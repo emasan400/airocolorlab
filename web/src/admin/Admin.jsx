@@ -110,7 +110,14 @@ function Login() {
     setBusy(true);
     setErr('');
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setErr('Credenciales inválidas.');
+    if (error) {
+      const msg = error.message || 'Error desconocido';
+      setErr(
+        msg.toLowerCase().includes('email not confirmed')
+          ? 'Email no confirmado: en Supabase → Authentication → Users, abrí tu usuario y marcá "Confirm".'
+          : `Supabase dice: ${msg}`
+      );
+    }
     setBusy(false);
   };
 
