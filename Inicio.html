@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  :root {
+    --airo-black: #111111;
+    --airo-blue: #1a4295;
+    --airo-cyan: #00b4d8; 
+    --airo-white: #ffffff;
+    --bg-neutral: #F4F6F8;
+    --border-light: #eaeaea;
+    --font-sans: 'Inter', sans-serif;
+    --font-serif: 'Rockwell', 'Courier Bold', Courier, Georgia, serif;
+  }
+
+  body, .airo-wrap {
+    font-family: var(--font-sans);
+    background: var(--airo-white);
+    color: var(--airo-black);
+    line-height: 1.6;
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  h1, h2, h3, h4, .rockwell { font-family: var(--font-serif) !important; font-weight: normal; }
+  
+  .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+  .reveal.active { opacity: 1; transform: translateY(0); }
+
+  /* HERO MONUMENTAL CON TÍTULO GIGANTE Y CARRUSEL SUPERPUESTO */
+  .hero { 
+    position: relative;
+    min-height: 85vh; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+    text-align: center; 
+    padding: 100px 20px 80px; 
+    width: 100%;
+    overflow: hidden;
+  }
+
+  /* Contenedor de capas para el Carrusel Suave */
+  .hero-bg-slider {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-color: var(--airo-black);
+  }
+
+  /* Capas individuales con fundido y zoom sutil */
+  .bg-layer {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    animation: smoothCrossfade 25s infinite;
+  }
+
+  .bg-layer:nth-child(1) { background-image: url('https://i.postimg.cc/2SRx2mf4/Whats-App-Image-2026-08-07-at-20-37-58.jpg'); animation-delay: 0s; }
+  .bg-layer:nth-child(2) { background-image: url('https://i.postimg.cc/FH5xDmQJ/Whats-App-Image-2026-08-07-at-20-37-58-(1).jpg'); animation-delay: -20s; }
+  .bg-layer:nth-child(3) { background-image: url('https://i.postimg.cc/4xk1BZTt/Whats-App-Image-2026-08-07-at-20-37-59.jpg'); animation-delay: -15s; }
+  .bg-layer:nth-child(4) { background-image: url('https://i.postimg.cc/SxFGDqpM/Whats-App-Image-2026-08-07-at-20-37-59-(1).jpg'); animation-delay: -10s; }
+  .bg-layer:nth-child(5) { background-image: url('https://i.postimg.cc/52dmn1Mz/Whats-App-Image-2026-08-07-at-20-37-59-(2).jpg'); animation-delay: -5s; }
+
+  @keyframes smoothCrossfade {
+    0%   { opacity: 1; transform: scale(1); }
+    16%  { opacity: 1; transform: scale(1.02); }
+    20%  { opacity: 0; transform: scale(1.03); }
+    96%  { opacity: 0; transform: scale(1); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  
+  /* Capa superpuesta para garantizar la legibilidad del texto */
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(rgba(244,246,248,0.85), rgba(255,255,255,0.98));
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .hero-badge { 
+    background: var(--airo-white); border: 1px solid var(--border-light); padding: 10px 22px; 
+    border-radius: 30px; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; 
+    color: var(--airo-blue); margin-bottom: 30px; font-weight: 600; display: inline-flex; 
+    align-items: center; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); 
+  }
+  .hero-badge span { width: 8px; height: 8px; background: var(--airo-cyan); border-radius: 50%; display: inline-block; }
+
+  .hero-title { 
+    font-size: clamp(32px, 8.2vw, 150px); color: var(--airo-blue); line-height: 0.95; 
+    margin-bottom: 25px; text-transform: uppercase; letter-spacing: -1.5px; white-space: nowrap; 
+    width: 100%; max-width: 1400px; display: block; 
+  }
+  .hero-title .cyan-text { color: var(--airo-cyan); }
+  
+  .hero p { font-size: clamp(16px, 2vw, 20px); color: #555; max-width: 620px; margin-bottom: 45px; font-weight: 300; line-height: 1.6; }
+  
+  .btn-primary { 
+    background: var(--airo-black); color: var(--airo-white); font-family: var(--font-serif); 
+    font-size: 14px; text-transform: uppercase; letter-spacing: 2px; padding: 20px 42px; 
+    border-radius: 8px; text-decoration: none; transition: all 0.3s ease; display: inline-flex; 
+    align-items: center; gap: 12px; border: none; cursor: pointer; 
+  }
+  .btn-primary:hover { background: var(--airo-blue); transform: translateY(-3px); box-shadow: 0 14px 28px rgba(26,66,149,0.2); }
+
+  /* MARQUEE INFINITO */
+  .marquee { background: var(--airo-black); color: var(--airo-white); padding: 18px 0; overflow: hidden; white-space: nowrap; display: flex; align-items: center; border-top: 1px solid var(--airo-cyan); border-bottom: 1px solid var(--airo-cyan); }
+  .marquee-content { display: inline-flex; width: max-content; animation: scroll 25s linear infinite; font-size: 13px; font-family: var(--font-serif); text-transform: uppercase; letter-spacing: 2.5px; }
+  .marquee-content span { margin: 0 35px; }
+  .marquee-content .star { color: var(--airo-cyan); }
+  @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+  /* SECCIONES Y DIFERENCIALES */
+  .section-pad { padding: 100px 20px; max-width: 1250px; margin: 0 auto; }
+  .section-title { font-size: clamp(30px, 4.5vw, 48px); color: var(--airo-black); margin-bottom: 50px; text-align: center; }
+
+  .diff-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; }
+  .diff-card { background: var(--bg-neutral); padding: 40px 28px; border-radius: 12px; transition: all 0.3s ease; border: 1px solid var(--border-light); }
+  .diff-card:hover { transform: translateY(-8px); background: var(--airo-blue); box-shadow: 0 15px 35px rgba(26,66,149,0.2); border-color: var(--airo-blue); }
+  .diff-card h4 { font-size: 20px; margin-bottom: 12px; transition: color 0.3s ease; }
+  .diff-card p { font-size: 14px; opacity: 0.85; transition: color 0.3s ease; }
+  .diff-card:hover h4, .diff-card:hover p { color: var(--airo-white); }
+  .diff-card.highlight { background: var(--airo-blue); color: var(--airo-white); border-color: var(--airo-blue); }
+  .diff-card.highlight p { color: rgba(255,255,255,0.9); }
+  .title-cyan { color: var(--airo-cyan); }
+
+  /* PRODUCTOS / LIFESTYLE */
+  .lifestyle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .life-item { height: 400px; border-radius: 12px; background: var(--bg-neutral); position: relative; overflow: hidden; padding: 35px; display: flex; align-items: flex-end; }
+  .life-item img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; mix-blend-mode: multiply; opacity: 0.9; transition: transform 0.8s ease; }
+  .life-item:hover img { transform: scale(1.04); }
+  .life-content { position: relative; z-index: 2; }
+  .life-content h3 { font-size: 24px; color: var(--airo-blue); margin-bottom: 6px; }
+  .life-content p { font-size: 14px; color: #555; }
+
+  /* PROCESO */
+  .process-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; text-align: center; }
+  .p-icon { width: 60px; height: 60px; background: var(--airo-white); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; font-size: 22px; color: var(--airo-blue); box-shadow: 0 8px 20px rgba(0,0,0,0.04); font-family: var(--font-serif); border: 1px solid var(--border-light); transition: all 0.3s; }
+  .reveal:hover .p-icon { background: var(--airo-cyan); color: var(--airo-white); border-color: var(--airo-cyan); transform: scale(1.1); }
+  .process-grid h4 { font-size: 18px; margin-bottom: 8px; }
+  .process-grid p { font-size: 13.5px; color: #666; }
+
+  @media (max-width: 900px) { .lifestyle-grid, .process-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) {
+    .diff-grid, .lifestyle-grid, .process-grid { grid-template-columns: 1fr; }
+    .hero-title { font-size: clamp(24px, 7.8vw, 50px); white-space: normal; }
+    .hero { padding: 70px 15px; min-height: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="airo-wrap">
+
+  <section class="hero">
+    <div class="hero-bg-slider">
+      <div class="bg-layer"></div>
+      <div class="bg-layer"></div>
+      <div class="bg-layer"></div>
+      <div class="bg-layer"></div>
+      <div class="bg-layer"></div>
+    </div>
+    <div class="hero-overlay"></div>
+    
+    <div class="hero-content">
+      <div class="hero-badge reveal"><span></span> Estudio de Producción Textil</div>
+      <h1 class="rockwell hero-title reveal">AIRO <span class="cyan-text">COLOR</span> LAB.</h1>
+      <p class="reveal">Personalización textil y merchandising a medida.<br>Desde 10 unidades.</p>
+      
+      <!-- ENLACE CORREGIDO AL CATÁLOGO (LIMPIEZA DE URL) -->
+      <a href="https://sites.google.com/view/airocolorlab/cat%C3%A1logo" target="_top" class="btn-primary rockwell reveal">Comenzar mi Proyecto ➔</a>
+    </div>
+  </section>
+
+  <div class="marquee">
+    <div class="marquee-content">
+      <span><span class="star">★</span> Desde 10 unidades</span>
+      <span><span class="star">★</span> Producción nacional</span>
+      <span><span class="star">★</span> Envíos a todo el país</span>
+      <span><span class="star">★</span> Asesoramiento personalizado</span>
+      <span><span class="star">★</span> Sublimación Full Color</span>
+      <span><span class="star">★</span> Entrega en 5 a 7 días hábiles</span>
+      <span><span class="star">★</span> Desde 10 unidades</span>
+      <span><span class="star">★</span> Producción nacional</span>
+      <span><span class="star">★</span> Envíos a todo el país</span>
+      <span><span class="star">★</span> Asesoramiento personalizado</span>
+      <span><span class="star">★</span> Sublimación Full Color</span>
+      <span><span class="star">★</span> Entrega en 5 a 7 días hábiles</span>
+    </div>
+  </div>
+
+  <section class="section-pad">
+    <h2 class="section-title rockwell reveal">¿Por qué elegir AIRO?</h2>
+    <div class="diff-grid">
+      <div class="diff-card highlight reveal">
+        <h4 class="rockwell title-cyan">Desde 10 unidades</h4>
+        <p>Producí sin stock ocioso. Lanzá cápsulas o ediciones limitadas sin los mínimos inalcanzables de las fábricas tradicionales.</p>
+      </div>
+      <div class="diff-card reveal">
+        <h4 class="rockwell">Producción Nacional</h4>
+        <p>Controlamos la calidad de cada detalle en nuestro taller, desde el diseño inicial hasta la última costura.</p>
+      </div>
+      <div class="diff-card reveal">
+        <h4 class="rockwell">Atención Personalizada</h4>
+        <p>Te asignamos un asesor que acompaña tu proyecto asegurando que los colores y materiales sean exactos.</p>
+      </div>
+      <div class="diff-card reveal">
+        <h4 class="rockwell">Calidad Profesional</h4>
+        <p>Sublimación sin límite de tintas y tecnología DTF de alta resistencia pensadas para durar.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-pad" style="padding-top:0;">
+    <h2 class="section-title rockwell reveal">Lanzá tu próxima colección.</h2>
+    <div class="lifestyle-grid">
+      <div class="life-item reveal">
+        <img src="https://drive.google.com/uc?export=view&id=1Gm60bfPCBjXGFRPvjEg955amcTAuMBva" alt="Indumentaria Corporativa">
+        <div class="life-content"><h3 class="rockwell">Indumentaria & Uniformes</h3><p>Vestí a tu equipo con materiales premium y acabados duraderos.</p></div>
+      </div>
+      <div class="life-item reveal">
+        <img src="https://drive.google.com/uc?export=view&id=1PC4P4vEdDMzW2rVHiHaXAqj1yjH_yu5Y" alt="Merchandising Eventos">
+        <div class="life-content"><h3 class="rockwell">Merchandising de Impacto</h3><p>Lanyards, tote bags y accesorios que tus clientes van a querer conservar.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-pad" style="background:var(--bg-neutral); max-width: 100%;">
+    <div style="max-width: 1200px; margin: 0 auto;">
+      <h2 class="section-title rockwell reveal">¿Cómo trabajamos?</h2>
+      <div class="process-grid">
+        <div class="reveal"><div class="p-icon">1</div><h4 class="rockwell">Contanos tu idea</h4><p>Completás el brief inicial con tus requerimientos.</p></div>
+        <div class="reveal"><div class="p-icon">2</div><h4 class="rockwell">Te asesoramos</h4><p>Definimos materiales, técnicas y diseño.</p></div>
+        <div class="reveal"><div class="p-icon">3</div><h4 class="rockwell">Fabricamos</h4><p>Ingresamos a taller con control de calidad.</p></div>
+        <div class="reveal"><div class="p-icon">4</div><h4 class="rockwell">Recibís tu proyecto</h4><p>Despachamos directamente a tu puerta.</p></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const reveals = document.querySelectorAll(".reveal");
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add("active"); });
+    }, { threshold: 0.1 });
+    reveals.forEach(reveal => observer.observe(reveal));
+  });
+</script>
+</body>
+</html>

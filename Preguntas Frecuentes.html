@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  :root {
+    --airo-black: #111111; 
+    --airo-blue: #1a4295; 
+    --airo-cyan: #00b4d8; 
+    --airo-white: #ffffff; 
+    --bg-neutral: #F4F6F8; 
+    --border-light: #eaeaea;
+    --font-sans: 'Inter', sans-serif;
+    --font-serif: 'Rockwell', 'Courier Bold', Courier, Georgia, serif;
+  }
+
+  body, .airo-wrap {
+    font-family: var(--font-sans);
+    color: var(--airo-black);
+    line-height: 1.6;
+    min-height: 100vh;
+    /* Degradado sutil con la paleta de AIRO */
+    background: linear-gradient(
+      180deg, 
+      rgba(255, 255, 255, 1) 0%, 
+      rgba(0, 180, 216, 0.03) 50%, 
+      rgba(26, 66, 149, 0.05) 100%
+    );
+  }
+  
+  .rockwell { font-family: var(--font-serif) !important; font-weight: normal; }
+  
+  .anim { animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+  .container { max-width: 950px; margin: 0 auto; padding: 70px 20px; }
+  
+  /* HEADER */
+  .header-faq { text-align: center; margin-bottom: 60px; }
+  .header-faq h1 { font-size: clamp(34px, 5.5vw, 56px); color: var(--airo-blue); margin-bottom: 14px; text-transform: uppercase; line-height: 1; }
+  .header-faq p { font-size: 16px; color: #666; max-width: 500px; margin: 0 auto; }
+  
+  /* MISIÓN Y VISIÓN */
+  .mv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 70px; }
+  .mv-card { 
+    background: var(--airo-white); 
+    padding: 40px 30px; 
+    border-radius: 16px; 
+    border: 1px solid var(--border-light); 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+    transition: all 0.3s ease;
+  }
+  .mv-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 180, 216, 0.08);
+    border-color: rgba(0, 180, 216, 0.3); /* Borde cyan al hover */
+  }
+  .mv-card h2 { font-size: 11px; color: var(--airo-cyan); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; font-weight: bold; }
+  .mv-card h3 { font-size: 24px; color: var(--airo-blue); margin-bottom: 15px; }
+  .mv-card p { font-size: 14px; color: #555; line-height: 1.7; }
+
+  /* FAQS ACCORDION */
+  .faq-container {
+    background: var(--airo-white);
+    padding: 40px;
+    border-radius: 16px;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.02);
+  }
+  .faq-title { font-size: 24px; color: var(--airo-blue); margin-bottom: 30px; text-transform: uppercase; text-align: center;}
+  
+  details { border-bottom: 1px solid var(--border-light); }
+  details:last-child { border-bottom: none; }
+  
+  details summary { 
+    padding: 24px 0; 
+    font-size: 17px; 
+    color: var(--airo-black); 
+    cursor: pointer; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    outline: none; 
+    transition: color 0.3s; 
+    font-weight: 500;
+  }
+  details summary::-webkit-details-marker { display: none; }
+  details summary:hover { color: var(--airo-cyan); }
+  
+  .icon-cross { position: relative; width: 14px; height: 14px; flex-shrink: 0; margin-left: 15px; }
+  .icon-cross::before, .icon-cross::after { content: ''; position: absolute; background: currentColor; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+  .icon-cross::before { top: 6px; left: 0; width: 14px; height: 2px; border-radius: 2px; }
+  .icon-cross::after { top: 0; left: 6px; width: 2px; height: 14px; border-radius: 2px; }
+  details[open] summary { color: var(--airo-blue); }
+  details[open] .icon-cross::after { transform: rotate(90deg) scaleY(0); }
+  
+  details .faq-answer { 
+    padding: 0 0 24px 0; 
+    font-size: 14.5px; 
+    color: #555; 
+    line-height: 1.7; 
+    animation: fadeUp 0.4s ease forwards; 
+  }
+
+  @media (max-width: 768px) { 
+    .mv-grid { grid-template-columns: 1fr; } 
+    details summary { font-size: 15.5px; padding: 20px 0; } 
+    .faq-container { padding: 25px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="airo-wrap">
+  <div class="container anim">
+    <div class="header-faq">
+      <h1 class="rockwell">Información & Operativa</h1>
+      <p>Conocé nuestra filosofía de trabajo y resolvé tus dudas antes de iniciar la producción.</p>
+    </div>
+
+    <div class="mv-grid">
+      <div class="mv-card">
+        <h2>Misión</h2>
+        <h3 class="rockwell">Elevar tu identidad visual</h3>
+        <p>Democratizar el acceso a productos textiles personalizados de calidad profesional. Acompañamos a marcas, eventos y creadores permitiéndoles producir desde bajos volúmenes sin comprometer la estética ni los acabados premium.</p>
+      </div>
+      <div class="mv-card">
+        <h2>Visión</h2>
+        <h3 class="rockwell">El estándar de diseño textil</h3>
+        <p>Ser el estudio-fábrica referente en Argentina para producciones a medida y merchandising corporativo, demostrando que la personalización textil puede ser ágil, transparente y enfocada 100% en las necesidades del cliente.</p>
+      </div>
+    </div>
+
+    <div class="faq-container">
+      <h2 class="faq-title rockwell">Preguntas Frecuentes</h2>
+
+      <details>
+        <summary class="rockwell">¿Realizan envíos a todo el país? <span class="icon-cross"></span></summary>
+        <div class="faq-answer">Sí. Trabajamos con logística nacional puerta a puerta para asegurar que tu proyecto llegue a tiempo, estés donde estés, manteniendo la seguridad de la mercadería.</div>
+      </details>
+      <details>
+        <summary class="rockwell">¿Puedo pedir muestras físicas? <span class="icon-cross"></span></summary>
+        <div class="faq-answer">Absolutamente. Podés solicitar una muestra física para evaluar colores, telas y terminaciones. El costo de esta muestra se descuenta del total si decidís avanzar con la producción completa.</div>
+      </details>
+      <details>
+        <summary class="rockwell">¿Cómo envío mi diseño o logo? <span class="icon-cross"></span></summary>
+        <div class="faq-answer">Aceptamos archivos vectoriales (.AI, .EPS, .PDF) o imágenes en alta resolución (PNG, TIFF a 300dpi). Si no sabés cómo exportarlo, nuestro equipo de diseño te guía paso a paso.</div>
+      </details>
+      <details>
+        <summary class="rockwell">¿Qué pasa si no tengo diseño? <span class="icon-cross"></span></summary>
+        <div class="faq-answer">No te preocupes. Contamos con un equipo de diseño in-house que puede adaptar tu logo existente o crear una propuesta gráfica desde cero, optimizada especialmente para el estampado textil.</div>
+      </details>
+      <details>
+        <summary class="rockwell">¿Qué métodos de pago aceptan? <span class="icon-cross"></span></summary>
+        <div class="faq-answer">Aceptamos transferencias bancarias, e-cheq y tarjetas. Para iniciar la producción solicitamos un anticipo del 50%, y el saldo restante se abona contra entrega del producto terminado.</div>
+      </details>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

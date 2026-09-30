@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-PSPJ7DSX');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  :root {
+    --airo-black: #111111;
+    --airo-blue: #1a4295;
+    --airo-cyan: #00b4d8; 
+    --airo-white: #ffffff;
+    --bg-neutral: #F4F6F8;
+    --border-light: #eaeaea;
+    --font-sans: 'Inter', sans-serif;
+    --font-serif: 'Rockwell', 'Courier Bold', Courier, Georgia, serif;
+  }
+
+  body, .airo-wrap {
+    font-family: var(--font-sans);
+    background: var(--bg-neutral);
+    color: var(--airo-black);
+    line-height: 1.6;
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+  }
+  .rockwell { font-family: var(--font-serif) !important; font-weight: normal; }
+  
+  .anim { animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 60px 20px; width: 100%; }
+  .project-grid { display: grid; grid-template-columns: 1fr 1.25fr; gap: 40px; align-items: start; }
+  
+  .info-side { background: var(--airo-white); padding: 40px; border-radius: 16px; border: 1px solid var(--border-light); box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
+  .info-side h1 { font-size: clamp(38px, 5vw, 72px); line-height: 0.95; color: var(--airo-blue); margin-bottom: 20px; text-transform: uppercase; letter-spacing: -1px; }
+  .info-side p { font-size: 15px; color: #555; margin-bottom: 30px; }
+  
+  .contact-details { border-top: 1px solid var(--border-light); padding-top: 25px; margin-bottom: 30px; }
+  .contact-details strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--airo-cyan); margin-bottom: 6px; font-weight: 600; }
+  .hover-link { font-size: 14.5px; color: var(--airo-black); text-decoration: none; margin-bottom: 18px; display: inline-block; transition: all 0.3s ease; font-weight: 500; }
+  .hover-link:hover { color: var(--airo-blue); transform: translateX(5px); }
+  .contact-details p.sub-text { font-size: 13.5px; color: #666; margin-top: -12px; margin-bottom: 18px; }
+
+  .trust-card { background: var(--bg-neutral); padding: 24px; border-radius: 12px; border: 1px solid var(--border-light); }
+  .trust-card h4 { font-size: 12px; text-transform: uppercase; color: var(--airo-blue); letter-spacing: 1px; margin-bottom: 12px; }
+  .trust-item { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 8px; font-weight: 500; color: #444; }
+  .trust-item:last-child { margin-bottom: 0; }
+
+  .form-side { background: var(--airo-white); padding: 40px; border-radius: 16px; border: 1px solid var(--border-light); box-shadow: 0 15px 40px rgba(0,0,0,0.03); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .form-group { position: relative; margin-bottom: 18px; }
+  
+  .floating-input { width: 100%; padding: 22px 14px 8px; border: 1px solid var(--border-light); border-radius: 8px; font-family: var(--font-sans); font-size: 13.5px; background: var(--bg-neutral); outline: none; transition: 0.3s; color: var(--airo-black); }
+  .floating-input:focus { border-color: var(--airo-cyan); background: var(--airo-white); box-shadow: 0 0 0 3px rgba(0,180,216,0.1); }
+  .floating-label { position: absolute; left: 15px; top: 16px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; font-weight: 600; pointer-events: none; transition: 0.25s ease all; }
+  
+  .floating-input:focus ~ .floating-label, .floating-input:not(:placeholder-shown) ~ .floating-label { top: 6px; font-size: 9px; color: var(--airo-cyan); }
+
+  .static-label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #666; font-weight: 600; margin-bottom: 8px; }
+  .standard-input { padding: 12px 14px; border: 1px solid var(--border-light); border-radius: 8px; font-family: var(--font-sans); font-size: 13.5px; background: var(--bg-neutral); outline: none; transition: 0.3s; color: var(--airo-black); width: 100%; }
+  .standard-input:focus { border-color: var(--airo-cyan); background: var(--airo-white); box-shadow: 0 0 0 3px rgba(0,180,216,0.1); }
+  
+  .chip-container { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip-label input { display: none; }
+  .chip-text { padding: 8px 14px; border: 1px solid var(--border-light); border-radius: 20px; font-size: 12px; color: #555; cursor: pointer; transition: 0.2s; background: var(--airo-white); display: inline-block; }
+  .chip-label input:checked + .chip-text { background: var(--airo-black); color: var(--airo-white); border-color: var(--airo-black); }
+
+  .btn-submit { width: 100%; background: var(--airo-black); color: var(--airo-white); padding: 18px; border-radius: 8px; border: none; font-size: 12.5px; text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer; transition: all 0.3s; margin-top: 10px; font-weight: 500;}
+  .btn-submit:hover { background: var(--airo-blue); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(26,66,149,0.2); }
+
+  @media (max-width: 850px) { .project-grid { grid-template-columns: 1fr; gap: 30px; } .form-row { grid-template-columns: 1fr; gap: 0; } .info-side, .form-side { padding: 25px; } }
+</style>
+</head>
+<body>
+
+<div class="airo-wrap">
+  <div class="container anim">
+    <div class="project-grid">
+      
+      <div class="info-side">
+        <h1 class="rockwell">Hablemos.</h1>
+        <p>Contanos sobre tu proyecto. Nuestro estudio armará una propuesta a medida para tu marca.</p>
+        
+        <div class="contact-details">
+          <strong>Email Directo</strong>
+          <!-- Enlace ofuscado para evitar SPAM -->
+          <a href="javascript:void(0)" id="secure-mail" class="hover-link">Cargando...</a>
+          
+          <strong>Ubicación & Horarios</strong>
+          <a href="https://maps.google.com/?q=Buenos+Aires,+Argentina" target="_blank" class="hover-link">CABA, Buenos Aires</a>
+          <p class="sub-text">Lunes a Viernes de 09:00 a 18:00 hs.</p>
+          
+          <strong>Redes Sociales</strong>
+          <a href="https://www.instagram.com/airocolorlab/?utm_source=ig_web_button_share_sheet" target="_blank" class="hover-link">Instagram: @airocolorlab</a>
+        </div>
+
+        <div class="trust-card">
+          <h4 class="rockwell">¿Por qué AIRO Color Lab?</h4>
+          <div class="trust-item">✔ Producción flexible desde 10 unidades</div>
+          <div class="trust-item">✔ Asesoramiento personalizado in-house</div>
+          <div class="trust-item">✔ Respuesta en menos de 24 hs hábiles</div>
+        </div>
+      </div>
+
+      <div class="form-side">
+        <div class="form-row">
+          <div class="form-group"><input type="text" id="f_nom" class="floating-input" placeholder=" " required><label class="floating-label">Nombre *</label></div>
+          <div class="form-group"><input type="text" id="f_emp" class="floating-input" placeholder=" "><label class="floating-label">Empresa / Marca</label></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><input type="text" id="f_wpp" class="floating-input" placeholder=" " required><label class="floating-label">WhatsApp *</label></div>
+          <div class="form-group"><input type="email" id="f_email" class="floating-input" placeholder=" " required><label class="floating-label">Email *</label></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><input type="text" id="f_ciudad" class="floating-input" placeholder=" "><label class="floating-label">Ciudad / Provincia</label></div>
+          <div class="form-group" style="margin-bottom: 18px;"><label class="static-label">Fecha Estimada</label><input type="date" id="f_fecha" class="standard-input"></div>
+        </div>
+        
+        <div class="form-group" style="margin-top: 10px;">
+          <label class="static-label">Objetivo del proyecto</label>
+          <div class="chip-container">
+            <label class="chip-label"><input type="radio" name="f_obj" value="Evento"><span class="chip-text">Evento</span></label>
+            <label class="chip-label"><input type="radio" name="f_obj" value="Merchandising"><span class="chip-text">Merchandising</span></label>
+            <label class="chip-label"><input type="radio" name="f_obj" value="Uniformes"><span class="chip-text">Uniformes</span></label>
+            <label class="chip-label"><input type="radio" name="f_obj" value="Regalos"><span class="chip-text">Regalos</span></label>
+          </div>
+        </div>
+        
+        <div class="form-group" style="margin-top: 10px;">
+          <label class="static-label">¿Tenés diseño armado?</label>
+          <div class="chip-container">
+            <label class="chip-label"><input type="radio" name="f_dis" value="Sí, lo tengo"><span class="chip-text">Sí, lo tengo</span></label>
+            <label class="chip-label"><input type="radio" name="f_dis" value="No"><span class="chip-text">No</span></label>
+            <label class="chip-label"><input type="radio" name="f_dis" value="Necesito ayuda"><span class="chip-text">Necesito ayuda</span></label>
+          </div>
+        </div>
+        
+        <div class="form-group" style="margin-top: 20px;">
+          <textarea id="f_msg" class="floating-input" rows="3" placeholder=" "></textarea>
+          <label class="floating-label">Comentarios / Qué necesitás producir</label>
+        </div>
+        
+        <button class="btn-submit rockwell" onclick="enviar()">💬 Solicitar Cotización</button>
+        <p style="font-size:11px; color:#888; text-align:center; margin-top:14px;">🔒 Tus datos únicamente serán utilizados para responder esta consulta.</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbzfCUFD7v3507wU3bAw1EcgDWDHVF4RW10eSNO1wFkD_bjaB54nk0A8Utw5nydHubg/exec";
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const hoy = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById("f_fecha");
+    if(dateInput) dateInput.setAttribute("min", hoy);
+    
+    // OFUSCACIÓN DE EMAIL APLICADA
+    const e1 = "YWlyb2NvbG9ybGFi";
+    const e2 = "QGdtYWlsLmNvbQ==";
+    const mailSeguro = atob(e1 + e2);
+    const mailLink = document.getElementById("secure-mail");
+    if(mailLink) {
+      mailLink.href = "mailto:" + mailSeguro;
+      mailLink.innerText = mailSeguro;
+    }
+  });
+
+  function enviar() {
+    let nom = document.getElementById("f_nom").value; 
+    let wpp = document.getElementById("f_wpp").value;
+    if (!nom || !wpp) return alert("Por favor, ingresá tu Nombre y WhatsApp para ponernos en contacto.");
+    
+    let emp = document.getElementById("f_emp").value || "-";
+    let email = document.getElementById("f_email").value || "-";
+    let ciudad = document.getElementById("f_ciudad").value || "-";
+    let fecha = document.getElementById("f_fecha").value || "No especificada";
+    let obj = document.querySelector('input[name="f_obj"]:checked')?.value || "-";
+    let dis = document.querySelector('input[name="f_dis"]:checked')?.value || "-";
+    let msg = document.getElementById("f_msg").value || "-";
+    
+    let dataCRM = {
+      origen: "Contacto", nombre: nom, empresa: emp, whatsapp: wpp,
+      email: email, ciudad: ciudad, fecha_estimada: fecha, objetivo: obj,
+      diseno: diseno, comentarios: msg, carrito: "No aplica"
+    };
+
+    fetch(API_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dataCRM)
+    }).catch(err => console.log(err));
+
+    let mensaje = "¡Hola AIRO! Quiero iniciar una consulta.\n\n" +
+                  "👤 Nombre: *" + nom + "*\n" +
+                  "🏢 Empresa: " + emp + "\n" +
+                  "📱 WhatsApp: " + wpp + "\n" +
+                  "📧 Email: " + email + "\n" +
+                  "📍 Ciudad: " + ciudad + "\n" +
+                  "📅 Fecha Estimada: " + fecha + "\n" +
+                  "🎯 Objetivo: " + obj + "\n" +
+                  "🎨 Diseño: " + dis + "\n" +
+                  "💬 Mensaje: " + msg;
+                  
+    // OFUSCACIÓN DE TELÉFONO APLICADA
+    const p1 = "NTQ5MTE2";
+    const p2 = "MzU1MzQ0Mw==";
+    const numeroSeguro = atob(p1 + p2);
+
+    window.open("https://wa.me/" + numeroSeguro + "?text=" + encodeURIComponent(mensaje), '_blank');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# Entorno y secretos — nunca versionar
+.env
+.env.*
+!.env.example
+
+# Node / build
+node_modules/
+web/node_modules/
+web/dist/
+
+# SO / editor
+Thumbs.db
+.DS_Store
