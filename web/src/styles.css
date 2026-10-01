@@ -442,6 +442,26 @@ a { color: inherit; }
 .modal-add:hover { background: var(--blue); box-shadow: var(--shadow-2); }
 .modal-add:active { transform: scale(0.98); }
 
+/* QuickView — datos de producción B2B */
+.prod-data { border-top: 1px solid var(--line); margin: 4px 0 18px; }
+.prod-data-row {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+  padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 12.5px;
+}
+.prod-data-row span { color: var(--ink-45); }
+.prod-data-row b { font-weight: 600; text-align: right; }
+.qty-field input { max-width: 140px; }
+.modal-ctas { display: flex; gap: 10px; padding-top: 20px; flex-shrink: 0; }
+.modal-ctas .modal-add { margin-top: 0; flex: 1; }
+.modal-wsp {
+  padding: 0 16px; border-radius: var(--r-s); border: 1px solid var(--line);
+  background: var(--paper); color: var(--ink); font-size: 12.5px; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+  transition: border-color 0.15s, background-color 0.15s, transform 0.12s;
+}
+.modal-wsp:hover { border-color: var(--ink); background: var(--neutral); }
+.modal-wsp:active { transform: scale(0.97); }
+
 /* ---------- Drawer carrito / brief ---------- */
 .drawer-overlay {
   position: fixed; inset: 0; z-index: 300;

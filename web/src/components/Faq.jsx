@@ -31,7 +31,7 @@ export default function Faq() {
     <section className="section" id="faq">
       <div className="container">
         <Reveal className="section-head section-head--center">
-          <span className="ed-index">05</span>
+          <span className="ed-index">04</span>
           <div className="section-eyebrow">Información & Operativa</div>
           <h2 className="display section-title">Antes de producir.</h2>
           <p className="section-sub">

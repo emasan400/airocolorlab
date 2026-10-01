@@ -27,15 +27,15 @@ export function CartProvider({ children }) {
   }, []);
 
   const addItem = useCallback(
-    (id_producto, titulo) => {
+    (id_producto, titulo, cantidad = 10) => {
       setItems((prev) => {
         const exists = prev.find((i) => i.id === id_producto && i.titulo === titulo);
         if (exists) {
           return prev.map((i) =>
-            i === exists ? { ...i, cantidad: i.cantidad + 10 } : i
+            i === exists ? { ...i, cantidad: i.cantidad + cantidad } : i
           );
         }
-        return [...prev, { id: id_producto, titulo, cantidad: 10 }];
+        return [...prev, { id: id_producto, titulo, cantidad }];
       });
       // Primer producto: abrir el drawer directamente; si no, toast.
       if (items.length === 0 && !isOpen) setIsOpen(true);

@@ -1,14 +1,24 @@
 import { useEffect, useState } from 'react';
 import { useCart } from '../context/CartContext';
+import { openWhatsApp } from '../lib/secure';
+
+const PROD_DATA = [
+  ['Pedido mínimo', '10 unidades'],
+  ['Producción', 'A pedido · sin stock fijo'],
+  ['Personalización', 'Arte propio o asistido por el estudio'],
+  ['Cotización', 'A medida según volumen y terminación'],
+];
 
 export default function QuickView({ producto, onClose }) {
   const [imgIndex, setImgIndex] = useState(0);
   const [colorIdx, setColorIdx] = useState(0);
+  const [cantidad, setCantidadState] = useState(10);
   const { addItem } = useCart();
 
   useEffect(() => {
     setImgIndex(0);
     setColorIdx(0);
+    setCantidadState(10);
   }, [producto]);
 
   useEffect(() => {
@@ -32,8 +42,17 @@ export default function QuickView({ producto, onClose }) {
   const handleAdd = () => {
     const color = producto.colores?.[colorIdx];
     const titulo = color ? `${producto.nombre} (${color})` : producto.nombre;
-    addItem(producto.id_producto, titulo);
+    addItem(producto.id_producto, titulo, cantidad);
     onClose();
+  };
+
+  const handleWhatsApp = () => {
+    const color = producto.colores?.[colorIdx];
+    openWhatsApp(
+      `¡Hola AIRO! Quiero consultar por *${producto.nombre}*` +
+        (color ? ` en variante ${color}` : '') +
+        `.\nCantidad estimada: ${cantidad} unidades.`
+    );
   };
 
   return (
@@ -99,8 +118,37 @@ export default function QuickView({ producto, onClose }) {
                 </div>
               </div>
             )}
+
+            <div className="prod-data">
+              {PROD_DATA.map(([k, v]) => (
+                <div className="prod-data-row" key={k}>
+                  <span>{k}</span>
+                  <b>{v}</b>
+                </div>
+              ))}
+            </div>
+
+            <div className="field qty-field">
+              <span className="field-label">Cantidad estimada</span>
+              <input
+                type="number"
+                min="10"
+                step="10"
+                value={cantidad}
+                onChange={(e) =>
+                  setCantidadState(Math.max(10, parseInt(e.target.value, 10) || 10))
+                }
+              />
+            </div>
           </div>
-          <button className="modal-add" onClick={handleAdd}>Agregar al Brief</button>
+          <div className="modal-ctas">
+            <button className="modal-add" onClick={handleAdd}>
+              Agregar al Brief · {cantidad} u.
+            </button>
+            <button className="modal-wsp" onClick={handleWhatsApp}>
+              Consultar por WhatsApp
+            </button>
+          </div>
         </div>
       </div>
     </div>

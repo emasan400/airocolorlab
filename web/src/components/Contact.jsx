@@ -60,7 +60,7 @@ export default function Contact() {
       <div className="container">
         <div className="contact-grid">
           <Reveal className="contact-info">
-            <span className="ed-index">04</span>
+            <span className="ed-index">05</span>
             <div className="section-eyebrow">Contacto</div>
             <h2 className="display">Hablemos<em>.</em></h2>
             <p>

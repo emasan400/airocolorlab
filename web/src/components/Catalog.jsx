@@ -51,7 +51,8 @@ export default function Catalog() {
           <div className="section-eyebrow">Catálogo</div>
           <h2 className="display section-title">La colección.</h2>
           <p className="section-sub">
-            Seleccioná productos para armar tu brief. Cada uno se cotiza a medida.
+            Producción a pedido · mínimo 10 unidades · cotización a medida.
+            Seleccioná productos para armar tu brief.
           </p>
           <div style={{ marginTop: 32 }}>
             <button className="btn btn--primary" onClick={openCart}>

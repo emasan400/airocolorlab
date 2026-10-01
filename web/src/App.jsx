@@ -27,8 +27,8 @@ export default function App() {
         <Lifestyle />
         <Process />
         <Catalog />
-        <Contact />
         <Faq />
+        <Contact />
       </main>
       <Footer />
       <CartDrawer />
