@@ -10,8 +10,9 @@ const DISENO = ['Sí, lo tengo', 'No', 'Necesito ayuda'];
 export default function CartDrawer() {
   const { items, isOpen, closeCart, setCantidad, removeItem, totalUnidades } = useCart();
   const [step, setStep] = useState(1);
+  const [consent, setConsent] = useState(false);
   const [form, setForm] = useState({
-    nombre: '', empresa: '', objetivo: '', fecha: '', lugar: '', diseno: '', comentarios: '',
+    nombre: '', empresa: '', objetivo: '', fecha: '', lugar: '', diseno: '', comentarios: '', website: '',
   });
 
   useEffect(() => {
@@ -32,6 +33,10 @@ export default function CartDrawer() {
   };
 
   const enviar = () => {
+    if (form.website) return; // honeypot anti-spam
+    if (!consent) {
+      return alert('Necesitamos tu consentimiento para tratar tus datos de contacto.');
+    }
     const txt = items.map((i) => `• ${i.cantidad}x ${i.titulo}`).join('\n');
     postLead({
       origen: 'Catálogo',
@@ -64,9 +69,9 @@ export default function CartDrawer() {
   return (
     <>
       <div className={`drawer-overlay${isOpen ? ' open' : ''}`} onClick={closeCart} />
-      <aside className={`drawer${isOpen ? ' open' : ''}`} aria-label="Tu brief">
+      <aside className={`drawer${isOpen ? ' open' : ''}`} aria-label="Tu carrito">
         <div className="drawer-head">
-          <h2>Tu Brief</h2>
+          <h2>Tu Carrito</h2>
           <button onClick={closeCart} aria-label="Cerrar">×</button>
         </div>
 
@@ -119,6 +124,10 @@ export default function CartDrawer() {
                 <label>Empresa / Marca</label>
                 <input type="text" value={form.empresa} onChange={set('empresa')} placeholder="Opcional" />
               </div>
+              <input
+                type="text" className="hp-field" tabIndex={-1} autoComplete="off"
+                aria-hidden="true" value={form.website} onChange={set('website')}
+              />
               <div className="field">
                 <label>Objetivo del Proyecto</label>
                 <div className="chips">
@@ -166,6 +175,16 @@ export default function CartDrawer() {
           )}
           {step === 3 && (
             <>
+              <label className="consent-check">
+                <input
+                  type="checkbox" checked={consent}
+                  onChange={(e) => setConsent(e.target.checked)}
+                />
+                <span>
+                  Acepto el tratamiento de mis datos personales (Ley 25.326)
+                  para que AIRO responda esta solicitud.
+                </span>
+              </label>
               <div className="row">
                 <button className="btn btn--ghost" onClick={() => goTo(2)}>Atrás</button>
                 <button className="btn btn--success" onClick={enviar}>Solicitar Cotización</button>

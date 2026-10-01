@@ -8,9 +8,10 @@ const DISENO = ['Sí, lo tengo', 'No', 'Necesito ayuda'];
 
 export default function Contact() {
   const [email, setEmail] = useState('');
+  const [consent, setConsent] = useState(false);
   const [form, setForm] = useState({
     nombre: '', empresa: '', whatsapp: '', email: '', ciudad: '', fecha: '',
-    objetivo: '', diseno: '', mensaje: '',
+    objetivo: '', diseno: '', mensaje: '', website: '',
   });
 
   useEffect(() => {
@@ -23,8 +24,12 @@ export default function Contact() {
   const pick = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
   const enviar = () => {
+    if (form.website) return; // honeypot: bots lo completan, humanos no lo ven
     if (!form.nombre.trim() || !form.whatsapp.trim()) {
       return alert('Por favor, ingresá tu Nombre y WhatsApp para ponernos en contacto.');
+    }
+    if (!consent) {
+      return alert('Necesitamos tu consentimiento para tratar tus datos de contacto.');
     }
 
     postLead({
@@ -145,6 +150,21 @@ export default function Contact() {
               <label>Comentarios / Qué necesitás producir</label>
               <textarea rows="3" value={form.mensaje} onChange={set('mensaje')} />
             </div>
+
+            <input
+              type="text" className="hp-field" tabIndex={-1} autoComplete="off"
+              aria-hidden="true" value={form.website} onChange={set('website')}
+            />
+            <label className="consent-check">
+              <input
+                type="checkbox" checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+              />
+              <span>
+                Acepto el tratamiento de mis datos personales (Ley 25.326)
+                para que AIRO Color Lab responda esta consulta.
+              </span>
+            </label>
 
             <button className="btn btn--primary" style={{ width: '100%', justifyContent: 'center' }} onClick={enviar}>
               Solicitar Cotización

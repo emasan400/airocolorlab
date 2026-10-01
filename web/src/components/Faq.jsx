@@ -3,6 +3,18 @@ import { Reveal } from '../hooks/useReveal';
 
 const FAQS = [
   {
+    q: '¿Cómo garantizan la calidad?',
+    a: 'Cada lote pasa un control de calidad antes del despacho: colores, costuras, estampado y empaque. Además validás una muestra (física o digital) antes de que entremos en producción.',
+  },
+  {
+    q: '¿Cuáles son los tiempos de producción?',
+    a: 'Entre 5 y 15 días hábiles según el producto y el volumen. Al cotizar te confirmamos una fecha de entrega comprometida — no trabajamos con plazos ambiguos.',
+  },
+  {
+    q: '¿Qué pasa si el pedido llega con un defecto?',
+    a: 'Lo resolvemos. Revisamos el caso con fotos del producto, y si el defecto es de producción lo reponemos o reprocesamos sin costo adicional.',
+  },
+  {
     q: '¿Realizan envíos a todo el país?',
     a: 'Sí. Trabajamos con logística nacional puerta a puerta para asegurar que tu proyecto llegue a tiempo, estés donde estés, manteniendo la seguridad de la mercadería.',
   },

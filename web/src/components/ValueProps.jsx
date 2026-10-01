@@ -3,15 +3,15 @@ import { Reveal } from '../hooks/useReveal';
 const VALUES = [
   {
     h: 'Producción nacional',
-    p: 'Controlamos la calidad de cada detalle en nuestro taller, desde el diseño inicial hasta la última costura.',
+    p: 'Controlamos cada detalle en nuestro taller, desde el diseño inicial hasta la última costura.',
   },
   {
-    h: 'Atención personalizada',
-    p: 'Te asignamos un asesor que acompaña tu proyecto asegurando que los colores y materiales sean exactos.',
+    h: 'Calidad verificable',
+    p: 'Muestra física o digital antes de producir, y control de calidad por lote antes de cada despacho.',
   },
   {
-    h: 'Calidad profesional',
-    p: 'Sublimación sin límite de tintas y tecnología DTF de alta resistencia pensadas para durar.',
+    h: 'Acompañamiento dedicado',
+    p: 'Un asesor sigue tu proyecto de punta a punta: materiales, colores, plazos y post-venta.',
   },
 ];
 
@@ -40,7 +40,7 @@ export default function ValueProps() {
             </div>
             <div className="value-stats">
               <div className="stat"><b>10</b><span>uds. mínimo</span></div>
-              <div className="stat"><b>5–7</b><span>días hábiles</span></div>
+              <div className="stat"><b>5–15</b><span>días hábiles</span></div>
               <div className="stat"><b>100%</b><span>a medida</span></div>
             </div>
           </Reveal>

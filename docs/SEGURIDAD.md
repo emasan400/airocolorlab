@@ -48,7 +48,7 @@ Admin (login) ────(JWT → rol authenticated)─────► Supabase
 | A.8.26 Requisitos de seguridad en aplicaciones | ✅ | Validación de formularios client-side; límites de payload por esquema de tabla |
 | A.8.27 Arquitectura segura | ✅ | SPA estática sin backend propio → superficie de ataque reducida a CDN + API gestionada |
 | A.8.28 Codificación segura | ✅ | Sin `dangerouslySetInnerHTML`; React escapa contenido por defecto (anti-XSS); queries parametrizadas vía PostgREST |
-| A.5.31 Requisitos legales (PII) | ⚠️ Pendiente | Falta texto de consentimiento/privacidad en formularios que recolectan datos personales (ver §6) |
+| A.5.31 Requisitos legales (PII) | ✅ | Consentimiento explícito (Ley 25.326) obligatorio en formularios; PII de leads solo legible por admin autenticado |
 
 ---
 
@@ -91,8 +91,8 @@ cotización), este documento debe revisarse contra ATLAS.
 
 | Prioridad | Ítem | Acción sugerida |
 | --- | --- | --- |
-| Alta | Spam al insert público de `leads` | Campo honeypot oculto en formularios; si crece, Edge Function con CAPTCHA |
-| Alta | Aviso de privacidad | Agregar consentimiento de tratamiento de datos en formularios (Ley 25.326 AR) |
+| ~~Alta~~ | ~~Spam al insert público de `leads`~~ | ✅ Implementado: honeypot `website` oculto en ambos formularios — los bots lo completan y el submit se descarta silenciosamente |
+| ~~Alta~~ | ~~Aviso de privacidad~~ | ✅ Implementado: checkbox de consentimiento (Ley 25.326) obligatorio en Contacto y Carrito antes de enviar |
 | Media | MFA del admin | Activar MFA en Supabase Auth para el usuario admin |
 | Media | Base64 ≠ cifrado | El teléfono/email son públicos por diseño del negocio; la ofuscación solo frena scraping — no tratar como control de confidencialidad |
 | Media | Monitoreo | Revisión mensual de Security Advisors en Supabase + logs de Auth |

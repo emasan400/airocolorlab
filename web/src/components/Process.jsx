@@ -1,10 +1,10 @@
 import { Reveal } from '../hooks/useReveal';
 
 const STEPS = [
-  { h: 'Contanos tu idea', p: 'Completás el brief inicial con tus requerimientos.' },
-  { h: 'Te asesoramos', p: 'Definimos materiales, técnicas y diseño.' },
-  { h: 'Fabricamos', p: 'Ingresamos a taller con control de calidad.' },
-  { h: 'Recibís tu proyecto', p: 'Despachamos directamente a tu puerta.' },
+  { h: 'Contanos tu idea', p: 'Completás el formulario inicial con productos, cantidades y fecha objetivo.' },
+  { h: 'Asesoramiento + muestra', p: 'Definimos materiales y técnicas juntos, y validás una muestra antes de producir.' },
+  { h: 'Fabricamos', p: 'Producción en taller propio con control de calidad por lote.' },
+  { h: 'Entrega y post-venta', p: 'Despacho puerta a puerta y seguimiento hasta que estés conforme.' },
 ];
 
 export default function Process() {

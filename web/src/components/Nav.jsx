@@ -27,7 +27,7 @@ export default function Nav() {
         </ul>
         <button className="nav-cta" onClick={openCart}>
           <svg viewBox="0 0 24 24"><path d="M2 3h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>
-          Mi Brief
+          Mi Carrito
           <span className="count">{items.length}</span>
         </button>
       </div>

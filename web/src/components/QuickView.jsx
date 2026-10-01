@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { openWhatsApp } from '../lib/secure';
 
@@ -13,12 +13,15 @@ export default function QuickView({ producto, onClose }) {
   const [imgIndex, setImgIndex] = useState(0);
   const [colorIdx, setColorIdx] = useState(0);
   const [cantidad, setCantidadState] = useState(10);
+  const [logo, setLogo] = useState(null);
+  const fileRef = useRef(null);
   const { addItem } = useCart();
 
   useEffect(() => {
     setImgIndex(0);
     setColorIdx(0);
     setCantidadState(10);
+    setLogo(null);
   }, [producto]);
 
   useEffect(() => {
@@ -38,6 +41,17 @@ export default function QuickView({ producto, onClose }) {
 
   const prev = () => setImgIndex((i) => (i - 1 + imgs.length) % imgs.length);
   const next = () => setImgIndex((i) => (i + 1) % imgs.length);
+
+  const onLogo = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return alert('Subí un archivo de imagen.');
+    if (file.size > 3 * 1024 * 1024) return alert('El logo supera los 3 MB.');
+    const rd = new FileReader();
+    rd.onload = () => setLogo(rd.result);
+    rd.readAsDataURL(file);
+    e.target.value = '';
+  };
 
   const handleAdd = () => {
     const color = producto.colores?.[colorIdx];
@@ -65,6 +79,7 @@ export default function QuickView({ producto, onClose }) {
 
         <div className="modal-left">
           <div className="modal-imgbox">
+            {producto.badge && <span className="img-badge">{producto.badge}</span>}
             {imgs.length > 1 && (
               <>
                 <button className="carousel-btn prev" onClick={prev} aria-label="Anterior">❮</button>
@@ -72,6 +87,7 @@ export default function QuickView({ producto, onClose }) {
               </>
             )}
             {imgs.length > 0 && <img src={imgs[imgIndex]} alt={producto.nombre} />}
+            {logo && <img className="logo-overlay" src={logo} alt="Tu logo" />}
           </div>
           {imgs.length > 1 && (
             <div className="thumbs">
@@ -86,11 +102,20 @@ export default function QuickView({ producto, onClose }) {
               ))}
             </div>
           )}
+          <div className="logo-tools">
+            <button className="logo-btn" onClick={() => fileRef.current?.click()}>
+              ↑ {logo ? 'Cambiar logo' : 'Probar mi logo'}
+            </button>
+            {logo && (
+              <button className="logo-btn" onClick={() => setLogo(null)}>Quitar</button>
+            )}
+            <input ref={fileRef} type="file" accept="image/*" hidden onChange={onLogo} />
+            <span className="logo-hint">Previsualización referencial</span>
+          </div>
         </div>
 
         <div className="modal-right">
           <div className="modal-scroll">
-            {producto.badge && <span className="modal-badge">{producto.badge}</span>}
             <h2>{producto.nombre}</h2>
             <p className="modal-desc">{producto.descripcion}</p>
 
@@ -143,7 +168,7 @@ export default function QuickView({ producto, onClose }) {
           </div>
           <div className="modal-ctas">
             <button className="modal-add" onClick={handleAdd}>
-              Agregar al Brief · {cantidad} u.
+              Agregar al Carrito · {cantidad} u.
             </button>
             <button className="modal-wsp" onClick={handleWhatsApp}>
               Consultar por WhatsApp

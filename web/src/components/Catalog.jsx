@@ -52,11 +52,11 @@ export default function Catalog() {
           <h2 className="display section-title">La colección.</h2>
           <p className="section-sub">
             Producción a pedido · mínimo 10 unidades · cotización a medida.
-            Seleccioná productos para armar tu brief.
+            Seleccioná productos para armar tu carrito.
           </p>
           <div style={{ marginTop: 32 }}>
             <button className="btn btn--primary" onClick={openCart}>
-              Ver mi brief ({items.length})
+              Ver mi carrito ({items.length})
             </button>
           </div>
         </Reveal>
@@ -128,7 +128,7 @@ export default function Catalog() {
 
       <QuickView producto={selected} onClose={() => setSelected(null)} />
 
-      <button className="floating-cart" onClick={openCart} aria-label="Abrir brief">
+      <button className="floating-cart" onClick={openCart} aria-label="Abrir carrito">
         <svg viewBox="0 0 24 24"><path d="M2 3h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>
         <span className="count">{items.length}</span>
       </button>
