@@ -13,11 +13,6 @@ export default function Hero() {
       <div className="hero-veil" aria-hidden="true" />
 
       <div className="hero-inner">
-        <Reveal>
-          <div className="hero-badge">
-            <span className="pulse" /> Merchandising corporativo
-          </div>
-        </Reveal>
         <Reveal delay={90}>
           <h1 className="display hero-title">
             Hacé que tu marca<br /><em>no pase desapercibida.</em>

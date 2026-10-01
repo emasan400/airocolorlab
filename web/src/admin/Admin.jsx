@@ -296,6 +296,7 @@ function ProductosPanel() {
               <select value={form.categoria} onChange={set('categoria')}>
                 <option value="merchandising">Merchandising</option>
                 <option value="indumentaria">Indumentaria</option>
+                <option value="packs">Packs</option>
               </select>
             </div>
             <div className="field"><label>Badge</label><input type="text" value={form.badge} onChange={set('badge')} placeholder="Top, Nuevo, Eco..." /></div>
@@ -541,6 +542,7 @@ function DraftAdmin() {
                 <select value={form.categoria} onChange={set('categoria')}>
                   <option value="merchandising">Merchandising</option>
                   <option value="indumentaria">Indumentaria</option>
+                  <option value="packs">Packs</option>
                 </select>
               </div>
               <div className="field"><label>Badge</label><input type="text" value={form.badge} onChange={set('badge')} placeholder="Top, Nuevo, Eco..." /></div>

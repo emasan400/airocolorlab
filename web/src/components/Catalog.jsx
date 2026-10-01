@@ -8,6 +8,7 @@ const FILTERS = [
   { id: 'all', label: 'Todos' },
   { id: 'indumentaria', label: 'Indumentaria' },
   { id: 'merchandising', label: 'Merchandising' },
+  { id: 'packs', label: 'Packs' },
 ];
 
 export default function Catalog() {

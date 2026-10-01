@@ -9,9 +9,20 @@
       "precio": null,
       "cantidad": null,
       "imagen_principal": "/imagenes/productos/lanyard.jpg",
-      "galeria": ["/imagenes/productos/lanyard.jpg", "/imagenes/productos/cintas.jpg"],
-      "colores": ["Sublimado Full", "Base Negra"],
-      "especificaciones": ["Poliéster Premium", "Ancho 20/25mm", "Mosquetón Metálico", "Sublimación 360°"],
+      "galeria": [
+        "/imagenes/productos/lanyard.jpg",
+        "/imagenes/productos/cintas.jpg"
+      ],
+      "colores": [
+        "Sublimado Full",
+        "Base Negra"
+      ],
+      "especificaciones": [
+        "Poliéster Premium",
+        "Ancho 20/25mm",
+        "Mosquetón Metálico",
+        "Sublimación 360°"
+      ],
       "activo": true
     },
     {
@@ -23,9 +34,18 @@
       "precio": null,
       "cantidad": null,
       "imagen_principal": "/imagenes/productos/cintas.jpg",
-      "galeria": ["/imagenes/productos/cintas.jpg"],
-      "colores": ["Sublimación Full"],
-      "especificaciones": ["Terminación suave", "Corte por calor", "Largo a medida", "Full Color"],
+      "galeria": [
+        "/imagenes/productos/cintas.jpg"
+      ],
+      "colores": [
+        "Sublimación Full"
+      ],
+      "especificaciones": [
+        "Terminación suave",
+        "Corte por calor",
+        "Largo a medida",
+        "Full Color"
+      ],
       "activo": true
     },
     {
@@ -38,8 +58,14 @@
       "cantidad": null,
       "imagen_principal": null,
       "galeria": [],
-      "colores": ["Full Color"],
-      "especificaciones": ["Cinta tubular", "Cierre plástico o aluminio", "Full Color"],
+      "colores": [
+        "Full Color"
+      ],
+      "especificaciones": [
+        "Cinta tubular",
+        "Cierre plástico o aluminio",
+        "Full Color"
+      ],
       "activo": false
     },
     {
@@ -51,9 +77,22 @@
       "precio": null,
       "cantidad": null,
       "imagen_principal": "/imagenes/productos/remera.jpg",
-      "galeria": ["/imagenes/productos/remera.jpg", "/imagenes/productos/buzo-capucha.jpg"],
-      "colores": ["Blanco", "Negro", "Gris Melange", "Azul Marino"],
-      "especificaciones": ["100% Algodón Peinado", "Moldería Clásica/Oversize", "Estampado DTF", "Talles S al XXL"],
+      "galeria": [
+        "/imagenes/productos/remera.jpg",
+        "/imagenes/productos/buzo-capucha.jpg"
+      ],
+      "colores": [
+        "Blanco",
+        "Negro",
+        "Gris Melange",
+        "Azul Marino"
+      ],
+      "especificaciones": [
+        "100% Algodón Peinado",
+        "Moldería Clásica/Oversize",
+        "Estampado DTF",
+        "Talles S al XXL"
+      ],
       "activo": true
     },
     {
@@ -65,9 +104,22 @@
       "precio": null,
       "cantidad": null,
       "imagen_principal": "/imagenes/productos/buzo-capucha.jpg",
-      "galeria": ["/imagenes/productos/buzo-capucha.jpg", "/imagenes/productos/buzo-sin-capucha.jpg"],
-      "colores": ["Negro", "Gris Topo", "Blanco", "Crudo"],
-      "especificaciones": ["Friza Invisible", "Costuras reforzadas", "Capucha forrada", "Cordón con puntera"],
+      "galeria": [
+        "/imagenes/productos/buzo-capucha.jpg",
+        "/imagenes/productos/buzo-sin-capucha.jpg"
+      ],
+      "colores": [
+        "Negro",
+        "Gris Topo",
+        "Blanco",
+        "Crudo"
+      ],
+      "especificaciones": [
+        "Friza Invisible",
+        "Costuras reforzadas",
+        "Capucha forrada",
+        "Cordón con puntera"
+      ],
       "activo": true
     },
     {
@@ -79,9 +131,18 @@
       "precio": null,
       "cantidad": null,
       "imagen_principal": "/imagenes/productos/cintas.jpg",
-      "galeria": ["/imagenes/productos/cintas.jpg"],
-      "colores": ["Negro", "Personalizado"],
-      "especificaciones": ["Hilo de Nylon", "Tejido Jacquard", "Alta resistencia"],
+      "galeria": [
+        "/imagenes/productos/cintas.jpg"
+      ],
+      "colores": [
+        "Negro",
+        "Personalizado"
+      ],
+      "especificaciones": [
+        "Hilo de Nylon",
+        "Tejido Jacquard",
+        "Alta resistencia"
+      ],
       "activo": true
     },
     {
@@ -93,9 +154,18 @@
       "precio": null,
       "cantidad": null,
       "imagen_principal": "/imagenes/productos/correas.jpg",
-      "galeria": ["/imagenes/productos/correas.jpg"],
-      "colores": ["Sublimado Full"],
-      "especificaciones": ["Herrajes reforzados", "Costura atraque", "Doble cinta", "Full Color"],
+      "galeria": [
+        "/imagenes/productos/correas.jpg"
+      ],
+      "colores": [
+        "Sublimado Full"
+      ],
+      "especificaciones": [
+        "Herrajes reforzados",
+        "Costura atraque",
+        "Doble cinta",
+        "Full Color"
+      ],
       "activo": true
     },
     {
@@ -107,9 +177,18 @@
       "precio": null,
       "cantidad": null,
       "imagen_principal": "/imagenes/productos/totes.jpg",
-      "galeria": ["/imagenes/productos/totes.jpg"],
-      "colores": ["Crudo (Lienzo natural)", "Negro"],
-      "especificaciones": ["Lienzo 100% Algodón", "Estampado DTF", "Manijas reforzadas"],
+      "galeria": [
+        "/imagenes/productos/totes.jpg"
+      ],
+      "colores": [
+        "Crudo (Lienzo natural)",
+        "Negro"
+      ],
+      "especificaciones": [
+        "Lienzo 100% Algodón",
+        "Estampado DTF",
+        "Manijas reforzadas"
+      ],
       "activo": true
     },
     {
@@ -121,9 +200,18 @@
       "precio": null,
       "cantidad": null,
       "imagen_principal": "/imagenes/productos/etiquetas.jpg",
-      "galeria": ["/imagenes/productos/etiquetas.jpg"],
-      "colores": ["Fondo Blanco", "Fondo Negro"],
-      "especificaciones": ["Raso o Poliamida", "Corte láser / calor", "Resistentes a lavados"],
+      "galeria": [
+        "/imagenes/productos/etiquetas.jpg"
+      ],
+      "colores": [
+        "Fondo Blanco",
+        "Fondo Negro"
+      ],
+      "especificaciones": [
+        "Raso o Poliamida",
+        "Corte láser / calor",
+        "Resistentes a lavados"
+      ],
       "activo": true
     },
     {
@@ -136,7 +224,9 @@
       "cantidad": null,
       "imagen_principal": null,
       "galeria": [],
-      "colores": ["Celeste y Blanco"],
+      "colores": [
+        "Celeste y Blanco"
+      ],
       "especificaciones": [],
       "activo": false
     },
@@ -150,7 +240,9 @@
       "cantidad": null,
       "imagen_principal": null,
       "galeria": [],
-      "colores": ["Diseño a medida"],
+      "colores": [
+        "Diseño a medida"
+      ],
       "especificaciones": [],
       "activo": false
     },
@@ -164,9 +256,111 @@
       "cantidad": null,
       "imagen_principal": null,
       "galeria": [],
-      "colores": ["Sublimado Full"],
+      "colores": [
+        "Sublimado Full"
+      ],
       "especificaciones": [],
       "activo": false
+    },
+    {
+      "id_producto": "pk1",
+      "categoria": "packs",
+      "badge": "Pack",
+      "nombre": "Pack Bienvenida — Onboarding",
+      "descripcion": "Kit de ingreso para nuevos miembros del equipo: remera personalizada, tote bag y lanyard oficial con tu identidad de marca.",
+      "precio": null,
+      "cantidad": null,
+      "imagen_principal": "/imagenes/productos/totes.jpg",
+      "galeria": [
+        "/imagenes/productos/totes.jpg",
+        "/imagenes/productos/remera.jpg",
+        "/imagenes/productos/lanyard.jpg"
+      ],
+      "colores": [
+        "Identidad de marca",
+        "Edición empresa"
+      ],
+      "especificaciones": [
+        "Remera personalizada",
+        "Tote bag de lienzo",
+        "Lanyard sublimado",
+        "Etiqueta de composición opcional"
+      ],
+      "activo": true
+    },
+    {
+      "id_producto": "pk2",
+      "categoria": "packs",
+      "badge": "Pack",
+      "nombre": "Pack Evento",
+      "descripcion": "Todo lo que tu evento necesita en una sola producción: lanyards de acreditación, pulseras de tela y cintas para medallas.",
+      "precio": null,
+      "cantidad": null,
+      "imagen_principal": "/imagenes/productos/lanyard.jpg",
+      "galeria": [
+        "/imagenes/productos/lanyard.jpg",
+        "/imagenes/productos/cintas.jpg"
+      ],
+      "colores": [
+        "Full color",
+        "Paleta del evento"
+      ],
+      "especificaciones": [
+        "Lanyards de acreditación",
+        "Pulseras de tela",
+        "Cintas para medallas",
+        "Producción coordinada por lote"
+      ],
+      "activo": true
+    },
+    {
+      "id_producto": "pk3",
+      "categoria": "packs",
+      "badge": "Pack",
+      "nombre": "Pack Uniforme de Equipo",
+      "descripcion": "Vestí a todo tu equipo con imagen unificada: remeras y buzos personalizados con los colores y el logo de tu marca.",
+      "precio": null,
+      "cantidad": null,
+      "imagen_principal": "/imagenes/productos/remera.jpg",
+      "galeria": [
+        "/imagenes/productos/remera.jpg",
+        "/imagenes/productos/buzo-capucha.jpg"
+      ],
+      "colores": [
+        "Combinación a elección"
+      ],
+      "especificaciones": [
+        "Remeras o chombas",
+        "Buzos rústicos o friza",
+        "Etiquetas de composición",
+        "Talles surtidos por integrante"
+      ],
+      "activo": true
+    },
+    {
+      "id_producto": "pk4",
+      "categoria": "packs",
+      "badge": "Pack",
+      "nombre": "Pack Marca Propia",
+      "descripcion": "Para marcas que lanzan su línea: remeras o buzos con tu etiqueta de composición tejida y tote bags de packaging.",
+      "precio": null,
+      "cantidad": null,
+      "imagen_principal": "/imagenes/productos/etiquetas.jpg",
+      "galeria": [
+        "/imagenes/productos/etiquetas.jpg",
+        "/imagenes/productos/remera.jpg",
+        "/imagenes/productos/totes.jpg"
+      ],
+      "colores": [
+        "Según colección"
+      ],
+      "especificaciones": [
+        "Prendas a medida",
+        "Etiquetas de composición propias",
+        "Tote bags de packaging",
+        "Asesoría de materiales"
+      ],
+      "activo": true
     }
   ]
 }
