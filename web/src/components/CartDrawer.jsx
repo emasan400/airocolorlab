@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { postLead } from '../lib/leads';
 import { openWhatsApp } from '../lib/secure';
@@ -15,6 +15,9 @@ export default function CartDrawer() {
     nombre: '', empresa: '', objetivo: '', fecha: '', lugar: '', diseno: '', comentarios: '', website: '',
   });
 
+  const drawerRef = useRef(null);
+  const closeRef = useRef(null);
+
   useEffect(() => {
     if (isOpen) setStep(1);
     if (isOpen) {
@@ -22,6 +25,35 @@ export default function CartDrawer() {
       document.getElementById('b_fecha')?.setAttribute('min', hoy);
     }
   }, [isOpen]);
+
+  // Foco dentro del drawer mientras esta abierto + Escape cierra + devolver foco
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.activeElement;
+    closeRef.current?.focus();
+    const onKey = (e) => {
+      if (e.key === 'Escape') return closeCart();
+      if (e.key !== 'Tab') return;
+      const els = drawerRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!els?.length) return;
+      const first = els[0];
+      const last = els[els.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      prev?.focus?.();
+    };
+  }, [isOpen, closeCart]);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value ?? e }));
   const pick = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
@@ -69,15 +101,20 @@ export default function CartDrawer() {
   return (
     <>
       <div className={`drawer-overlay${isOpen ? ' open' : ''}`} onClick={closeCart} />
-      <aside className={`drawer${isOpen ? ' open' : ''}`} aria-label="Tu carrito">
+      <aside
+        className={`drawer${isOpen ? ' open' : ''}`}
+        role="dialog" aria-modal="true" aria-label="Tu carrito"
+        aria-hidden={!isOpen}
+        ref={drawerRef}
+      >
         <div className="drawer-head">
           <h2>Tu Carrito</h2>
-          <button onClick={closeCart} aria-label="Cerrar">×</button>
+          <button onClick={closeCart} aria-label="Cerrar carrito" ref={closeRef}>×</button>
         </div>
 
         <div className="drawer-body">
-          <div className="stepper-label">Paso {step} de 3: {STEP_TITLES[step - 1]}</div>
-          <div className="stepper-bar">
+          <div className="stepper-label" aria-live="polite">Paso {step} de 3: {STEP_TITLES[step - 1]}</div>
+          <div className="stepper-bar" role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={3} aria-label="Progreso de la solicitud">
             <div className="stepper-fill" style={{ width: `${(step / 3) * 100}%` }} />
           </div>
 
@@ -117,12 +154,12 @@ export default function CartDrawer() {
           {step === 2 && (
             <>
               <div className="field">
-                <label>Nombre y Apellido *</label>
-                <input type="text" value={form.nombre} onChange={set('nombre')} placeholder="Ej: Camila Rodríguez" />
+                <label htmlFor="b_nombre">Nombre y Apellido *</label>
+                <input id="b_nombre" type="text" value={form.nombre} onChange={set('nombre')} placeholder="Ej: Camila Rodríguez" autoComplete="name" required />
               </div>
               <div className="field">
-                <label>Empresa / Marca</label>
-                <input type="text" value={form.empresa} onChange={set('empresa')} placeholder="Opcional" />
+                <label htmlFor="b_empresa">Empresa / Marca</label>
+                <input id="b_empresa" type="text" value={form.empresa} onChange={set('empresa')} placeholder="Opcional" autoComplete="organization" />
               </div>
               <input
                 type="text" className="hp-field" tabIndex={-1} autoComplete="off"
@@ -130,9 +167,9 @@ export default function CartDrawer() {
               />
               <div className="field">
                 <label>Objetivo del Proyecto</label>
-                <div className="chips">
+                <div className="chips" role="group" aria-label="Objetivo del proyecto">
                   {OBJETIVOS.map((o) => (
-                    <button key={o} className={`chip${form.objetivo === o ? ' selected' : ''}`} onClick={() => pick('objetivo')(o)}>{o}</button>
+                    <button key={o} className={`chip${form.objetivo === o ? ' selected' : ''}`} aria-pressed={form.objetivo === o} onClick={() => pick('objetivo')(o)}>{o}</button>
                   ))}
                 </div>
               </div>
@@ -142,24 +179,24 @@ export default function CartDrawer() {
           {step === 3 && (
             <>
               <div className="field">
-                <label>Fecha Estimada de Entrega</label>
+                <label htmlFor="b_fecha">Fecha Estimada de Entrega</label>
                 <input type="date" id="b_fecha" value={form.fecha} onChange={set('fecha')} />
               </div>
               <div className="field">
-                <label>Lugar de Entrega</label>
-                <input type="text" value={form.lugar} onChange={set('lugar')} placeholder="Ej: CABA" />
+                <label htmlFor="b_lugar">Lugar de Entrega</label>
+                <input id="b_lugar" type="text" value={form.lugar} onChange={set('lugar')} placeholder="Ej: CABA" autoComplete="address-level2" />
               </div>
               <div className="field">
                 <label>¿Ya contás con diseño?</label>
-                <div className="chips">
+                <div className="chips" role="group" aria-label="¿Ya contás con diseño?">
                   {DISENO.map((d) => (
-                    <button key={d} className={`chip${form.diseno === d ? ' selected' : ''}`} onClick={() => pick('diseno')(d)}>{d}</button>
+                    <button key={d} className={`chip${form.diseno === d ? ' selected' : ''}`} aria-pressed={form.diseno === d} onClick={() => pick('diseno')(d)}>{d}</button>
                   ))}
                 </div>
               </div>
               <div className="field">
-                <label>Comentarios adicionales</label>
-                <textarea rows="3" value={form.comentarios} onChange={set('comentarios')} placeholder="Detalles de colores, talles o telas..." />
+                <label htmlFor="b_comentarios">Comentarios adicionales</label>
+                <textarea id="b_comentarios" rows="3" value={form.comentarios} onChange={set('comentarios')} placeholder="Detalles de colores, talles o telas..." />
               </div>
             </>
           )}

@@ -13,14 +13,15 @@ import CartDrawer from './components/CartDrawer';
 
 function Toast() {
   const { toast } = useCart();
-  return <div className={`toast${toast ? ' show' : ''}`}>{toast}</div>;
+  return <div className={`toast${toast ? ' show' : ''}`} role="status" aria-live="polite">{toast}</div>;
 }
 
 export default function App() {
   return (
     <CartProvider>
+      <a href="#main-content" className="skip-link">Saltar al contenido principal</a>
       <Nav />
-      <main>
+      <main id="main-content" tabIndex={-1}>
         <Hero />
         <Marquee />
         <ValueProps />

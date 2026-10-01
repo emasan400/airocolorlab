@@ -101,54 +101,54 @@ export default function Contact() {
           <Reveal delay={120} className="contact-form">
             <div className="form-row">
               <div className="field">
-                <label>Nombre *</label>
-                <input type="text" value={form.nombre} onChange={set('nombre')} />
+                <label htmlFor="c_nombre">Nombre *</label>
+                <input id="c_nombre" type="text" value={form.nombre} onChange={set('nombre')} autoComplete="name" required />
               </div>
               <div className="field">
-                <label>Empresa / Marca</label>
-                <input type="text" value={form.empresa} onChange={set('empresa')} />
-              </div>
-            </div>
-            <div className="form-row">
-              <div className="field">
-                <label>WhatsApp *</label>
-                <input type="text" value={form.whatsapp} onChange={set('whatsapp')} />
-              </div>
-              <div className="field">
-                <label>Email *</label>
-                <input type="email" value={form.email} onChange={set('email')} />
+                <label htmlFor="c_empresa">Empresa / Marca</label>
+                <input id="c_empresa" type="text" value={form.empresa} onChange={set('empresa')} autoComplete="organization" />
               </div>
             </div>
             <div className="form-row">
               <div className="field">
-                <label>Ciudad / Provincia</label>
-                <input type="text" value={form.ciudad} onChange={set('ciudad')} />
+                <label htmlFor="c_whatsapp">WhatsApp *</label>
+                <input id="c_whatsapp" type="tel" value={form.whatsapp} onChange={set('whatsapp')} autoComplete="tel" inputMode="tel" required />
               </div>
               <div className="field">
-                <label>Fecha estimada</label>
+                <label htmlFor="c_email">Email *</label>
+                <input id="c_email" type="email" value={form.email} onChange={set('email')} autoComplete="email" inputMode="email" required />
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="field">
+                <label htmlFor="c_ciudad">Ciudad / Provincia</label>
+                <input id="c_ciudad" type="text" value={form.ciudad} onChange={set('ciudad')} autoComplete="address-level2" />
+              </div>
+              <div className="field">
+                <label htmlFor="c_fecha">Fecha estimada</label>
                 <input type="date" id="c_fecha" value={form.fecha} onChange={set('fecha')} />
               </div>
             </div>
 
             <div className="field">
-              <label>Objetivo del proyecto</label>
-              <div className="chips">
+              <label id="c_objetivo_label">Objetivo del proyecto</label>
+              <div className="chips" role="group" aria-labelledby="c_objetivo_label">
                 {OBJETIVOS.map((o) => (
-                  <button key={o} type="button" className={`chip${form.objetivo === o ? ' selected' : ''}`} onClick={() => pick('objetivo')(o)}>{o}</button>
+                  <button key={o} type="button" className={`chip${form.objetivo === o ? ' selected' : ''}`} aria-pressed={form.objetivo === o} onClick={() => pick('objetivo')(o)}>{o}</button>
                 ))}
               </div>
             </div>
             <div className="field">
-              <label>¿Tenés diseño armado?</label>
-              <div className="chips">
+              <label id="c_diseno_label">¿Tenés diseño armado?</label>
+              <div className="chips" role="group" aria-labelledby="c_diseno_label">
                 {DISENO.map((d) => (
-                  <button key={d} type="button" className={`chip${form.diseno === d ? ' selected' : ''}`} onClick={() => pick('diseno')(d)}>{d}</button>
+                  <button key={d} type="button" className={`chip${form.diseno === d ? ' selected' : ''}`} aria-pressed={form.diseno === d} onClick={() => pick('diseno')(d)}>{d}</button>
                 ))}
               </div>
             </div>
             <div className="field">
-              <label>Comentarios / Qué necesitás producir</label>
-              <textarea rows="3" value={form.mensaje} onChange={set('mensaje')} />
+              <label htmlFor="c_mensaje">Comentarios / Qué necesitás producir</label>
+              <textarea id="c_mensaje" rows="3" value={form.mensaje} onChange={set('mensaje')} />
             </div>
 
             <input

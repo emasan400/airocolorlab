@@ -18,6 +18,8 @@ export default function QuickView({ producto, onClose }) {
   const [dragging, setDragging] = useState(false);
   const fileRef = useRef(null);
   const imgboxRef = useRef(null);
+  const modalRef = useRef(null);
+  const closeRef = useRef(null);
   const { addItem } = useCart();
 
   useEffect(() => {
@@ -29,10 +31,35 @@ export default function QuickView({ producto, onClose }) {
   }, [producto]);
 
   useEffect(() => {
-    const onKey = (e) => e.key === 'Escape' && onClose();
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'Tab') {
+        const els = modalRef.current?.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (!els?.length) return;
+        const first = els[0];
+        const last = els[els.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  // Foco al cerrar + devolver foco al elemento que abrio el modal
+  useEffect(() => {
+    if (!producto) return;
+    const prev = document.activeElement;
+    closeRef.current?.focus();
+    return () => prev?.focus?.();
+  }, [producto]);
 
   if (!producto) return <div className="modal-overlay" />;
 
@@ -98,8 +125,8 @@ export default function QuickView({ producto, onClose }) {
       className={`modal-overlay${producto ? ' open' : ''}`}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="modal" role="dialog" aria-modal="true" aria-label={producto.nombre}>
-        <button className="modal-close" onClick={onClose} aria-label="Cerrar">✕</button>
+      <div className="modal" role="dialog" aria-modal="true" aria-label={producto.nombre} ref={modalRef}>
+        <button className="modal-close" onClick={onClose} aria-label="Cerrar" ref={closeRef}>✕</button>
 
         <div className="modal-left">
           <div className="modal-imgbox" ref={imgboxRef}>
@@ -126,15 +153,18 @@ export default function QuickView({ producto, onClose }) {
             )}
           </div>
           {imgs.length > 1 && (
-            <div className="thumbs">
+            <div className="thumbs" role="group" aria-label="Galería de imágenes">
               {imgs.map((img, i) => (
-                <div
+                <button
+                  type="button"
                   key={i}
                   className={`thumb${i === imgIndex ? ' active' : ''}`}
                   onClick={() => setImgIndex(i)}
+                  aria-label={`Imagen ${i + 1} de ${imgs.length}`}
+                  aria-pressed={i === imgIndex}
                 >
                   <img src={img} alt="" />
-                </div>
+                </button>
               ))}
             </div>
           )}

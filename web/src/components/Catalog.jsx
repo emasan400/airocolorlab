@@ -87,7 +87,16 @@ export default function Catalog() {
                 key={p.id_producto}
                 delay={(i % 3) * 80}
                 className="product-card"
+                role="button"
+                tabIndex={0}
+                aria-label={`Ver detalle de ${p.nombre}`}
                 onClick={() => setSelected(p)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelected(p);
+                  }
+                }}
               >
                 <div className="product-img">
                   {p.imagen_principal ? (
