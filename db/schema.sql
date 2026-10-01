@@ -10,7 +10,7 @@
 
 create table productos (
   id_producto   text primary key,              -- 'p1', 'p2', ...
-  categoria     text not null check (categoria in ('indumentaria', 'merchandising')),
+  categoria     text not null check (categoria in ('indumentaria', 'merchandising', 'packs')),
   badge         text,
   nombre        text not null,
   descripcion   text,
