@@ -15,17 +15,17 @@ export default function Hero() {
       <div className="hero-inner">
         <Reveal>
           <div className="hero-badge">
-            <span className="pulse" /> Estudio de producción textil
+            <span className="pulse" /> Merchandising corporativo
           </div>
         </Reveal>
         <Reveal delay={90}>
           <h1 className="display hero-title">
-            Tu marca,<br /><em>hecha prenda.</em>
+            Hacé que tu marca<br /><em>no pase desapercibida.</em>
           </h1>
         </Reveal>
         <Reveal delay={200} className="hero-bottom">
           <p className="hero-sub">
-            Personalización textil y merchandising a medida para marcas, eventos
+            Merchandising corporativo e indumentaria a medida para marcas, eventos
             y empresas. Calidad de fábrica, sin los mínimos de fábrica.
           </p>
           <div className="hero-actions">
@@ -34,7 +34,7 @@ export default function Hero() {
           </div>
           <div className="hero-meta">
             <span>Desde 10 uds.</span>
-            <span>Taller propio</span>
+            <span>Producción a pedido</span>
             <span>Buenos Aires</span>
           </div>
         </Reveal>

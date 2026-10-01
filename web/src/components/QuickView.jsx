@@ -14,7 +14,10 @@ export default function QuickView({ producto, onClose }) {
   const [colorIdx, setColorIdx] = useState(0);
   const [cantidad, setCantidadState] = useState(10);
   const [logo, setLogo] = useState(null);
+  const [logoPos, setLogoPos] = useState({ x: 50, y: 50 });
+  const [dragging, setDragging] = useState(false);
   const fileRef = useRef(null);
+  const imgboxRef = useRef(null);
   const { addItem } = useCart();
 
   useEffect(() => {
@@ -22,6 +25,7 @@ export default function QuickView({ producto, onClose }) {
     setColorIdx(0);
     setCantidadState(10);
     setLogo(null);
+    setLogoPos({ x: 50, y: 50 });
   }, [producto]);
 
   useEffect(() => {
@@ -48,10 +52,30 @@ export default function QuickView({ producto, onClose }) {
     if (!file.type.startsWith('image/')) return alert('Subí un archivo de imagen.');
     if (file.size > 3 * 1024 * 1024) return alert('El logo supera los 3 MB.');
     const rd = new FileReader();
-    rd.onload = () => setLogo(rd.result);
+    rd.onload = () => {
+      setLogo(rd.result);
+      setLogoPos({ x: 50, y: 50 });
+    };
     rd.readAsDataURL(file);
     e.target.value = '';
   };
+
+  const onLogoPointerDown = (e) => {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setDragging(true);
+  };
+
+  const onLogoPointerMove = (e) => {
+    if (!dragging || !imgboxRef.current) return;
+    const r = imgboxRef.current.getBoundingClientRect();
+    setLogoPos({
+      x: Math.min(96, Math.max(4, ((e.clientX - r.left) / r.width) * 100)),
+      y: Math.min(96, Math.max(4, ((e.clientY - r.top) / r.height) * 100)),
+    });
+  };
+
+  const onLogoPointerUp = () => setDragging(false);
 
   const handleAdd = () => {
     const color = producto.colores?.[colorIdx];
@@ -78,7 +102,7 @@ export default function QuickView({ producto, onClose }) {
         <button className="modal-close" onClick={onClose} aria-label="Cerrar">✕</button>
 
         <div className="modal-left">
-          <div className="modal-imgbox">
+          <div className="modal-imgbox" ref={imgboxRef}>
             {producto.badge && <span className="img-badge">{producto.badge}</span>}
             {imgs.length > 1 && (
               <>
@@ -87,7 +111,19 @@ export default function QuickView({ producto, onClose }) {
               </>
             )}
             {imgs.length > 0 && <img src={imgs[imgIndex]} alt={producto.nombre} />}
-            {logo && <img className="logo-overlay" src={logo} alt="Tu logo" />}
+            {logo && (
+              <img
+                className={`logo-overlay${dragging ? ' dragging' : ''}`}
+                src={logo}
+                alt="Tu logo"
+                draggable={false}
+                style={{ left: `${logoPos.x}%`, top: `${logoPos.y}%` }}
+                onPointerDown={onLogoPointerDown}
+                onPointerMove={onLogoPointerMove}
+                onPointerUp={onLogoPointerUp}
+                onPointerCancel={onLogoPointerUp}
+              />
+            )}
           </div>
           {imgs.length > 1 && (
             <div className="thumbs">
@@ -110,7 +146,9 @@ export default function QuickView({ producto, onClose }) {
               <button className="logo-btn" onClick={() => setLogo(null)}>Quitar</button>
             )}
             <input ref={fileRef} type="file" accept="image/*" hidden onChange={onLogo} />
-            <span className="logo-hint">Previsualización referencial</span>
+            <span className="logo-hint">
+              {logo ? 'Arrastrá el logo para posicionarlo · referencial' : 'Previsualización referencial'}
+            </span>
           </div>
         </div>
 

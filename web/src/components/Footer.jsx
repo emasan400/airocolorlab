@@ -17,9 +17,9 @@ export default function Footer() {
             <h5>Secciones</h5>
             <ul>
               <li><a href="#inicio">Inicio</a></li>
-              <li><a href="#coleccion">Colección</a></li>
+              <li><a href="#coleccion">Nuestros productos</a></li>
               <li><a href="#proceso">Proceso</a></li>
-              <li><a href="#contacto">Contacto</a></li>
+              <li><a href="#faq">FAQs</a></li>
             </ul>
           </div>
           <div>
@@ -27,7 +27,7 @@ export default function Footer() {
             <ul>
               <li><a href={email ? `mailto:${email}` : '#'}>{email || '…'}</a></li>
               <li><a href="https://www.instagram.com/airocolorlab/" target="_blank" rel="noreferrer">Instagram</a></li>
-              <li><a href="#/admin">Admin</a></li>
+              <li><a href="#contacto">Escribinos</a></li>
             </ul>
           </div>
         </div>

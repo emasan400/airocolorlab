@@ -3,7 +3,7 @@ import { Reveal } from '../hooks/useReveal';
 const VALUES = [
   {
     h: 'Producción nacional',
-    p: 'Controlamos cada detalle en nuestro taller, desde el diseño inicial hasta la última costura.',
+    p: 'Controlamos cada detalle del proceso, desde el diseño inicial hasta el último acabado.',
   },
   {
     h: 'Calidad verificable',
