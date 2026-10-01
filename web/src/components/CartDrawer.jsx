@@ -182,7 +182,8 @@ export default function CartDrawer() {
                 />
                 <span>
                   Acepto el tratamiento de mis datos personales (Ley 25.326)
-                  para que AIRO responda esta solicitud.
+                  para que AIRO responda esta solicitud.{' '}
+                  <a href="#/privacidad" target="_blank">Ver política de privacidad</a>.
                 </span>
               </label>
               <div className="row">

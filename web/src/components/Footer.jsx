@@ -33,6 +33,7 @@ export default function Footer() {
         </div>
         <div className="footer-bottom">
           <span>© {new Date().getFullYear()} AIRO Color Lab</span>
+          <a href="#/privacidad">Política de Privacidad</a>
           <span>Calidad de fábrica, desde 10 unidades.</span>
         </div>
       </div>

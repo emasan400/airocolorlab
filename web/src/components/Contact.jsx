@@ -162,7 +162,8 @@ export default function Contact() {
               />
               <span>
                 Acepto el tratamiento de mis datos personales (Ley 25.326)
-                para que AIRO Color Lab responda esta consulta.
+                para que AIRO Color Lab responda esta consulta.{' '}
+                <a href="#/privacidad" target="_blank">Ver política de privacidad</a>.
               </span>
             </label>
 
