@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
-import { mail, openWhatsApp } from '../lib/secure';
+import { mail, openWhatsApp, buildQuoteMessage } from '../lib/secure';
 import { postLead } from '../lib/leads';
 import { Reveal } from '../hooks/useReveal';
 
 const OBJETIVOS = ['Evento', 'Merchandising', 'Uniformes', 'Regalos'];
 const DISENO = ['Sí, lo tengo', 'No', 'Necesito ayuda'];
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function Contact() {
   const [email, setEmail] = useState('');
   const [consent, setConsent] = useState(false);
+  const [errors, setErrors] = useState({});
   const [form, setForm] = useState({
     nombre: '', empresa: '', whatsapp: '', email: '', ciudad: '', fecha: '',
     objetivo: '', diseno: '', mensaje: '', website: '',
@@ -25,12 +28,15 @@ export default function Contact() {
 
   const enviar = () => {
     if (form.website) return; // honeypot: bots lo completan, humanos no lo ven
-    if (!form.nombre.trim() || !form.whatsapp.trim()) {
-      return alert('Por favor, ingresá tu Nombre y WhatsApp para ponernos en contacto.');
-    }
-    if (!consent) {
-      return alert('Necesitamos tu consentimiento para tratar tus datos de contacto.');
-    }
+    const e = {};
+    if (!form.nombre.trim()) e.nombre = 'Ingresá tu nombre.';
+    if (!form.whatsapp.trim()) e.whatsapp = 'Ingresá tu WhatsApp.';
+    else if (form.whatsapp.replace(/\D/g, '').length < 8) e.whatsapp = 'Revisá el número (mínimo 8 dígitos).';
+    if (!form.email.trim()) e.email = 'Ingresá tu email.';
+    else if (!EMAIL_RE.test(form.email.trim())) e.email = 'Revisá el formato del email.';
+    if (!consent) e.consent = 'Necesitamos tu consentimiento para tratar tus datos.';
+    setErrors(e);
+    if (Object.keys(e).length) return;
 
     postLead({
       origen: 'Contacto',
@@ -47,16 +53,22 @@ export default function Contact() {
     });
 
     openWhatsApp(
-      '¡Hola AIRO! Quiero iniciar una consulta.\n\n' +
-        `👤 Nombre: *${form.nombre}*\n` +
-        `🏢 Empresa: ${form.empresa || '-'}\n` +
-        `📱 WhatsApp: ${form.whatsapp}\n` +
-        `📧 Email: ${form.email || '-'}\n` +
-        `📍 Ciudad: ${form.ciudad || '-'}\n` +
-        `📅 Fecha Estimada: ${form.fecha || 'No especificada'}\n` +
-        `🎯 Objetivo: ${form.objetivo || '-'}\n` +
-        `🎨 Diseño: ${form.diseno || '-'}\n` +
-        `💬 Mensaje: ${form.mensaje || '-'}`
+      buildQuoteMessage({
+        intro: 'Hola AIRO, quiero hacer una consulta.',
+        contacto: {
+          Nombre: form.nombre,
+          Empresa: form.empresa,
+          WhatsApp: form.whatsapp,
+          Email: form.email,
+          Ciudad: form.ciudad,
+        },
+        proyecto: {
+          Objetivo: form.objetivo,
+          'Fecha estimada': form.fecha,
+          'Diseño': form.diseno,
+          Mensaje: form.mensaje,
+        },
+      })
     );
   };
 
@@ -102,7 +114,8 @@ export default function Contact() {
             <div className="form-row">
               <div className="field">
                 <label htmlFor="c_nombre">Nombre *</label>
-                <input id="c_nombre" type="text" value={form.nombre} onChange={set('nombre')} autoComplete="name" required />
+                <input id="c_nombre" type="text" value={form.nombre} onChange={set('nombre')} autoComplete="name" required aria-invalid={!!errors.nombre} />
+                {errors.nombre && <p className="field-error" role="alert">{errors.nombre}</p>}
               </div>
               <div className="field">
                 <label htmlFor="c_empresa">Empresa / Marca</label>
@@ -112,11 +125,13 @@ export default function Contact() {
             <div className="form-row">
               <div className="field">
                 <label htmlFor="c_whatsapp">WhatsApp *</label>
-                <input id="c_whatsapp" type="tel" value={form.whatsapp} onChange={set('whatsapp')} autoComplete="tel" inputMode="tel" required />
+                <input id="c_whatsapp" type="tel" value={form.whatsapp} onChange={set('whatsapp')} autoComplete="tel" inputMode="tel" required aria-invalid={!!errors.whatsapp} />
+                {errors.whatsapp && <p className="field-error" role="alert">{errors.whatsapp}</p>}
               </div>
               <div className="field">
                 <label htmlFor="c_email">Email *</label>
-                <input id="c_email" type="email" value={form.email} onChange={set('email')} autoComplete="email" inputMode="email" required />
+                <input id="c_email" type="email" value={form.email} onChange={set('email')} autoComplete="email" inputMode="email" required aria-invalid={!!errors.email} />
+                {errors.email && <p className="field-error" role="alert">{errors.email}</p>}
               </div>
             </div>
             <div className="form-row">
@@ -159,6 +174,7 @@ export default function Contact() {
               <input
                 type="checkbox" checked={consent}
                 onChange={(e) => setConsent(e.target.checked)}
+                aria-invalid={!!errors.consent}
               />
               <span>
                 Acepto el tratamiento de mis datos personales (Ley 25.326)
@@ -166,6 +182,7 @@ export default function Contact() {
                 <a href="#/privacidad" target="_blank">Ver política de privacidad</a>.
               </span>
             </label>
+            {errors.consent && <p className="field-error" role="alert">{errors.consent}</p>}
 
             <button className="btn btn--primary" style={{ width: '100%', justifyContent: 'center' }} onClick={enviar}>
               Solicitar Cotización

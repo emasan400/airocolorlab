@@ -11,3 +11,4 @@ web/dist/
 # SO / editor
 Thumbs.db
 .DS_Store
+*.log

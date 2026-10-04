@@ -8,10 +8,10 @@
       "descripcion": "Lanyards personalizados con sublimación full color en ambas caras.",
       "precio": null,
       "cantidad": null,
-      "imagen_principal": "/imagenes/productos/lanyard.jpg",
+      "imagen_principal": "/imagenes/productos/lanyard.webp",
       "galeria": [
-        "/imagenes/productos/lanyard.jpg",
-        "/imagenes/productos/cintas.jpg"
+        "/imagenes/productos/lanyard.webp",
+        "/imagenes/productos/cintas.webp"
       ],
       "colores": [
         "Sublimado Full",
@@ -33,9 +33,9 @@
       "descripcion": "Cintas personalizadas para eventos y competencias deportivas.",
       "precio": null,
       "cantidad": null,
-      "imagen_principal": "/imagenes/productos/cintas.jpg",
+      "imagen_principal": "/imagenes/productos/cintas.webp",
       "galeria": [
-        "/imagenes/productos/cintas.jpg"
+        "/imagenes/productos/cintas.webp"
       ],
       "colores": [
         "Sublimación Full"
@@ -76,10 +76,10 @@
       "descripcion": "Remeras personalizadas para marcas, eventos y equipos.",
       "precio": null,
       "cantidad": null,
-      "imagen_principal": "/imagenes/productos/remera.jpg",
+      "imagen_principal": "/imagenes/productos/remera.webp",
       "galeria": [
-        "/imagenes/productos/remera.jpg",
-        "/imagenes/productos/buzo-capucha.jpg"
+        "/imagenes/productos/remera.webp",
+        "/imagenes/productos/buzo-capucha.webp"
       ],
       "colores": [
         "Blanco",
@@ -103,10 +103,10 @@
       "descripcion": "Buzos personalizados con capucha en diferentes materiales y terminaciones.",
       "precio": null,
       "cantidad": null,
-      "imagen_principal": "/imagenes/productos/buzo-capucha.jpg",
+      "imagen_principal": "/imagenes/productos/buzo-capucha.webp",
       "galeria": [
-        "/imagenes/productos/buzo-capucha.jpg",
-        "/imagenes/productos/buzo-sin-capucha.jpg"
+        "/imagenes/productos/buzo-capucha.webp",
+        "/imagenes/productos/buzo-sin-capucha.webp"
       ],
       "colores": [
         "Negro",
@@ -130,9 +130,9 @@
       "descripcion": "Cintas textiles de alta resistencia personalizadas para aplicaciones múltiples.",
       "precio": null,
       "cantidad": null,
-      "imagen_principal": "/imagenes/productos/cintas.jpg",
+      "imagen_principal": "/imagenes/productos/cintas.webp",
       "galeria": [
-        "/imagenes/productos/cintas.jpg"
+        "/imagenes/productos/cintas.webp"
       ],
       "colores": [
         "Negro",
@@ -153,9 +153,9 @@
       "descripcion": "Correas estampadas personalizadas para mascotas y pet shops.",
       "precio": null,
       "cantidad": null,
-      "imagen_principal": "/imagenes/productos/correas.jpg",
+      "imagen_principal": "/imagenes/productos/correas.webp",
       "galeria": [
-        "/imagenes/productos/correas.jpg"
+        "/imagenes/productos/correas.webp"
       ],
       "colores": [
         "Sublimado Full"
@@ -176,9 +176,9 @@
       "descripcion": "Bolsas de lienzo personalizadas para marcas y eventos.",
       "precio": null,
       "cantidad": null,
-      "imagen_principal": "/imagenes/productos/totes.jpg",
+      "imagen_principal": "/imagenes/productos/totes.webp",
       "galeria": [
-        "/imagenes/productos/totes.jpg"
+        "/imagenes/productos/totes.webp"
       ],
       "colores": [
         "Crudo (Lienzo natural)",
@@ -199,9 +199,9 @@
       "descripcion": "Etiquetas textiles para reforzar la identidad de tus prendas.",
       "precio": null,
       "cantidad": null,
-      "imagen_principal": "/imagenes/productos/etiquetas.jpg",
+      "imagen_principal": "/imagenes/productos/etiquetas.webp",
       "galeria": [
-        "/imagenes/productos/etiquetas.jpg"
+        "/imagenes/productos/etiquetas.webp"
       ],
       "colores": [
         "Fondo Blanco",
@@ -270,11 +270,11 @@
       "descripcion": "Kit de ingreso para nuevos miembros del equipo: remera personalizada, tote bag y lanyard oficial con tu identidad de marca.",
       "precio": null,
       "cantidad": null,
-      "imagen_principal": "/imagenes/productos/totes.jpg",
+      "imagen_principal": "/imagenes/productos/totes.webp",
       "galeria": [
-        "/imagenes/productos/totes.jpg",
-        "/imagenes/productos/remera.jpg",
-        "/imagenes/productos/lanyard.jpg"
+        "/imagenes/productos/totes.webp",
+        "/imagenes/productos/remera.webp",
+        "/imagenes/productos/lanyard.webp"
       ],
       "colores": [
         "Identidad de marca",
@@ -296,10 +296,10 @@
       "descripcion": "Todo lo que tu evento necesita en una sola producción: lanyards de acreditación, pulseras de tela y cintas para medallas.",
       "precio": null,
       "cantidad": null,
-      "imagen_principal": "/imagenes/productos/lanyard.jpg",
+      "imagen_principal": "/imagenes/productos/lanyard.webp",
       "galeria": [
-        "/imagenes/productos/lanyard.jpg",
-        "/imagenes/productos/cintas.jpg"
+        "/imagenes/productos/lanyard.webp",
+        "/imagenes/productos/cintas.webp"
       ],
       "colores": [
         "Full color",
@@ -321,10 +321,10 @@
       "descripcion": "Vestí a todo tu equipo con imagen unificada: remeras y buzos personalizados con los colores y el logo de tu marca.",
       "precio": null,
       "cantidad": null,
-      "imagen_principal": "/imagenes/productos/remera.jpg",
+      "imagen_principal": "/imagenes/productos/remera.webp",
       "galeria": [
-        "/imagenes/productos/remera.jpg",
-        "/imagenes/productos/buzo-capucha.jpg"
+        "/imagenes/productos/remera.webp",
+        "/imagenes/productos/buzo-capucha.webp"
       ],
       "colores": [
         "Combinación a elección"
@@ -345,11 +345,11 @@
       "descripcion": "Para marcas que lanzan su línea: remeras o buzos con tu etiqueta de composición tejida y tote bags de packaging.",
       "precio": null,
       "cantidad": null,
-      "imagen_principal": "/imagenes/productos/etiquetas.jpg",
+      "imagen_principal": "/imagenes/productos/etiquetas.webp",
       "galeria": [
-        "/imagenes/productos/etiquetas.jpg",
-        "/imagenes/productos/remera.jpg",
-        "/imagenes/productos/totes.jpg"
+        "/imagenes/productos/etiquetas.webp",
+        "/imagenes/productos/remera.webp",
+        "/imagenes/productos/totes.webp"
       ],
       "colores": [
         "Según colección"

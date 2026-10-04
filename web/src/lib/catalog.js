@@ -1,5 +1,4 @@
 import catalogoData from '../data/catalogo.json';
-import { fetchProductosDb } from './db';
 
 const DRAFT_KEY = 'airo_catalog_draft_v1';
 
@@ -27,8 +26,13 @@ export async function loadCatalogo() {
     } catch { return null; }
   })();
   if (draft) return draft;
-  const db = await fetchProductosDb();
-  return db || catalogoData.productos;
+  // Supabase se descarga por demanda (chunk separado) solo si está configurado
+  if (import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY) {
+    const { fetchProductosDb } = await import('./db');
+    const db = await fetchProductosDb();
+    if (db) return db;
+  }
+  return catalogoData.productos;
 }
 
 export function getProductos() {

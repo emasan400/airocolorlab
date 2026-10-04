@@ -39,7 +39,7 @@ export function CartProvider({ children }) {
       });
       // Primer producto: abrir el drawer directamente; si no, toast.
       if (items.length === 0 && !isOpen) setIsOpen(true);
-      else showToast('✔ Agregado a tu selección');
+      else showToast('✔ Agregado a tu cotización');
     },
     [items.length, isOpen, showToast]
   );
@@ -54,6 +54,8 @@ export function CartProvider({ children }) {
     setItems((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
+  const clearCart = useCallback(() => setItems([]), []);
+
   const totalUnidades = items.reduce((acc, i) => acc + i.cantidad, 0);
 
   return (
@@ -66,6 +68,7 @@ export function CartProvider({ children }) {
         addItem,
         setCantidad,
         removeItem,
+        clearCart,
         totalUnidades,
         toast,
         showToast,

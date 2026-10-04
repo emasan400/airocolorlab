@@ -28,6 +28,13 @@ export default function Catalog() {
     return () => { alive = false; };
   }, []);
 
+  // Las tarjetas lifestyle cambian el filtro del catálogo
+  useEffect(() => {
+    const onFilter = (e) => setFilter(e.detail);
+    window.addEventListener('airo:catalog-filter', onFilter);
+    return () => window.removeEventListener('airo:catalog-filter', onFilter);
+  }, []);
+
   const filtered = productos.filter((p) => {
     const matchFilter = filter === 'all' || p.categoria === filter;
     const text = `${p.nombre} ${p.descripcion} ${p.badge || ''}`.toLowerCase();
@@ -43,11 +50,11 @@ export default function Catalog() {
           <h2 className="display section-title">Nuestros productos.</h2>
           <p className="section-sub">
             Producción a pedido · mínimo 10 unidades · cotización a medida.
-            Seleccioná productos para armar tu carrito.
+            Seleccioná productos para armar tu cotización.
           </p>
           <div style={{ marginTop: 32 }}>
             <button className="btn btn--primary" onClick={openCart}>
-              Ver mi carrito ({items.length})
+              Ver mi cotización ({items.length})
             </button>
           </div>
         </Reveal>
@@ -120,7 +127,7 @@ export default function Catalog() {
 
       <QuickView producto={selected} onClose={() => setSelected(null)} />
 
-      <button className="floating-cart" onClick={openCart} aria-label="Abrir carrito">
+      <button className="floating-cart" onClick={openCart} aria-label="Abrir cotización">
         <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>
         <span className="count">{items.length}</span>
       </button>

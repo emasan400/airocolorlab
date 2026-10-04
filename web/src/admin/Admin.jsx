@@ -287,7 +287,7 @@ function ProductosPanel() {
         {editing ? (
           <>
             <h2>{editing === '__new__' ? 'Nuevo producto' : `Editar ${editing}`}</h2>
-            <p className="hint">Listas separadas por coma. Rutas de imagen: <code>/imagenes/productos/archivo.jpg</code></p>
+            <p className="hint">Listas separadas por coma. Rutas de imagen: <code>/imagenes/productos/archivo.webp</code></p>
 
             <div className="field"><label>ID *</label><input type="text" value={form.id_producto} onChange={set('id_producto')} disabled={editing !== '__new__'} /></div>
             <div className="field"><label>Nombre *</label><input type="text" value={form.nombre} onChange={set('nombre')} /></div>
@@ -304,7 +304,7 @@ function ProductosPanel() {
               <div className="field"><label>Precio</label><input type="number" value={form.precio} onChange={set('precio')} placeholder="—" /></div>
               <div className="field"><label>Cantidad</label><input type="number" value={form.cantidad} onChange={set('cantidad')} placeholder="—" /></div>
             </div>
-            <div className="field"><label>Imagen principal</label><input type="text" value={form.imagen_principal} onChange={set('imagen_principal')} placeholder="/imagenes/productos/xxx.jpg" /></div>
+            <div className="field"><label>Imagen principal</label><input type="text" value={form.imagen_principal} onChange={set('imagen_principal')} placeholder="/imagenes/productos/xxx.webp" /></div>
             <div className="field"><label>Galería</label><input type="text" value={form.galeria} onChange={set('galeria')} placeholder="ruta1, ruta2" /></div>
             <div className="field"><label>Colores</label><input type="text" value={form.colores} onChange={set('colores')} placeholder="Blanco, Negro" /></div>
             <div className="field"><label>Especificaciones</label><textarea value={form.especificaciones} onChange={set('especificaciones')} placeholder="Algodón peinado, DTF..." /></div>
@@ -533,7 +533,7 @@ function DraftAdmin() {
           {editing ? (
             <>
               <h2>{editing === '__new__' ? 'Nuevo producto' : `Editar ${editing}`}</h2>
-              <p className="hint">Listas separadas por coma. Rutas de imagen: <code>/imagenes/productos/archivo.jpg</code></p>
+              <p className="hint">Listas separadas por coma. Rutas de imagen: <code>/imagenes/productos/archivo.webp</code></p>
 
               <div className="field"><label>ID *</label><input type="text" value={form.id_producto} onChange={set('id_producto')} disabled={editing !== '__new__'} /></div>
               <div className="field"><label>Nombre *</label><input type="text" value={form.nombre} onChange={set('nombre')} /></div>
@@ -550,7 +550,7 @@ function DraftAdmin() {
                 <div className="field"><label>Precio</label><input type="number" value={form.precio} onChange={set('precio')} placeholder="—" /></div>
                 <div className="field"><label>Cantidad</label><input type="number" value={form.cantidad} onChange={set('cantidad')} placeholder="—" /></div>
               </div>
-              <div className="field"><label>Imagen principal</label><input type="text" value={form.imagen_principal} onChange={set('imagen_principal')} placeholder="/imagenes/productos/xxx.jpg" /></div>
+              <div className="field"><label>Imagen principal</label><input type="text" value={form.imagen_principal} onChange={set('imagen_principal')} placeholder="/imagenes/productos/xxx.webp" /></div>
               <div className="field"><label>Galería</label><input type="text" value={form.galeria} onChange={set('galeria')} placeholder="ruta1, ruta2" /></div>
               <div className="field"><label>Colores</label><input type="text" value={form.colores} onChange={set('colores')} placeholder="Blanco, Negro" /></div>
               <div className="field"><label>Especificaciones</label><textarea value={form.especificaciones} onChange={set('especificaciones')} placeholder="Algodón peinado, DTF..." /></div>

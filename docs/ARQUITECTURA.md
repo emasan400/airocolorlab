@@ -56,7 +56,8 @@ AiroColorLab/
 │  │     ├─ hero/                # 5 fotos del crossfade del hero
 │  │     └─ lifestyle/           # fotos de secciones editoriales
 │  └─ src/
-│     ├─ main.jsx                # Router por hash: #/ → App, #/admin → Admin
+│     ├─ main.jsx                # Router por hash: #/ → App, #/admin → Admin (lazy),
+│     │                          # #/privacidad, #/terminos, resto → 404
 │     ├─ App.jsx                 # composición del sitio + CartProvider + Toast
 │     ├─ styles.css              # design system completo (tokens + componentes)
 │     ├─ data/catalogo.json      # "tabla" productos (fuente de verdad)
@@ -129,7 +130,7 @@ Edición del catálogo sobre un **borrador local**:
 4. `Importar JSON` → carga un catalogo.json existente para seguir editándolo.
 
 Las imágenes nuevas se copian a mano a `public/imagenes/productos/` y se
-referencian por ruta (`/imagenes/productos/archivo.jpg`).
+referencian por ruta (`/imagenes/productos/archivo.webp`).
 
 ---
 
@@ -140,9 +141,14 @@ Hash router mínimo en `main.jsx` (sin react-router):
 | URL | Vista |
 | --- | --- |
 | `#/` o vacío | Sitio público |
-| `#/admin` | Panel de administración |
+| `#/admin` | Panel de administración (chunk lazy: React.lazy + Suspense) |
+| `#/privacidad` | Política de privacidad (Ley 25.326) |
+| `#/terminos` | Términos y condiciones de servicio |
+| cualquier otro `#/...` | Vista 404 (NotFound) |
 
 Los anchors internos (`#coleccion`, `#contacto`...) hacen scroll nativo.
+Además `public/404.html` es la página de error estática que sirve Vercel
+para rutas inexistentes fuera de la SPA.
 
 ## 5. Build y deploy
 
@@ -166,4 +172,17 @@ Sin server-side rendering ni variables de build obligatorias.
   despliegan juntos), cero puntos de falla externos, cambios auditables en Git.
 - **atob() para contacto**: ofuscación anti-scrapers (no es seguridad, es
   higiene anti-spam).
-- **GTM-PSPJ7DSX** conservado del sitio anterior.
+- **GTM-PSPJ7DSX** conservado del sitio anterior. Se carga **solo tras
+  consentimiento**: `public/gtm-init.js` expone `window.__loadGTM()` y el
+  banner `CookieConsent` (localStorage `airo_cookie_consent`) decide si
+  invocarlo.
+- **Code splitting**: el panel admin (`Admin.jsx`) y la capa Supabase
+  (`lib/db.js`) son chunks separados que solo se descargan en `#/admin` o
+  cuando `loadCatalogo()` detecta las env vars configuradas.
+- **Imágenes WebP** en `public/imagenes/` (hero-1.jpg se conserva solo
+  como `og:image` por compatibilidad de scrapers).
+- **SEO/pública**: `public/robots.txt`, `public/sitemap.xml`,
+  `public/favicon.svg`, `public/404.html`.
+- **CI**: `.github/workflows/ci.yml` corre `npm run check`
+  (`web/scripts/check.mjs`: anchors, rutas de imagen, alt text, secrets)
+  + `npm run build` en cada push/PR.

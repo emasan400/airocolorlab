@@ -236,7 +236,7 @@ export default function QuickView({ producto, onClose }) {
           </div>
           <div className="modal-ctas">
             <button className="modal-add" onClick={handleAdd}>
-              Agregar al Carrito · {cantidad} u.
+              Sumar a cotización · {cantidad} u.
             </button>
             <button className="modal-wsp" onClick={handleWhatsApp}>
               Consultar por WhatsApp

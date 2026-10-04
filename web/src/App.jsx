@@ -10,6 +10,7 @@ import Contact from './components/Contact';
 import Faq from './components/Faq';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
+import CookieConsent from './components/CookieConsent';
 
 function Toast() {
   const { toast } = useCart();
@@ -33,6 +34,7 @@ export default function App() {
       </main>
       <Footer />
       <CartDrawer />
+      <CookieConsent />
       <Toast />
     </CartProvider>
   );
