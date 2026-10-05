@@ -15,6 +15,8 @@ export default function QuickView({ producto, onClose }) {
   const [cantidad, setCantidadState] = useState(10);
   const [logo, setLogo] = useState(null);
   const [logoPos, setLogoPos] = useState({ x: 50, y: 50 });
+  const [logoScale, setLogoScale] = useState(1);
+  const [logoRot, setLogoRot] = useState(0);
   const [dragging, setDragging] = useState(false);
   const fileRef = useRef(null);
   const imgboxRef = useRef(null);
@@ -28,6 +30,8 @@ export default function QuickView({ producto, onClose }) {
     setCantidadState(10);
     setLogo(null);
     setLogoPos({ x: 50, y: 50 });
+    setLogoScale(1);
+    setLogoRot(0);
   }, [producto]);
 
   useEffect(() => {
@@ -82,6 +86,8 @@ export default function QuickView({ producto, onClose }) {
     rd.onload = () => {
       setLogo(rd.result);
       setLogoPos({ x: 50, y: 50 });
+      setLogoScale(1);
+      setLogoRot(0);
     };
     rd.readAsDataURL(file);
     e.target.value = '';
@@ -103,6 +109,12 @@ export default function QuickView({ producto, onClose }) {
   };
 
   const onLogoPointerUp = () => setDragging(false);
+
+  const resetLogo = () => {
+    setLogoPos({ x: 50, y: 50 });
+    setLogoScale(1);
+    setLogoRot(0);
+  };
 
   const handleAdd = () => {
     const color = producto.colores?.[colorIdx];
@@ -144,7 +156,11 @@ export default function QuickView({ producto, onClose }) {
                 src={logo}
                 alt="Tu logo"
                 draggable={false}
-                style={{ left: `${logoPos.x}%`, top: `${logoPos.y}%` }}
+                style={{
+                  left: `${logoPos.x}%`,
+                  top: `${logoPos.y}%`,
+                  transform: `translate(-50%, -50%) rotate(${logoRot}deg) scale(${logoScale})`,
+                }}
                 onPointerDown={onLogoPointerDown}
                 onPointerMove={onLogoPointerMove}
                 onPointerUp={onLogoPointerUp}
@@ -173,13 +189,40 @@ export default function QuickView({ producto, onClose }) {
               ↑ {logo ? 'Cambiar logo' : 'Probar mi logo'}
             </button>
             {logo && (
-              <button className="logo-btn" onClick={() => setLogo(null)}>Quitar</button>
+              <>
+                <button className="logo-btn" onClick={resetLogo}>Reiniciar</button>
+                <button className="logo-btn" onClick={() => setLogo(null)}>Quitar</button>
+              </>
             )}
             <input ref={fileRef} type="file" accept="image/*" hidden onChange={onLogo} />
             <span className="logo-hint">
-              {logo ? 'Arrastrá el logo para posicionarlo · referencial' : 'Previsualización referencial'}
+              {logo ? 'Arrastrá para posicionar · referencial' : 'Previsualización referencial'}
             </span>
           </div>
+          {logo && (
+            <div className="logo-ranges">
+              <label className="logo-range">
+                <span>Tamaño</span>
+                <input
+                  type="range" min="30" max="250" step="5"
+                  value={Math.round(logoScale * 100)}
+                  aria-label="Tamaño del logo"
+                  onChange={(e) => setLogoScale(Number(e.target.value) / 100)}
+                />
+                <b>{Math.round(logoScale * 100)}%</b>
+              </label>
+              <label className="logo-range">
+                <span>Rotación</span>
+                <input
+                  type="range" min="-45" max="45" step="1"
+                  value={logoRot}
+                  aria-label="Rotación del logo"
+                  onChange={(e) => setLogoRot(Number(e.target.value))}
+                />
+                <b>{logoRot}°</b>
+              </label>
+            </div>
+          )}
         </div>
 
         <div className="modal-right">

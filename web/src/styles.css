@@ -492,6 +492,19 @@ a { color: inherit; }
 .logo-btn:hover { border-color: var(--cyan); color: var(--blue); }
 .logo-btn:active { transform: scale(0.97); }
 .logo-hint { font-size: 10.5px; color: var(--ink-45); margin-left: auto; }
+.logo-ranges {
+  display: flex; gap: 18px; margin-top: 10px; padding-top: 10px;
+  border-top: 1px dashed var(--line-strong);
+}
+.logo-range { flex: 1; display: flex; align-items: center; gap: 10px; }
+.logo-range span {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-45); white-space: nowrap;
+}
+.logo-range b { font-size: 11px; color: var(--ink-70); min-width: 38px; text-align: right; font-variant-numeric: tabular-nums; }
+.logo-range input[type='range'] {
+  flex: 1; accent-color: var(--blue); height: 28px; cursor: pointer;
+}
 
 /* Honeypot anti-spam + consentimiento de datos */
 .hp-field {
@@ -874,6 +887,8 @@ a { color: inherit; }
   .nav-cta { padding: 11px 16px; font-size: 13.5px; }
   /* Titulos de producto legibles en grilla 1-col */
   .product-name { font-size: 22px; }
+  /* Controles de logo apilados en pantallas chicas */
+  .logo-ranges { flex-direction: column; gap: 8px; }
 }
 
 /* ── Página de política de privacidad ── */
