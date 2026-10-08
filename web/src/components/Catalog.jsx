@@ -3,6 +3,7 @@ import { getProductos, loadCatalogo } from '../lib/catalog';
 import { useCart } from '../context/CartContext';
 import { Reveal } from '../hooks/useReveal';
 import QuickView from './QuickView';
+import { productPath } from '../lib/slug';
 
 const FILTERS = [
   { id: 'all', label: 'Todos' },
@@ -61,11 +62,12 @@ export default function Catalog() {
 
         <div>
           <Reveal className="toolbar" style={{ marginBottom: 32 }}>
-            <div className="filters" role="tablist">
+            <div className="filters" role="group" aria-label="Filtrar por categoría">
               {FILTERS.map((f) => (
                 <button
                   key={f.id}
                   className={`filter-btn${filter === f.id ? ' active' : ''}`}
+                  aria-pressed={filter === f.id}
                   onClick={() => setFilter(f.id)}
                 >
                   {f.label}
@@ -73,11 +75,13 @@ export default function Catalog() {
               ))}
             </div>
             <div className="search-box">
-              <svg viewBox="0 0 24 24">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
               </svg>
+              <label htmlFor="catalog-search" className="sr-only">Buscar productos</label>
               <input
-                type="text"
+                id="catalog-search"
+                type="search"
                 placeholder="Buscar productos..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -94,18 +98,10 @@ export default function Catalog() {
                 key={p.id_producto}
                 delay={(i % 3) * 80}
                 className="product-card"
-                role="button"
-                tabIndex={0}
+                as="article"
                 aria-label={`Ver detalle de ${p.nombre}`}
-                onClick={() => setSelected(p)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setSelected(p);
-                  }
-                }}
               >
-                <div className="product-img">
+                <a className="product-img" href={productPath(p)} aria-label={`Página de ${p.nombre}`}>
                   {p.imagen_principal ? (
                     <img src={p.imagen_principal} alt={p.nombre} loading="lazy" />
                   ) : (
@@ -113,11 +109,16 @@ export default function Catalog() {
                   )}
                   {p.badge && <span className="img-badge">{p.badge}</span>}
                   <span className="product-cta">Ver producto →</span>
-                </div>
+                </a>
                 <div className="product-info">
                   <span className="row-cat">{p.categoria}</span>
-                  <h3 className="product-name">{p.nombre}</h3>
+                  <h3 className="product-name">
+                    <a href={productPath(p)}>{p.nombre}</a>
+                  </h3>
                   <p className="product-desc">{p.descripcion}</p>
+                  <button type="button" className="product-customize" onClick={() => setSelected(p)}>
+                    Personalizar →
+                  </button>
                 </div>
               </Reveal>
             ))}

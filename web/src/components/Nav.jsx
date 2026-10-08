@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useCart } from '../context/CartContext';
 
+// En páginas de producto los anchors internos viven en home — se prefijan '/'.
+const onHome = () => window.location.pathname === '/';
 const LINKS = [
   ['#inicio', 'Inicio'],
   ['#proceso', 'Proceso'],
@@ -8,6 +10,7 @@ const LINKS = [
   ['#faq', 'FAQs'],
   ['#contacto', 'Contacto'],
 ];
+const hrefOf = (h) => (onHome() ? h : `/${h}`);
 
 export default function Nav() {
   const { items, openCart } = useCart();
@@ -30,12 +33,12 @@ export default function Nav() {
   return (
     <nav className={`nav${scrolled || menuOpen ? ' scrolled' : ''}`} aria-label="Navegación principal">
       <div className="container nav-inner">
-        <a href="#inicio" className="nav-brand" onClick={() => setMenuOpen(false)}>
+        <a href={hrefOf('#inicio')} className="nav-brand" onClick={() => setMenuOpen(false)}>
           <span className="dot" aria-hidden="true" /> AIRO Color Lab
         </a>
         <ul className="nav-links">
           {LINKS.map(([href, label]) => (
-            <li key={href}><a href={href}>{label}</a></li>
+            <li key={href}><a href={hrefOf(href)}>{label}</a></li>
           ))}
         </ul>
         <div className="nav-actions">
@@ -59,7 +62,7 @@ export default function Nav() {
         <ul>
           {LINKS.map(([href, label]) => (
             <li key={href}>
-              <a href={href} onClick={() => setMenuOpen(false)}>{label}</a>
+              <a href={hrefOf(href)} onClick={() => setMenuOpen(false)}>{label}</a>
             </li>
           ))}
         </ul>

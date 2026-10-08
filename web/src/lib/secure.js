@@ -7,8 +7,13 @@ const E2 = 'QGdtYWlsLmNvbQ==';
 export const phone = () => atob(P1 + P2);
 export const mail = () => atob(E1 + E2);
 
+// Devuelve la URL generada (o null si el popup fue bloqueado) — la UI decide
+// qué mostrar. Nunca se abre automáticamente durante un envío async; solo
+// responde a un click humano explícito.
 export function openWhatsApp(message) {
-  window.open(`https://wa.me/${phone()}?text=${encodeURIComponent(message)}`, '_blank');
+  const url = `https://wa.me/${phone()}?text=${encodeURIComponent(message)}`;
+  const w = window.open(url, '_blank', 'noopener,noreferrer');
+  return w ? url : null;
 }
 
 // Arma el mensaje de WhatsApp: solo incluye los datos realmente cargados

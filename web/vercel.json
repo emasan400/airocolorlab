@@ -20,5 +20,6 @@
         }
       ]
     }
-  ]
+  ],
+  "functions": { "api/quote.mjs": { "includeFiles": "src/data/catalogo.json" } }
 }

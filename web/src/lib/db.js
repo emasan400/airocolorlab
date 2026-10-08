@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from './supabase.js';
 
 // Capa de acceso a Postgres vía Supabase. Devuelve el mismo shape
 // que catalogo.json para no tocar los componentes.
@@ -44,40 +44,19 @@ export async function fetchProductosDb() {
   }
 }
 
-// Upsert del padre + reemplazo de filas hijas (imágenes, colores, specs).
-export async function saveProductoDb(p) {
+// Guardado atómico de producto vía RPC save_catalog_product (padre + hijas
+// en una sola transacción server-side). Requiere la migración aplicada —
+// si el RPC no existe, el error se propaga: SIN fallback destructivo
+// (upsert+delete+insert dejaba el producto roto a medias ante un fallo).
+export async function saveProductoDb(p, client = supabase) {
   const { galeria, colores, especificaciones, ...row } = p;
-  const { error } = await supabase.from('productos').upsert({
-    ...row,
-    badge: row.badge || null,
-    descripcion: row.descripcion || null,
+  const { error } = await client.rpc('save_catalog_product', {
+    p_product: { ...row, badge: row.badge || null, descripcion: row.descripcion || null },
+    p_galeria: galeria || [],
+    p_colores: colores || [],
+    p_especificaciones: especificaciones || [],
   });
   if (error) throw error;
-
-  const id = p.id_producto;
-  await Promise.all([
-    supabase.from('producto_imagenes').delete().eq('id_producto', id),
-    supabase.from('producto_colores').delete().eq('id_producto', id),
-    supabase.from('producto_especificaciones').delete().eq('id_producto', id),
-  ]);
-
-  const inserts = [
-    galeria?.length &&
-      supabase.from('producto_imagenes').insert(
-        galeria.map((ruta, orden) => ({ id_producto: id, ruta, orden }))
-      ),
-    colores?.length &&
-      supabase.from('producto_colores').insert(
-        colores.map((nombre, orden) => ({ id_producto: id, nombre, orden }))
-      ),
-    especificaciones?.length &&
-      supabase.from('producto_especificaciones').insert(
-        especificaciones.map((detalle, orden) => ({ id_producto: id, detalle, orden }))
-      ),
-  ].filter(Boolean);
-  const results = await Promise.all(inserts);
-  const failed = results.find((r) => r.error);
-  if (failed) throw failed.error;
 }
 
 export async function deleteProductoDb(id) {
@@ -93,13 +72,17 @@ export async function setActivoDb(id, activo) {
   if (error) throw error;
 }
 
-// Últimos leads para la vista del admin (solo usuarios autenticados).
+// Últimas solicitudes de cotización para la vista del admin (solo autenticados).
+// Columnas explícitas — nunca select(*) sobre datos de contacto.
+// 'carrito' se mantiene para compat con solicitudes legacy del flujo anterior.
+// El error se PROPAGA: un [] ambiguo nunca simula un CRM vacío.
 export async function fetchLeadsDb(limit = 100) {
   if (!supabase) return [];
   const { data, error } = await supabase
     .from('leads')
-    .select('*')
+    .select('id,request_id,origen,nombre,empresa,whatsapp,email,ciudad,fecha_estimada,objetivo,diseno,comentarios,carrito,quote_items,created_at')
     .order('created_at', { ascending: false })
     .limit(limit);
-  return error ? [] : data;
+  if (error) throw error;
+  return data;
 }

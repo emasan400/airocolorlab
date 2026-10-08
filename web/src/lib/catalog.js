@@ -27,7 +27,8 @@ export async function loadCatalogo() {
   })();
   if (draft) return draft;
   // Supabase se descarga por demanda (chunk separado) solo si está configurado
-  if (import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY) {
+  const env = import.meta.env || {};
+  if (env.VITE_SUPABASE_URL && env.VITE_SUPABASE_ANON_KEY) {
     const { fetchProductosDb } = await import('./db');
     const db = await fetchProductosDb();
     if (db) return db;

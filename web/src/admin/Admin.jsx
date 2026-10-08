@@ -340,18 +340,55 @@ function ProductosPanel() {
   );
 }
 
+const LEADS_LIMIT = 100;
+
 function LeadsPanel() {
   const [leads, setLeads] = useState(null);
+  const [err, setErr] = useState(null);
 
-  const reload = () => fetchLeadsDb().then(setLeads);
+  const reload = () =>
+    fetchLeadsDb(LEADS_LIMIT)
+      .then((rows) => { setLeads(rows); setErr(null); })
+      .catch((e) => { setErr(e?.message || 'No se pudieron cargar las solicitudes'); });
+
   useEffect(() => { reload(); }, []);
+
+  // Export solo tras carga exitosa; etiqueta explícita del alcance paginado —
+  // nunca se afirma que es el set completo.
+  const exportQuotes = () => {
+    const envelope = { schema: 'airo-quote-import-v1', scope: `ultimas ${LEADS_LIMIT} solicitudes`, quotes: leads };
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(envelope, null, 2)], { type: 'application/json' }));
+    a.download = 'airo-quotes-export.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  const itemsTxt = (l) =>
+    Array.isArray(l.quote_items) && l.quote_items.length
+      ? l.quote_items.map((i) => `• ${i.cantidad}× ${i.titulo}`).join('\n')
+      : l.carrito && l.carrito !== 'No aplica' ? l.carrito : '—';
+
+  if (err) {
+    return (
+      <div className="admin-wrap admin-wrap--full">
+        <div className="admin-table" style={{ padding: 24 }}>
+          <p className="field-error" role="alert">No se pudieron cargar las solicitudes: {err}</p>
+          <button className="admin-btn" onClick={reload}>↻ Reintentar</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-wrap admin-wrap--full">
       <div className="admin-table">
         <div style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <b>{leads ? `${leads.length} leads` : 'Cargando…'}</b>
-          <button className="admin-btn" onClick={reload}>↻ Actualizar</button>
+          <b>{leads ? `${leads.length} solicitudes (máx. ${LEADS_LIMIT} — puede haber más páginas)` : 'Cargando…'}</b>
+          <span style={{ display: 'flex', gap: 8 }}>
+            <button className="admin-btn" onClick={exportQuotes} disabled={!leads}>⬇ Exportar JSON ({LEADS_LIMIT} últimas)</button>
+            <button className="admin-btn" onClick={reload}>↻ Actualizar</button>
+          </span>
         </div>
         <table>
           <thead>
@@ -369,7 +406,7 @@ function LeadsPanel() {
                 <td>{l.empresa}</td>
                 <td>{l.whatsapp}</td>
                 <td>{l.objetivo}</td>
-                <td className="lead-cart">{l.carrito !== 'No aplica' ? l.carrito : '—'}</td>
+                <td className="lead-cart">{itemsTxt(l)}</td>
               </tr>
             ))}
           </tbody>

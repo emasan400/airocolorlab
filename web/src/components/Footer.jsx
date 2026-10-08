@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { mail } from '../lib/secure';
 
+// Anchors internos viven en home; en páginas de producto se prefijan '/'.
+const P = (h) => (window.location.pathname === '/' ? h : `/${h}`);
+
 export default function Footer() {
   const [email, setEmail] = useState('');
   useEffect(() => setEmail(mail()), []);
@@ -16,10 +19,10 @@ export default function Footer() {
           <div>
             <h5>Secciones</h5>
             <ul>
-              <li><a href="#inicio">Inicio</a></li>
-              <li><a href="#coleccion">Nuestros productos</a></li>
-              <li><a href="#proceso">Proceso</a></li>
-              <li><a href="#faq">FAQs</a></li>
+              <li><a href={P('#inicio')}>Inicio</a></li>
+              <li><a href={P('#coleccion')}>Nuestros productos</a></li>
+              <li><a href={P('#proceso')}>Proceso</a></li>
+              <li><a href={P('#faq')}>FAQs</a></li>
             </ul>
           </div>
           <div>
@@ -27,7 +30,7 @@ export default function Footer() {
             <ul>
               <li><a href={email ? `mailto:${email}` : '#'}>{email || '…'}</a></li>
               <li><a href="https://www.instagram.com/airocolorlab/" target="_blank" rel="noreferrer">Instagram</a></li>
-              <li><a href="#contacto">Escribinos</a></li>
+              <li><a href={P('#contacto')}>Escribinos</a></li>
             </ul>
           </div>
         </div>

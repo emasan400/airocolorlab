@@ -4,9 +4,21 @@ const KEY = 'airo_cookie_consent';
 
 export default function CookieConsent() {
   const [visible, setVisible] = useState(false);
+  const [deferred, setDeferred] = useState(false);
 
   useEffect(() => {
     if (!localStorage.getItem(KEY)) setVisible(true);
+  }, []);
+
+  // El banner se oculta mientras haya un modal o drawer de cotización activo —
+  // no debe tapar el flujo ni el CTA de conversión. Reaparece al cerrarse.
+  useEffect(() => {
+    const check = () =>
+      setDeferred(!!document.querySelector('.modal-overlay.open, .drawer.open'));
+    check();
+    const obs = new MutationObserver(check);
+    obs.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+    return () => obs.disconnect();
   }, []);
 
   const decide = (value) => {
@@ -15,7 +27,7 @@ export default function CookieConsent() {
     if (value === 'accepted') window.__loadGTM?.();
   };
 
-  if (!visible) return null;
+  if (!visible || deferred) return null;
 
   return (
     <div className="cookie-banner" role="dialog" aria-live="polite" aria-label="Consentimiento de cookies">

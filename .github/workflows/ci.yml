@@ -26,6 +26,9 @@ jobs:
       - name: Project checks (anchors, image paths, alt text)
         run: npm run check
 
+      - name: Quote regression tests
+        run: node --test tests/quote.test.mjs
+
       - name: Build
         run: npm run build
         env:

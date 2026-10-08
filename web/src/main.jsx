@@ -5,9 +5,14 @@ import App from './App.jsx';
 import Privacy from './components/Privacy.jsx';
 import Terms from './components/Terms.jsx';
 import NotFound from './components/NotFound.jsx';
+import ProductPage from './components/ProductPage.jsx';
 
 // Admin + Supabase se descargan solo al entrar a #/admin (code splitting)
 const Admin = lazy(() => import('./admin/Admin.jsx'));
+
+// Rutas path estables de producto (/productos/{id}-{slug}/) — generadas en
+// build por scripts/product-pages.mjs; React monta sobre el prerender.
+const productMatch = window.location.pathname.match(/^\/productos\/([^-/]+)-[^/]+\/?$/);
 
 function Router() {
   const [hash, setHash] = useState(window.location.hash);
@@ -23,8 +28,11 @@ function Router() {
       </Suspense>
     );
   }
+  // Las rutas hash (#/privacidad, #/terminos, #/admin) siempre ganan —
+  // funcionan también desde una página de producto.
   if (hash.startsWith('#/privacidad')) return <Privacy />;
   if (hash.startsWith('#/terminos')) return <Terms />;
+  if (productMatch) return <ProductPage id={productMatch[1]} />;
   if (hash !== '#/' && hash.startsWith('#/')) return <NotFound />;
   return <App />;
 }

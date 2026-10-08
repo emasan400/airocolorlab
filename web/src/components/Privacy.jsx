@@ -40,6 +40,12 @@ export default function Privacy() {
             contacto posterior para perfeccionar la operación comercial. Los datos no serán utilizados para
             finalidades incompatibles con las aquí expuestas.
           </p>
+          <p>
+            Si incluís una previsualización en tu solicitud de cotización, AIRO recibe la imagen
+            referencial y los datos de configuración para revisar tu proyecto. El archivo de arte
+            original no se envía desde este visualizador. No compartas datos sensibles ni material
+            de terceros sin autorización.
+          </p>
 
           <h2>2. Almacenamiento e infraestructura tecnológica</h2>
           <p>Los datos personales recolectados se administran bajo un entorno de alta seguridad técnica:</p>

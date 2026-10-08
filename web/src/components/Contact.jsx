@@ -1,21 +1,34 @@
 import { useEffect, useState } from 'react';
 import { mail, openWhatsApp, buildQuoteMessage } from '../lib/secure';
 import { postLead } from '../lib/leads';
+import { trackQuoteEvent } from '../lib/analytics';
 import { Reveal } from '../hooks/useReveal';
 
 const OBJETIVOS = ['Evento', 'Merchandising', 'Uniformes', 'Regalos'];
 const DISENO = ['Sí, lo tengo', 'No', 'Necesito ayuda'];
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const CONTACT_DRAFT_KEY = 'airo_contact_draft_v1';
+const EMPTY_FORM = {
+  nombre: '', empresa: '', whatsapp: '', email: '', ciudad: '', fecha: '',
+  objetivo: '', diseno: '', mensaje: '', website: '',
+};
+const loadDraft = () => {
+  try { return { ...EMPTY_FORM, ...(JSON.parse(localStorage.getItem(CONTACT_DRAFT_KEY)) || {}) }; }
+  catch { return EMPTY_FORM; }
+};
 
 export default function Contact() {
   const [email, setEmail] = useState('');
   const [consent, setConsent] = useState(false);
   const [errors, setErrors] = useState({});
-  const [form, setForm] = useState({
-    nombre: '', empresa: '', whatsapp: '', email: '', ciudad: '', fecha: '',
-    objetivo: '', diseno: '', mensaje: '', website: '',
-  });
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(null); // {ack, snapshot:{form}} — snapshot inmutable
+  const [sendErr, setSendErr] = useState(null);
+  const [form, setForm] = useState(loadDraft);
+  // si el form cambia tras el ack, la referencia queda histórica — no se reusa
+  const sentStale = !!sent && JSON.stringify(form) !== JSON.stringify(sent.snapshot.form);
+  const activeSent = sent && !sentStale ? sent : null;
 
   useEffect(() => {
     setEmail(mail());
@@ -23,53 +36,95 @@ export default function Contact() {
     document.getElementById('c_fecha')?.setAttribute('min', hoy);
   }, []);
 
+  // Borrador local persistente — nunca se limpia solo.
+  useEffect(() => {
+    try { localStorage.setItem(CONTACT_DRAFT_KEY, JSON.stringify(form)); } catch { /* quota */ }
+  }, [form]);
+
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
   const pick = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
-  const enviar = () => {
-    if (form.website) return; // honeypot: bots lo completan, humanos no lo ven
+  const waMessage = () =>
+    buildQuoteMessage({
+      intro: 'Hola AIRO, quiero hacer una consulta.',
+      contacto: {
+        Nombre: form.nombre,
+        Empresa: form.empresa,
+        WhatsApp: form.whatsapp,
+        Email: form.email,
+        Ciudad: form.ciudad,
+      },
+      proyecto: {
+        Objetivo: form.objetivo,
+        'Fecha estimada': form.fecha,
+        'Diseño': form.diseno,
+        Mensaje: form.mensaje,
+        ...(activeSent ? { Referencia: activeSent.ack.request_id } : {}),
+      },
+    });
+  const snapMessage = () =>
+    buildQuoteMessage({
+      intro: 'Hola AIRO, quiero hacer una consulta.',
+      contacto: {
+        Nombre: sent.snapshot.form.nombre,
+        Empresa: sent.snapshot.form.empresa,
+        WhatsApp: sent.snapshot.form.whatsapp,
+        Email: sent.snapshot.form.email,
+        Ciudad: sent.snapshot.form.ciudad,
+      },
+      proyecto: {
+        Objetivo: sent.snapshot.form.objetivo,
+        'Fecha estimada': sent.snapshot.form.fecha,
+        'Diseño': sent.snapshot.form.diseno,
+        Mensaje: sent.snapshot.form.mensaje,
+        Referencia: sent.ack.request_id,
+      },
+    });
+
+  const enviar = async () => {
+    if (form.website || sending) return; // honeypot + doble-click
     const e = {};
     if (!form.nombre.trim()) e.nombre = 'Ingresá tu nombre.';
-    if (!form.whatsapp.trim()) e.whatsapp = 'Ingresá tu WhatsApp.';
-    else if (form.whatsapp.replace(/\D/g, '').length < 8) e.whatsapp = 'Revisá el número (mínimo 8 dígitos).';
-    if (!form.email.trim()) e.email = 'Ingresá tu email.';
-    else if (!EMAIL_RE.test(form.email.trim())) e.email = 'Revisá el formato del email.';
+    const phoneOk = form.whatsapp.replace(/\D/g, '').length >= 8;
+    const emailOk = EMAIL_RE.test(form.email.trim());
+    if (!phoneOk && !emailOk)
+      e.contact = 'Dejanos un WhatsApp (mín. 8 dígitos) o un email válido.';
+    else {
+      if (form.whatsapp.trim() && !phoneOk) e.whatsapp = 'Revisá el número (mínimo 8 dígitos).';
+      if (form.email.trim() && !emailOk) e.email = 'Revisá el formato del email.';
+    }
     if (!consent) e.consent = 'Necesitamos tu consentimiento para tratar tus datos.';
     setErrors(e);
     if (Object.keys(e).length) return;
 
-    postLead({
-      origen: 'Contacto',
-      nombre: form.nombre,
-      empresa: form.empresa || '-',
-      whatsapp: form.whatsapp,
-      email: form.email || '-',
-      ciudad: form.ciudad || '-',
-      fecha_estimada: form.fecha || 'No especificada',
-      objetivo: form.objetivo || '-',
-      diseno: form.diseno || '-',
-      comentarios: form.mensaje || '-',
-      carrito: 'No aplica',
-    });
-
-    openWhatsApp(
-      buildQuoteMessage({
-        intro: 'Hola AIRO, quiero hacer una consulta.',
-        contacto: {
-          Nombre: form.nombre,
-          Empresa: form.empresa,
-          WhatsApp: form.whatsapp,
-          Email: form.email,
-          Ciudad: form.ciudad,
-        },
-        proyecto: {
-          Objetivo: form.objetivo,
-          'Fecha estimada': form.fecha,
-          'Diseño': form.diseno,
-          Mensaje: form.mensaje,
-        },
-      })
-    );
+    setSending(true);
+    setSendErr(null);
+    trackQuoteEvent('quote_submit_attempt', {});
+    try {
+      const ack = await postLead({
+        origen: 'Contacto',
+        nombre: form.nombre,
+        empresa: form.empresa,
+        whatsapp: form.whatsapp,
+        email: form.email,
+        ciudad: form.ciudad,
+        fecha_estimada: form.fecha,
+        objetivo: form.objetivo,
+        diseno: form.diseno,
+        comentarios: form.mensaje,
+        website: form.website,
+        carrito: 'No aplica',
+        items: [],
+        consent: true,
+      });
+      setSent({ ack, snapshot: { form: { ...form } } });
+      trackQuoteEvent('quote_submit_accepted', { demo: ack.demo === true });
+    } catch (err) {
+      setSendErr(err?.error || 'No se confirmó el guardado de la consulta.');
+      trackQuoteEvent('quote_submit_failed', { http_status: err?.status || 0 });
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -111,6 +166,7 @@ export default function Contact() {
           </Reveal>
 
           <Reveal delay={120} className="contact-form">
+            <form onSubmit={(e) => { e.preventDefault(); enviar(); }} noValidate>
             <div className="form-row">
               <div className="field">
                 <label htmlFor="c_nombre">Nombre *</label>
@@ -125,12 +181,13 @@ export default function Contact() {
             <div className="form-row">
               <div className="field">
                 <label htmlFor="c_whatsapp">WhatsApp *</label>
-                <input id="c_whatsapp" type="tel" value={form.whatsapp} onChange={set('whatsapp')} autoComplete="tel" inputMode="tel" required aria-invalid={!!errors.whatsapp} />
+                <input id="c_whatsapp" type="tel" value={form.whatsapp} onChange={set('whatsapp')} autoComplete="tel" inputMode="tel" aria-invalid={!!(errors.whatsapp || errors.contact)} />
                 {errors.whatsapp && <p className="field-error" role="alert">{errors.whatsapp}</p>}
               </div>
               <div className="field">
-                <label htmlFor="c_email">Email *</label>
-                <input id="c_email" type="email" value={form.email} onChange={set('email')} autoComplete="email" inputMode="email" required aria-invalid={!!errors.email} />
+                <label htmlFor="c_email">Email</label>
+                <input id="c_email" type="email" value={form.email} onChange={set('email')} autoComplete="email" inputMode="email" aria-invalid={!!errors.email} />
+                <small className="field-hint">Uno de los dos: WhatsApp o email.</small>
                 {errors.email && <p className="field-error" role="alert">{errors.email}</p>}
               </div>
             </div>
@@ -183,11 +240,51 @@ export default function Contact() {
               </span>
             </label>
             {errors.consent && <p className="field-error" role="alert">{errors.consent}</p>}
+            {errors.contact && <p className="field-error" role="alert">{errors.contact}</p>}
 
-            <button className="btn btn--primary" style={{ width: '100%', justifyContent: 'center' }} onClick={enviar}>
-              Solicitar Cotización
-            </button>
+            {activeSent ? (
+              <div className="q-success" role="status">
+                <h3>{activeSent.ack.demo ? 'Solicitud de prueba guardada' : 'Guardamos tu consulta'}</h3>
+                <p>
+                  Referencia: <code>{activeSent.ack.request_id}</code>
+                  {' '}— abrí WhatsApp para continuar; el mensaje lo enviás vos.
+                  Un asesor de AIRO te responde en menos de 24 hs hábiles.
+                </p>
+                <button type="button" className="btn btn--success" onClick={() => { trackQuoteEvent('whatsapp_open_intent', {}); openWhatsApp(snapMessage()); }}>
+                  Abrir WhatsApp
+                </button>
+              </div>
+            ) : (
+              <>
+                {sent && sentStale && (
+                  <div className="q-review" role="status">
+                    Tus datos cambiaron desde la solicitud guardada (ref. <code>{sent.ack.request_id}</code>) —
+                    ese número corresponde a la versión anterior.
+                  </div>
+                )}
+                {sendErr && (
+                  <div className="q-error" role="alert">
+                    <b>No se confirmó el envío.</b> {sendErr} Tus datos siguen acá —
+                    reintentá o escribinos por WhatsApp.
+                    <div className="row" style={{ marginTop: 10 }}>
+                      <button type="button" className="btn btn--ghost" onClick={() => { trackQuoteEvent('whatsapp_open_intent', {}); openWhatsApp(waMessage()); }}>
+                        WhatsApp manual
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <button
+                  type="submit"
+                  className="btn btn--primary"
+                  style={{ width: '100%', justifyContent: 'center' }}
+                  disabled={sending}
+                >
+                  {sending ? 'Enviando…' : 'Solicitar Cotización'}
+                </button>
+              </>
+            )}
             <p className="privacy">🔒 Tus datos únicamente serán utilizados para responder esta consulta.</p>
+            </form>
           </Reveal>
         </div>
       </div>
