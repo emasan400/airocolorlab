@@ -30,7 +30,7 @@ const INACTIVE = { id_producto: 'zz0', nombre: 'Viejo', activo: false, colores: 
 const cat = [...CATALOG, INACTIVE];
 
 // PNG real (fixture generada) — no 'AAAA' falso.
-const REAL_PNG = fs.readFileSync(path.join(WEB, '..', '..', 'projects/verification-2026-first-audit/steps/test-logo.png'));
+const REAL_PNG = fs.readFileSync(path.join(WEB, 'tests/fixtures/test-logo.png'));
 const PNG_URL = 'data:image/png;base64,' + REAL_PNG.toString('base64');
 const BG = P4.imagen_principal;
 const previewOk = { logo_data_url: PNG_URL, x: 50, y: 50, scale: 1, rotation: 0, background: BG, version: 'v1' };
