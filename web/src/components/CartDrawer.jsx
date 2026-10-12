@@ -26,7 +26,7 @@ const loadDraft = () => {
 const fingerprint = (items, form) =>
   JSON.stringify({
     items: items.map((i) => [i.id, i.cantidad, i.variant, i.configuration_id,
-      i.preview && [i.preview.x, i.preview.y, i.preview.scale, i.preview.rotation, i.preview.background, i.preview.logo_data_url?.length]]),
+      i.preview && [i.preview.x, i.preview.y, i.preview.scale, i.preview.rotation, i.preview.background, i.preview.logo_data_url?.length, i.preview.tint]]),
     form,
   });
 
@@ -407,6 +407,7 @@ export default function CartDrawer() {
                                       logo={item.preview?.logo_data_url}
                                       x={item.preview?.x} y={item.preview?.y}
                                       scale={item.preview?.scale} rotation={item.preview?.rotation}
+                                      tint={item.preview?.tint}
                                       alt=""
                                     />
                                   </div>

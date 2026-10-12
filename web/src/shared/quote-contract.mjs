@@ -49,8 +49,11 @@ export function validatePreview(p, producto) {
   if (p === null || p === undefined) return { ok: true, preview: null };
   if (typeof p !== 'object' || Array.isArray(p)) return { error: 'preview inválido' };
   // Whitelist estricta — nunca se persisten propiedades desconocidas.
-  const { logo_data_url, x, y, scale, rotation, background, version } = p;
+  const { logo_data_url, x, y, scale, rotation, background, version, tint } = p;
   if (version !== 'v1') return { error: 'preview.version debe ser "v1"' };
+  // debe coincidir con TINT_HEXES de lib/mockup.js
+  if (tint != null && !['#FFFFFF', '#000000', '#808080'].includes(tint))
+    return { error: 'preview.tint debe ser #FFFFFF, #000000 o #808080' };
   if (logo_data_url != null) {
     if (typeof logo_data_url !== 'string') return { error: 'logo_data_url debe ser data URL' };
     const m = logo_data_url.match(/^data:image\/(png|jpeg|webp);base64,(.+)$/i);
@@ -73,7 +76,7 @@ export function validatePreview(p, producto) {
     return { error: 'preview.background debe ser una imagen de galería del producto' };
   return {
     ok: true,
-    preview: { logo_data_url: logo_data_url ?? null, x, y, scale, rotation, background, version: 'v1' },
+    preview: { logo_data_url: logo_data_url ?? null, x, y, scale, rotation, background, tint: tint ?? null, version: 'v1' },
   };
 }
 

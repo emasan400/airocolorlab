@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { openWhatsApp } from '../lib/secure';
 import { MAX_LOGO_ORIGINAL_BYTES, MAX_PREVIEW_BYTES, validateQuantity, parseQuantityText } from '../shared/quote-contract.mjs';
-import { exportMockupPng } from '../lib/mockup';
+import { exportMockupPng, isTintable, TINTS } from '../lib/mockup';
 import MockupPreview from './MockupPreview';
 
 const PROD_DATA = [
@@ -73,6 +73,7 @@ export default function QuickView({ producto, onClose, initialConfiguration = nu
   const [logoPos, setLogoPos] = useState({ x: 50, y: 50 });
   const [logoScale, setLogoScale] = useState(1);
   const [logoRot, setLogoRot] = useState(0);
+  const [tint, setTint] = useState('#FFFFFF');
   const [dragging, setDragging] = useState(false);
   const [configId, setConfigId] = useState(newConfigId);
   const fileRef = useRef(null);
@@ -129,6 +130,7 @@ export default function QuickView({ producto, onClose, initialConfiguration = nu
       setLogoPosValue({ x: pv.x ?? 50, y: pv.y ?? 50 });
       setLogoScaleValue(pv.scale ?? 1);
       setLogoRotValue(pv.rotation ?? 0);
+      setTint(pv.tint ?? '#FFFFFF');
       logoPointersRef.current.clear();
       logoGestureRef.current = null;
       setDragging(false);
@@ -144,6 +146,7 @@ export default function QuickView({ producto, onClose, initialConfiguration = nu
     setLogoPosValue({ x: 50, y: 50 });
     setLogoScaleValue(1);
     setLogoRotValue(0);
+    setTint('#FFFFFF');
     logoPointersRef.current.clear();
     logoGestureRef.current = null;
     setDragging(false);
@@ -324,11 +327,16 @@ export default function QuickView({ producto, onClose, initialConfiguration = nu
     setLogoRotValue(0);
   };
 
-  const previewOf = () => (logo ? {
-    logo_data_url: logo, x: Math.round(logoPos.x), y: Math.round(logoPos.y),
-    scale: Number(logoScale.toFixed(2)), rotation: logoRot,
-    background: imgs[imgIndex] || producto.imagen_principal, version: 'v1',
-  } : null);
+  const previewOf = () => {
+    const bgActual = imgs[imgIndex] || producto.imagen_principal;
+    const previewTint = isTintable(bgActual) ? tint : null;
+    if (!logo && (!previewTint || previewTint === '#FFFFFF')) return null;
+    return {
+      logo_data_url: logo, x: Math.round(logoPos.x), y: Math.round(logoPos.y),
+      scale: Number(logoScale.toFixed(2)), rotation: logoRot,
+      background: bgActual, tint: previewTint, version: 'v1',
+    };
+  };
 
   // ¿cambió algo del diseño respecto a la config original (edición)?
   const designChanged = () => {
@@ -359,7 +367,7 @@ export default function QuickView({ producto, onClose, initialConfiguration = nu
     if (!src) return;
     exportMockupPng({
       background: src, logo_data_url: logo,
-      x: logoPos.x, y: logoPos.y, scale: logoScale, rotation: logoRot,
+      x: logoPos.x, y: logoPos.y, scale: logoScale, rotation: logoRot, tint,
     }, `mockup-${producto.id_producto}-referencial.png`).catch(() => setLogoErr('No se pudo exportar el mockup.'));
   };
 
@@ -393,6 +401,7 @@ export default function QuickView({ producto, onClose, initialConfiguration = nu
               background={imgs[imgIndex]}
               logo={logo}
               x={logoPos.x} y={logoPos.y} scale={logoScale} rotation={logoRot}
+              tint={isTintable(imgs[imgIndex]) ? tint : null}
               alt={producto.nombre}
               logoProps={{
                 className: `mockup-logo${dragging ? ' dragging' : ''}`,
@@ -442,6 +451,24 @@ export default function QuickView({ producto, onClose, initialConfiguration = nu
               {logo ? 'Arrastrá para mover · pellizcá o usá los controles para tamaño y giro · referencial, no arte final' : 'Previsualización referencial'}
             </span>
           </div>
+          {isTintable(imgs[imgIndex]) && (
+            <div className="tint-row" role="group" aria-label="Color de la prenda en el mockup">
+              <span className="tint-label">Color</span>
+              {TINTS.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  className={`tint-swatch${tint === t.hex ? ' selected' : ''}`}
+                  style={{ '--swatch': t.hex }}
+                  aria-pressed={tint === t.hex}
+                  aria-label={t.label}
+                  title={t.label}
+                  onClick={() => setTint(t.hex)}
+                />
+              ))}
+              <span className="tint-hint">Color referencial — el tono real depende del textil.</span>
+            </div>
+          )}
           {logoErr && <p className="field-error" role="alert">{logoErr}</p>}
           {logo && (
             <div className="logo-ranges">
@@ -505,7 +532,13 @@ export default function QuickView({ producto, onClose, initialConfiguration = nu
                       key={c}
                       className={`chip${i === colorIdx ? ' selected' : ''}`}
                       aria-pressed={i === colorIdx}
-                      onClick={() => setColorIdx(i)}
+                      onClick={() => {
+                        setColorIdx(i);
+                        const color = c.toLowerCase();
+                        if (color.includes('negro')) setTint('#000000');
+                        else if (color.includes('blanco')) setTint('#FFFFFF');
+                        else if (color.includes('gris')) setTint('#808080');
+                      }}
                     >
                       {c}
                     </button>

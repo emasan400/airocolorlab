@@ -147,6 +147,7 @@ Técnicas de personalización mencionadas en specs: sublimación 360°/full colo
 ### Reglas duras del sitio (no romper en contenido)
 
 - Pedido mínimo: **10 unidades por producto**, cantidades en múltiplos de 10.
+- El mockup permite previsualizar la prenda en Blanco #FFFFFF, Negro #000000 y Gris #808080 (teñido referencial por máscara; siempre con la leyenda "color referencial").
 - Sin precios públicos: todo es "cotización a medida" hasta que exista tabla de precios.
 - Sin plazos de producción públicos: dependen de cada proyecto y se definen en la cotización. Mensaje aprobado: "nos hacemos cargo responsablemente de las fechas acordadas".
 - Lead time de respuesta prometido: 24 hs hábiles.

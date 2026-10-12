@@ -69,6 +69,16 @@ test('preview: rotación admite 180° y rechaza valores mayores', () => {
   assert.match(validatePreview({ ...previewOk, rotation: 181 }, P4).error, /rotation/);
 });
 
+test('preview: acepta tinte de prenda admitido', () => {
+  const tinted = validatePreview({ ...previewOk, tint: '#000000' }, P4);
+  assert.ok(tinted.ok);
+  assert.equal(tinted.preview.tint, '#000000');
+});
+
+test('preview: rechaza un tinte no admitido', () => {
+  assert.match(validatePreview({ ...previewOk, tint: '#FF0000' }, P4).error, /tint/);
+});
+
 test('migración legacy: variante inferida del título exacto, incierta → revisión', () => {
   const ok = migrateItem({ id: 'p4', titulo: `${P4.nombre} (${P4.colores[1]})`, cantidad: 20 }, cat);
   assert.ok(ok.ok && ok.item.variant === P4.colores[1]);
