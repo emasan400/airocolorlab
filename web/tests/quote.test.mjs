@@ -64,6 +64,11 @@ test('preview: PNG real pasa; fake base64 / svg / firma errónea / propiedades e
   assert.ok(stripped.ok && !('evil' in stripped.preview), 'propiedades desconocidas se descartan');
 });
 
+test('preview: rotación admite 180° y rechaza valores mayores', () => {
+  assert.ok(validatePreview({ ...previewOk, rotation: 180 }, P4).ok);
+  assert.match(validatePreview({ ...previewOk, rotation: 181 }, P4).error, /rotation/);
+});
+
 test('migración legacy: variante inferida del título exacto, incierta → revisión', () => {
   const ok = migrateItem({ id: 'p4', titulo: `${P4.nombre} (${P4.colores[1]})`, cantidad: 20 }, cat);
   assert.ok(ok.ok && ok.item.variant === P4.colores[1]);

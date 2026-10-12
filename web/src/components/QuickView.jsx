@@ -8,7 +8,7 @@ import MockupPreview from './MockupPreview';
 const PROD_DATA = [
   ['Pedido mínimo', '10 unidades'],
   ['Producción', 'A pedido · sin stock fijo'],
-  ['Personalización', 'Arte propio o asistido por el estudio'],
+  ['Desarrollo', 'Arte propio o desarrollado por el estudio'],
   ['Cotización', 'A medida según volumen y terminación'],
 ];
 
@@ -19,27 +19,43 @@ const newConfigId = () =>
 // El original queda SOLO en memoria local — nunca se sube.
 function rasterizeLogo(file) {
   return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      let side = 512;
-      const trySize = () => {
-        const scale = Math.min(1, side / Math.max(img.width, img.height));
-        const c = document.createElement('canvas');
-        c.width = Math.max(1, Math.round(img.width * scale));
-        c.height = Math.max(1, Math.round(img.height * scale));
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        const dataUrl = c.toDataURL('image/png');
-        const approx = Math.floor(dataUrl.length * 3 / 4);
-        if (approx > MAX_PREVIEW_BYTES && side > 64) { side = Math.floor(side / 2); return trySize(); }
-        if (approx > MAX_PREVIEW_BYTES) return reject(new Error('logo demasiado pesado aun reducido'));
-        resolve(dataUrl);
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('imagen ilegible'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('imagen ilegible'));
+      img.onload = () => {
+        const w = img.naturalWidth || img.width || 1024;
+        const h = img.naturalHeight || img.height || 1024;
+        let side = 1024;
+        const trySize = () => {
+          const scale = Math.min(1, side / Math.max(w, h));
+          const c = document.createElement('canvas');
+          c.width = Math.max(1, Math.round(w * scale));
+          c.height = Math.max(1, Math.round(h * scale));
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          const dataUrl = c.toDataURL('image/png');
+          const approx = Math.floor(dataUrl.length * 3 / 4);
+          if (approx > MAX_PREVIEW_BYTES && side > 64) { side = Math.floor(side / 2); return trySize(); }
+          if (approx > MAX_PREVIEW_BYTES) return reject(new Error('logo demasiado pesado aun reducido'));
+          resolve(dataUrl);
+        };
+        try {
+          trySize();
+        } catch (error) {
+          reject(error);
+        }
       };
-      trySize();
+      if (typeof reader.result !== 'string') return reject(new Error('imagen ilegible'));
+      const extension = file.name.match(/\.([^.]+)$/)?.[1].toLowerCase();
+      const mimeByExtension = {
+        png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp',
+        gif: 'image/gif', avif: 'image/avif', bmp: 'image/bmp', svg: 'image/svg+xml',
+      };
+      const mime = file.type || mimeByExtension[extension];
+      img.src = reader.result.replace(/^data:[^,]*,/, `data:${mime};base64,`);
     };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('imagen ilegible')); };
-    img.src = url;
+    reader.readAsDataURL(file);
   });
 }
 
@@ -63,7 +79,31 @@ export default function QuickView({ producto, onClose, initialConfiguration = nu
   const stageRef = useRef(null);
   const modalRef = useRef(null);
   const closeRef = useRef(null);
+  const logoPointersRef = useRef(new Map());
+  const logoGestureRef = useRef(null);
+  const logoPosRef = useRef(logoPos);
+  const logoScaleRef = useRef(logoScale);
+  const logoRotRef = useRef(logoRot);
   const { addItem } = useCart();
+
+  const setLogoPosValue = (next) => {
+    const value = typeof next === 'function' ? next(logoPosRef.current) : next;
+    logoPosRef.current = value;
+    setLogoPos(value);
+  };
+  const setLogoScaleValue = (next) => {
+    logoScaleRef.current = next;
+    setLogoScale(next);
+  };
+  const setLogoRotValue = (next) => {
+    logoRotRef.current = next;
+    setLogoRot(next);
+  };
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  const normalizeRotation = (v) => {
+    const normalized = ((v + 180) % 360 + 360) % 360 - 180;
+    return normalized === -180 ? 180 : normalized;
+  };
 
   // imgs se computa ANTES de cualquier early return (null-safe).
   const imgs = producto?.galeria?.length
@@ -86,9 +126,12 @@ export default function QuickView({ producto, onClose, initialConfiguration = nu
       setQtyError('');
       setLogo(pv.logo_data_url || null);
       setLogoErr('');
-      setLogoPos({ x: pv.x ?? 50, y: pv.y ?? 50 });
-      setLogoScale(pv.scale ?? 1);
-      setLogoRot(pv.rotation ?? 0);
+      setLogoPosValue({ x: pv.x ?? 50, y: pv.y ?? 50 });
+      setLogoScaleValue(pv.scale ?? 1);
+      setLogoRotValue(pv.rotation ?? 0);
+      logoPointersRef.current.clear();
+      logoGestureRef.current = null;
+      setDragging(false);
       setConfigId(cfg.configuration_id || newConfigId());
       return;
     }
@@ -98,9 +141,12 @@ export default function QuickView({ producto, onClose, initialConfiguration = nu
     setQtyError('');
     setLogo(null);
     setLogoErr('');
-    setLogoPos({ x: 50, y: 50 });
-    setLogoScale(1);
-    setLogoRot(0);
+    setLogoPosValue({ x: 50, y: 50 });
+    setLogoScaleValue(1);
+    setLogoRotValue(0);
+    logoPointersRef.current.clear();
+    logoGestureRef.current = null;
+    setDragging(false);
     setConfigId(newConfigId());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [producto, initialConfiguration]);
@@ -152,55 +198,130 @@ export default function QuickView({ producto, onClose, initialConfiguration = nu
     e.target.value = '';
     if (!file) return;
     setLogoErr('');
-    // Solo raster — nunca SVG/HTML ejecutable. El preview es referencial.
-    if (!/^image\/(png|jpe?g|webp|gif|avif|bmp)$/i.test(file.type))
-      return setLogoErr('Subí un PNG, JPG o WebP (no SVG ni otros formatos).');
+    // Se acepta SVG solo como ENTRADA: se rasteriza a PNG en el canvas local; al servidor nunca viaja SVG.
+    const supportedType = /^image\/(png|jpe?g|webp|gif|avif|bmp|svg\+xml)$/i.test(file.type);
+    const supportedExtension = !file.type && /\.(png|jpe?g|webp|gif|avif|bmp|svg)$/i.test(file.name);
+    if (!supportedType && !supportedExtension)
+      return setLogoErr('Para la previsualización usá PNG, JPG, WebP o SVG. Los archivos vectoriales (AI, EPS, PDF) los podés mandar por WhatsApp al cotizar.');
     if (file.size > MAX_LOGO_ORIGINAL_BYTES)
-      return setLogoErr('El logo original supera los 3 MB.');
+      return setLogoErr('El archivo supera los 10 MB — exportá una versión más liviana.');
     try {
       const dataUrl = await rasterizeLogo(file);
       setLogo(dataUrl);
-      setLogoPos({ x: 50, y: 50 });
-      setLogoScale(1);
-      setLogoRot(0);
+      setLogoPosValue({ x: 50, y: 50 });
+      setLogoScaleValue(1);
+      setLogoRotValue(0);
       setConfigId(newConfigId());
     } catch {
-      setLogoErr('No se pudo procesar el logo — probá con otro archivo.');
+      setLogoErr('No pudimos leer ese archivo. Probá exportarlo como PNG o JPG.');
     }
   };
-
-  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
   const onLogoPointerDown = (e) => {
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
+    const pointers = logoPointersRef.current;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 1) {
+      logoGestureRef.current = {
+        mode: 'drag',
+        pointerId: e.pointerId,
+        point: { x: e.clientX, y: e.clientY },
+        position: logoPosRef.current,
+      };
+    } else if (pointers.size === 2) {
+      const [{ x: x1, y: y1 }, { x: x2, y: y2 }] = pointers.values();
+      logoGestureRef.current = {
+        mode: 'pinch',
+        distance: Math.hypot(x2 - x1, y2 - y1) || 1,
+        angle: Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI,
+        scale: logoScaleRef.current,
+        rotation: logoRotRef.current,
+      };
+    }
     setDragging(true);
   };
 
   const onLogoPointerMove = (e) => {
-    if (!dragging || !stageRef.current) return;
+    const pointers = logoPointersRef.current;
+    if (!pointers.has(e.pointerId) || !stageRef.current) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const points = [...pointers.values()];
+    if (points.length >= 2) {
+      const [{ x: x1, y: y1 }, { x: x2, y: y2 }] = points;
+      const gesture = logoGestureRef.current;
+      if (gesture?.mode !== 'pinch') return;
+      const distance = Math.hypot(x2 - x1, y2 - y1);
+      const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+      const scale = clamp(gesture.scale * (distance / gesture.distance), 0.3, 2.5);
+      const rotation = Math.round(normalizeRotation(gesture.rotation + normalizeRotation(angle - gesture.angle)));
+      setLogoScaleValue(Number(scale.toFixed(2)));
+      setLogoRotValue(rotation);
+      return;
+    }
+    const gesture = logoGestureRef.current;
+    if (gesture?.mode !== 'drag' || gesture.pointerId !== e.pointerId) return;
     const r = stageRef.current.getBoundingClientRect();
-    setLogoPos({
-      x: clamp(((e.clientX - r.left) / r.width) * 100, 4, 96),
-      y: clamp(((e.clientY - r.top) / r.height) * 100, 4, 96),
+    setLogoPosValue({
+      x: clamp(gesture.position.x + ((e.clientX - gesture.point.x) / r.width) * 100, 4, 96),
+      y: clamp(gesture.position.y + ((e.clientY - gesture.point.y) / r.height) * 100, 4, 96),
     });
   };
 
-  const onLogoPointerUp = () => setDragging(false);
+  const onLogoPointerUp = (e) => {
+    const pointers = logoPointersRef.current;
+    pointers.delete(e.pointerId);
+    const remaining = [...pointers.entries()];
+    if (remaining.length === 1) {
+      const [pointerId, point] = remaining[0];
+      logoGestureRef.current = {
+        mode: 'drag',
+        pointerId,
+        point,
+        position: logoPosRef.current,
+      };
+    } else if (remaining.length >= 2) {
+      const p1 = remaining[0][1];
+      const p2 = remaining[1][1];
+      logoGestureRef.current = {
+        mode: 'pinch',
+        distance: Math.hypot(p2.x - p1.x, p2.y - p1.y) || 1,
+        angle: Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI,
+        scale: logoScaleRef.current,
+        rotation: logoRotRef.current,
+      };
+    } else {
+      logoGestureRef.current = null;
+    }
+    setDragging(remaining.length > 0);
+  };
 
   // Posición accesible por teclado: flechas mueven el logo (Shift = paso x5).
   const onLogoKeyDown = (e) => {
     const step = e.shiftKey ? 5 : 1;
     const d = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
-    if (!d) return;
-    e.preventDefault();
-    setLogoPos((p) => ({ x: clamp(p.x + d[0], 0, 100), y: clamp(p.y + d[1], 0, 100) }));
+    if (d) {
+      e.preventDefault();
+      setLogoPosValue((p) => ({ x: clamp(p.x + d[0], 0, 100), y: clamp(p.y + d[1], 0, 100) }));
+      return;
+    }
+    if (e.key === '[' || e.key === ']' || e.key === '{' || e.key === '}') {
+      e.preventDefault();
+      const rotationStep = e.shiftKey ? 15 : 1;
+      setLogoRotValue(Math.round(normalizeRotation(logoRotRef.current + (e.key === '[' || e.key === '{' ? -rotationStep : rotationStep))));
+      return;
+    }
+    if (e.key === '+' || e.key === '=' || e.key === '-') {
+      e.preventDefault();
+      const delta = e.key === '-' ? -0.05 : 0.05;
+      setLogoScaleValue(Number(clamp(logoScaleRef.current + delta, 0.3, 2.5).toFixed(2)));
+    }
   };
 
   const resetLogo = () => {
-    setLogoPos({ x: 50, y: 50 });
-    setLogoScale(1);
-    setLogoRot(0);
+    setLogoPosValue({ x: 50, y: 50 });
+    setLogoScaleValue(1);
+    setLogoRotValue(0);
   };
 
   const previewOf = () => (logo ? {
@@ -277,8 +398,8 @@ export default function QuickView({ producto, onClose, initialConfiguration = nu
                 className: `mockup-logo${dragging ? ' dragging' : ''}`,
                 tabIndex: 0,
                 role: 'slider',
-                'aria-label': 'Posición del logo (flechas para mover)',
-                'aria-valuetext': `x ${Math.round(logoPos.x)}%, y ${Math.round(logoPos.y)}%`,
+                'aria-label': 'Logo: flechas mueven, [ ] rotan, + − escalan',
+                'aria-valuetext': `x ${Math.round(logoPos.x)}%, y ${Math.round(logoPos.y)}%, rotación ${logoRot}°, tamaño ${Math.round(logoScale * 100)}%`,
                 onKeyDown: onLogoKeyDown,
                 onPointerDown: onLogoPointerDown,
                 onPointerMove: onLogoPointerMove,
@@ -310,13 +431,15 @@ export default function QuickView({ producto, onClose, initialConfiguration = nu
             {logo && (
               <>
                 <button className="logo-btn" onClick={resetLogo}>Reiniciar</button>
+                <button className="logo-btn" onClick={() => setLogoRotValue(Math.round(normalizeRotation(logoRotRef.current - 90)))}>−90°</button>
+                <button className="logo-btn" onClick={() => setLogoRotValue(Math.round(normalizeRotation(logoRotRef.current + 90)))}>+90°</button>
                 <button className="logo-btn" onClick={() => setLogo(null)}>Quitar</button>
               </>
             )}
             <button className="logo-btn" onClick={exportMockup}>⬇ Guardar mockup</button>
-            <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/avif,image/bmp" hidden onChange={onLogo} />
+            <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif,image/bmp,image/svg+xml,.png,.jpg,.jpeg,.webp,.gif,.avif,.bmp,.svg" hidden onChange={onLogo} />
             <span className="logo-hint">
-              {logo ? 'Arrastrá o usá flechas · referencial, no arte final' : 'Previsualización referencial'}
+              {logo ? 'Arrastrá para mover · pellizcá o usá los controles para tamaño y giro · referencial, no arte final' : 'Previsualización referencial'}
             </span>
           </div>
           {logoErr && <p className="field-error" role="alert">{logoErr}</p>}
@@ -326,14 +449,14 @@ export default function QuickView({ producto, onClose, initialConfiguration = nu
                 <span>X</span>
                 <input type="range" min="0" max="100" step="1" value={Math.round(logoPos.x)}
                   aria-label="Posición horizontal del logo"
-                  onChange={(e) => setLogoPos((p) => ({ ...p, x: Number(e.target.value) }))} />
+                  onChange={(e) => setLogoPosValue((p) => ({ ...p, x: Number(e.target.value) }))} />
                 <b>{Math.round(logoPos.x)}%</b>
               </label>
               <label className="logo-range">
                 <span>Y</span>
                 <input type="range" min="0" max="100" step="1" value={Math.round(logoPos.y)}
                   aria-label="Posición vertical del logo"
-                  onChange={(e) => setLogoPos((p) => ({ ...p, y: Number(e.target.value) }))} />
+                  onChange={(e) => setLogoPosValue((p) => ({ ...p, y: Number(e.target.value) }))} />
                 <b>{Math.round(logoPos.y)}%</b>
               </label>
               <label className="logo-range">
@@ -342,17 +465,17 @@ export default function QuickView({ producto, onClose, initialConfiguration = nu
                   type="range" min="30" max="250" step="5"
                   value={Math.round(logoScale * 100)}
                   aria-label="Tamaño del logo"
-                  onChange={(e) => setLogoScale(Number(e.target.value) / 100)}
+                  onChange={(e) => setLogoScaleValue(Number(e.target.value) / 100)}
                 />
                 <b>{Math.round(logoScale * 100)}%</b>
               </label>
               <label className="logo-range">
                 <span>Rotación</span>
                 <input
-                  type="range" min="-45" max="45" step="1"
+                  type="range" min="-180" max="180" step="1"
                   value={logoRot}
                   aria-label="Rotación del logo"
-                  onChange={(e) => setLogoRot(Number(e.target.value))}
+                  onChange={(e) => setLogoRotValue(Number(e.target.value))}
                 />
                 <b>{logoRot}°</b>
               </label>

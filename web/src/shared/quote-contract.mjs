@@ -9,7 +9,7 @@ export const CONSENT_VERSION = '2026-10-07';
 export const MIN_QTY = 10;
 export const MAX_PAYLOAD_BYTES = 2 * 1024 * 1024;
 export const MAX_PREVIEW_BYTES = 300 * 1024;
-export const MAX_LOGO_ORIGINAL_BYTES = 3 * 1024 * 1024;
+export const MAX_LOGO_ORIGINAL_BYTES = 10 * 1024 * 1024;
 export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function validateQuantity(q) {
@@ -63,7 +63,7 @@ export function validatePreview(p, producto) {
     if (!checkSignature(m[1].toLowerCase(), bytes))
       return { error: 'el contenido del logo no corresponde a un PNG/JPEG/WebP real' };
   }
-  for (const [k, v, lo, hi] of [['x', x, 0, 100], ['y', y, 0, 100], ['scale', scale, 0.3, 2.5], ['rotation', rotation, -45, 45]]) {
+  for (const [k, v, lo, hi] of [['x', x, 0, 100], ['y', y, 0, 100], ['scale', scale, 0.3, 2.5], ['rotation', rotation, -180, 180]]) {
     if (typeof v !== 'number' || !Number.isFinite(v) || v < lo || v > hi)
       return { error: `preview.${k} fuera de rango ${lo}..${hi}` };
   }
