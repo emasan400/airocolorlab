@@ -1,10 +1,10 @@
 const ITEMS = [
+  'Desarrollo de productos textiles',
   'Desde 10 unidades',
   'Producción nacional',
+  'Diseño in-house',
+  'Sublimación y DTF full color',
   'Envíos a todo el país',
-  'Asesoramiento personalizado',
-  'Sublimación full color',
-  'Entrega en 5 a 7 días hábiles',
 ];
 
 export default function Marquee() {

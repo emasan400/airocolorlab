@@ -3,12 +3,16 @@ import { Reveal } from '../hooks/useReveal';
 
 const FAQS = [
   {
+    q: '¿Qué significa que desarrollan productos textiles?',
+    a: 'Que no solo estampamos: partimos de tu idea o de tu marca y resolvemos el producto completo — tipo de prenda u objeto, materiales, moldería, técnica de personalización y terminaciones — hasta dejarlo listo para producir en serie.',
+  },
+  {
     q: '¿Cómo garantizan la calidad?',
     a: 'Cada lote pasa un control de calidad antes del despacho: colores, costuras, estampado y empaque. Además validás una muestra (física o digital) antes de que entremos en producción.',
   },
   {
     q: '¿Cuáles son los tiempos de producción?',
-    a: 'Entre 5 y 15 días hábiles según el producto y el volumen. Al cotizar te confirmamos una fecha de entrega comprometida — no trabajamos con plazos ambiguos.',
+    a: 'Dependen del producto, el volumen y la técnica, por eso los definimos en la cotización de cada proyecto. Una vez acordada la fecha, nos hacemos cargo responsablemente de cumplirla y te mantenemos al tanto de cada etapa.',
   },
   {
     q: '¿Qué pasa si el pedido llega con un defecto?',
@@ -47,7 +51,7 @@ export default function Faq() {
           <div className="section-eyebrow">Información & Operativa</div>
           <h2 className="display section-title">Antes de producir.</h2>
           <p className="section-sub">
-            Conocé nuestra filosofía de trabajo y resolvé tus dudas antes de iniciar la producción.
+            Conocé cómo desarrollamos cada producto y resolvé tus dudas antes de iniciar la producción.
           </p>
         </Reveal>
 
@@ -56,20 +60,14 @@ export default function Faq() {
             <span className="tag">Misión</span>
             <h3>Elevar tu identidad visual</h3>
             <p>
-              Democratizar el acceso a productos textiles personalizados de calidad
-              profesional. Acompañamos a marcas, eventos y creadores permitiéndoles
-              producir desde bajos volúmenes sin comprometer la estética ni los
-              acabados premium.
+              Democratizar el desarrollo de productos textiles de calidad profesional. Acompañamos a marcas, empresas y creadores para que produzcan desde bajos volúmenes sin comprometer la estética ni los acabados premium.
             </p>
           </Reveal>
           <Reveal delay={100} className="mv-card">
             <span className="tag">Visión</span>
-            <h3>El estándar de diseño textil</h3>
+            <h3>El estándar del producto textil a medida</h3>
             <p>
-              Ser el estudio-fábrica referente en Argentina para producciones a
-              medida y merchandising corporativo, demostrando que la personalización
-              textil puede ser ágil, transparente y enfocada 100% en las necesidades
-              del cliente.
+              Ser el estudio de desarrollo de productos textiles referente en Argentina para marcas, empresas y eventos, demostrando que desarrollar y producir a medida puede ser ágil, transparente y enfocado 100% en las necesidades del cliente.
             </p>
           </Reveal>
         </div>

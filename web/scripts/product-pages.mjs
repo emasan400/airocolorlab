@@ -21,7 +21,7 @@ export function renderProductPage(p, template) {
   const pathRel = productPath(p); // /productos/{id}-{slug}/
   const url = BASE + pathRel;
   const title = `${p.nombre} — AIRO Color Lab`;
-  const desc = `${p.descripcion || p.nombre} Producción a pedido, mínimo 10 unidades, cotización a medida.`;
+  const desc = `${p.descripcion || p.nombre} Desarrollo y producción a pedido, mínimo 10 unidades, cotización a medida.`;
   const ld = {
     '@context': 'https://schema.org',
     '@type': 'Product',

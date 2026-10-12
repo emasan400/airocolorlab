@@ -12,7 +12,7 @@
 | Campo | Valor |
 |---|---|
 | Nombre de marca | **AIRO Color Lab** (escrito "AIRO" en mayúsculas + "Color Lab") |
-| Rubro | Estudio B2B de producción y personalización textil |
+| Rubro | Estudio B2B de desarrollo de productos textiles (indumentaria, merchandising y packs a medida) |
 | Propuesta de valor | "Calidad de fábrica, sin los mínimos de fábrica" — producción flexible desde 10 unidades |
 | Tagline del hero | "Hacé que tu marca no pase desapercibida." |
 | Ubicación | Buenos Aires, Argentina — envíos a todo el país |
@@ -23,6 +23,7 @@
 
 ### Conceptos centrales de marca
 
+- **Desarrollo de producto, no solo estampado**: AIRO resuelve el producto textil completo (pieza, materiales, moldería, técnica, terminaciones), no imprime sobre algo ya hecho.
 - **Objetos que se conservan**: el merchandising como pieza de diseño, no como descartable.
 - **Estudio, no imprenta**: se habla de "proyectos" y "asesoramiento", no de "impresiones".
 - **Accesible sin ser barato**: mínimos bajos (10 uds.) pero calidad premium.
@@ -67,11 +68,12 @@
 | Idioma | Español rioplatense, **voseo** ("hacé", "contanos", "tu marca") |
 | Registro | Profesional pero cercano. Segunda persona del singular ("vos/tu") |
 | Léxico propio | "cotización" (nunca "carrito" ni "compra"), "proyecto", "producción a pedido", "pedido mínimo 10 unidades" |
-| Promesa concreta | "Respuesta en menos de 24 hs hábiles" |
+| Promesa concreta | "Respuesta en menos de 24 hs hábiles" · fechas de entrega solo una vez acordadas en la cotización |
 | Evitar | Jerga de ecommerce ("agregar al carrito", "checkout", "oferta flash"), exclamaciones excesivas, anglicismos innecesarios |
 
 ### Ejemplos de copy aprobado
 
+- "Desarrollamos productos textiles para marcas, empresas y eventos."
 - "Sumá productos del catálogo para arrancar tu cotización."
 - "Un asesor de AIRO revisará tu proyecto."
 - "Merchandising corporativo e indumentaria a medida para marcas, eventos y empresas."
@@ -117,7 +119,7 @@ Técnicas de personalización mencionadas en specs: sublimación 360°/full colo
 ### Convenciones de publicación
 
 - CTA único por pieza, siempre hacia WhatsApp o al formulario de cotización.
-- Hashtags sugeridos: #MerchandisingCorporativo #IndumentariaPersonalizada #MerchandisingArgentina #Branding #AIROColorLab
+- Hashtags sugeridos: #MerchandisingCorporativo #IndumentariaPersonalizada #MerchandisingArgentina #Branding #AIROColorLab #DesarrolloDeProducto
 - Formato prioridad: carruseles (antes/después, procesos) y Reels cortos de producción.
 - Nunca prometer precios en publicaciones — los precios son a medida por volumen; derivar a cotización.
 
@@ -127,8 +129,8 @@ Técnicas de personalización mencionadas en specs: sublimación 360°/full colo
 
 | Ítem | Estado / regla |
 |---|---|
-| Title | "AIRO Color Lab \| Merchandising Corporativo e Indumentaria Personalizada" (verificar en `web/index.html`) |
-| Meta description | Merchandising corporativo e indumentaria a medida para marcas, eventos y empresas. Desde 10 unidades. Buenos Aires. |
+| Title | AIRO Color Lab — Desarrollo de productos textiles para marcas |
+| Meta description | AIRO Color Lab desarrolla productos textiles para marcas, empresas y eventos: indumentaria, merchandising y packs a medida. Producción a pedido desde 10 unidades. Buenos Aires. |
 | Keywords naturales | merchandising corporativo, indumentaria personalizada, remeras personalizadas, lanyards personalizados, regalos empresariales, packs onboarding, Buenos Aires |
 | Estructura | SPA con hash routing — el contenido indexable vive en una sola URL; priorizar Instagram/Google Business Profile para alcance orgánico |
 | Reglas de copy | alt text descriptivo en toda imagen de producto; headings jerárquicos; nunca keyword stuffing |
@@ -146,6 +148,7 @@ Técnicas de personalización mencionadas en specs: sublimación 360°/full colo
 
 - Pedido mínimo: **10 unidades por producto**, cantidades en múltiplos de 10.
 - Sin precios públicos: todo es "cotización a medida" hasta que exista tabla de precios.
+- Sin plazos de producción públicos: dependen de cada proyecto y se definen en la cotización. Mensaje aprobado: "nos hacemos cargo responsablemente de las fechas acordadas".
 - Lead time de respuesta prometido: 24 hs hábiles.
 - Datos personales: consentimiento obligatorio (Ley 25.326), link a `#/privacidad`.
 - El sitio es estático (Vercel); el catálogo puede vivir en `catalogo.json` o en Supabase según entorno.

@@ -20,8 +20,7 @@ export default function Hero() {
         </Reveal>
         <Reveal delay={200} className="hero-bottom">
           <p className="hero-sub">
-            Merchandising corporativo e indumentaria a medida para marcas, eventos
-            y empresas. Calidad de fábrica, sin los mínimos de fábrica.
+            Desarrollamos productos textiles para marcas, empresas y eventos: indumentaria, merchandising y packs pensados desde cero para tu identidad. Calidad de fábrica, sin los mínimos de fábrica.
           </p>
           <div className="hero-actions">
             <a href="#coleccion" className="btn btn--light">Comenzar mi proyecto</a>
@@ -29,7 +28,7 @@ export default function Hero() {
           </div>
           <div className="hero-meta">
             <span>Desde 10 uds.</span>
-            <span>Producción a pedido</span>
+            <span>Desarrollo a medida</span>
             <span>Buenos Aires</span>
           </div>
         </Reveal>

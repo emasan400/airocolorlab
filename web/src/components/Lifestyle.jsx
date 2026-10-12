@@ -24,7 +24,7 @@ export default function Lifestyle() {
             <div className="life-info">
               <span className="tag">Indumentaria</span>
               <h3>Uniformes & colecciones</h3>
-              <p>Vestí a tu equipo con materiales premium y acabados duraderos.</p>
+              <p>Prendas desarrolladas para tu equipo o tu línea propia, con materiales premium y acabados duraderos.</p>
             </div>
             <span className="life-cta" aria-hidden="true">Ver productos →</span>
           </Reveal>
@@ -33,7 +33,7 @@ export default function Lifestyle() {
             <div className="life-info">
               <span className="tag">Merchandising</span>
               <h3>Objetos que se conservan</h3>
-              <p>Lanyards, tote bags y accesorios que tus clientes van a querer quedarse.</p>
+              <p>Lanyards, tote bags y accesorios textiles diseñados para que tus clientes quieran quedárselos.</p>
             </div>
             <span className="life-cta" aria-hidden="true">Ver productos →</span>
           </Reveal>

@@ -12,16 +12,17 @@ export default function Terms() {
             Los presentes Términos y Condiciones regulan el uso del sitio web de{' '}
             <b>AIRO Color Lab</b> (en adelante, el "Estudio"), con domicilio en la Ciudad
             Autónoma de Buenos Aires, Argentina, así como las condiciones comerciales de
-            los servicios de producción y personalización de merchandising corporativo e
-            indumentaria a medida que el Estudio ofrece a sus clientes (en adelante, el
+            los servicios de desarrollo, producción y personalización de productos
+            textiles (indumentaria, merchandising y packs a medida) que el Estudio
+            ofrece a sus clientes (en adelante, el
             "Cliente"). Al utilizar este sitio o solicitar una cotización, el Cliente
             declara conocer y aceptar estas condiciones.
           </p>
 
           <h2>1. Objeto y alcance del servicio</h2>
           <p>
-            El Estudio brinda servicios B2B de diseño, producción y personalización de
-            indumentaria y artículos promocionales (remeras, buzos, lanyards, cintas,
+            El Estudio brinda servicios B2B de desarrollo, diseño, producción y
+            personalización de productos textiles (remeras, buzos, lanyards, cintas,
             bolsos, etiquetas, entre otros). La información publicada en este sitio —
             catálogo, descripciones, materiales y referencias — tiene carácter
             orientativo y no constituye oferta vinculante; cada proyecto se define en

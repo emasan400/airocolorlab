@@ -14,7 +14,7 @@ export default function Footer() {
         <div className="footer-xl">AIRO Color Lab<span className="dot">.</span></div>
         <div className="footer-grid">
           <div>
-            <p>Estudio B2B de producción y personalización textil. Buenos Aires, Argentina.</p>
+            <p>Estudio de desarrollo de productos textiles para marcas, empresas y eventos. Buenos Aires, Argentina.</p>
           </div>
           <div>
             <h5>Secciones</h5>

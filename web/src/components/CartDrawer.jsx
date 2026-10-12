@@ -10,7 +10,7 @@ import MockupPreview from './MockupPreview';
 import QuickView from './QuickView';
 
 const STEPS = ['Tu selección', 'Tus datos'];
-const OBJETIVOS = ['Evento', 'Uniformes', 'Merchandising', 'Regalos'];
+const OBJETIVOS = ['Evento', 'Uniformes', 'Merchandising', 'Regalos', 'Marca propia'];
 const DISENO = ['Sí, lo tengo', 'No', 'Necesito ayuda'];
 const FORM_DRAFT_KEY = 'airo_quote_form_draft_v1';
 const EMPTY_FORM = { nombre: '', empresa: '', whatsapp: '', email: '', objetivo: '', fecha: '', lugar: '', diseno: '', comentarios: '', website: '' };
@@ -463,8 +463,8 @@ export default function CartDrawer() {
                       </div>
                       <p className="q-min-note">Mínimo {MIN_QTY} unidades por producto · múltiplos de 10 · precios por cotización.</p>
                       <div className="trust">
-                        <div>✔ Producción flexible desde 10 unidades</div>
-                        <div>✔ Asesoramiento personalizado in-house</div>
+                        <div>✔ Desarrollo de producto y producción desde 10 unidades</div>
+                        <div>✔ Diseño y asesoramiento in-house</div>
                         <div>✔ Precios por cotización · respuesta en menos de 24 hs hábiles</div>
                       </div>
                     </>
@@ -586,7 +586,7 @@ export default function CartDrawer() {
                     {sending ? 'Enviando…' : 'Enviar solicitud'}
                   </button>
                 </div>
-                <p className="disclaimer">🔒 Un asesor de AIRO revisará tu proyecto. Precios por cotización — no hay fecha de entrega prometida.</p>
+                <p className="disclaimer">🔒 Un asesor de AIRO revisará tu proyecto. Precios y fechas se acuerdan en la cotización.</p>
               </>
             )}
           </div>

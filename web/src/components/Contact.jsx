@@ -4,7 +4,7 @@ import { postLead } from '../lib/leads';
 import { trackQuoteEvent } from '../lib/analytics';
 import { Reveal } from '../hooks/useReveal';
 
-const OBJETIVOS = ['Evento', 'Merchandising', 'Uniformes', 'Regalos'];
+const OBJETIVOS = ['Evento', 'Merchandising', 'Uniformes', 'Regalos', 'Marca propia'];
 const DISENO = ['Sí, lo tengo', 'No', 'Necesito ayuda'];
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -136,8 +136,7 @@ export default function Contact() {
             <div className="section-eyebrow">Contacto</div>
             <h2 className="display">Hablemos<em>.</em></h2>
             <p>
-              Contanos sobre tu proyecto. Nuestro estudio armará una propuesta a
-              medida para tu marca.
+              Contanos qué producto querés desarrollar. Nuestro estudio armará una propuesta a medida para tu marca.
             </p>
 
             <div className="contact-lines">
@@ -159,8 +158,8 @@ export default function Contact() {
 
             <div className="contact-trust">
               <h4>¿Por qué AIRO Color Lab?</h4>
-              <div>✔ Producción flexible desde 10 unidades</div>
-              <div>✔ Asesoramiento personalizado in-house</div>
+              <div>✔ Desarrollo de producto y producción desde 10 unidades</div>
+              <div>✔ Diseño y asesoramiento in-house</div>
               <div>✔ Respuesta en menos de 24 hs hábiles</div>
             </div>
           </Reveal>

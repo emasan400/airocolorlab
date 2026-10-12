@@ -3,10 +3,10 @@ import { Reveal } from '../hooks/useReveal';
 const STEP_MS = 2400; // tiempo que tarda el pulso en llegar de un nodo al siguiente
 
 const STEPS = [
-  { h: 'Contanos tu idea', p: 'Completás el formulario inicial con productos, cantidades y fecha objetivo.' },
-  { h: 'Asesoramiento + muestra', p: 'Definimos materiales y técnicas juntos, y validás una muestra antes de producir.' },
+  { h: 'Contanos tu idea', p: 'Completás el formulario con productos, cantidades y fecha objetivo. Si todavía no tenés diseño, lo desarrollamos juntos.' },
+  { h: 'Desarrollo + muestra', p: 'Definimos materiales, técnicas y terminaciones, y validás una muestra antes de producir.' },
   { h: 'Fabricamos', p: 'Producción dedicada con control de calidad por lote en cada etapa.' },
-  { h: 'Entrega y post-venta', p: 'Despacho puerta a puerta y seguimiento hasta que estés conforme.' },
+  { h: 'Entrega y post-venta', p: 'Despacho puerta a puerta en la fecha acordada y seguimiento hasta que estés conforme.' },
 ];
 
 export default function Process() {
