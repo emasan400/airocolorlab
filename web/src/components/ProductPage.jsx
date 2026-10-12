@@ -8,6 +8,8 @@ import QuickView from './QuickView';
 import NotFound from './NotFound';
 import { getTodosProductos, loadCatalogo } from '../lib/catalog';
 import { productPath } from '../lib/slug';
+import { openWhatsApp } from '../lib/secure';
+
 function ProductView({ producto, relacionados }) {
   const [imgIndex, setImgIndex] = useState(0);
   const [quickOpen, setQuickOpen] = useState(false);
@@ -21,7 +23,9 @@ function ProductView({ producto, relacionados }) {
     <main id="main-content" tabIndex={-1}>
       <section className="section product-page">
         <div className="container">
-          <a href="/#coleccion" className="privacy-back">← Volver al catálogo</a>
+          <nav className="crumbs" aria-label="Ruta de navegación">
+            <a href="/">Inicio</a><span aria-hidden="true">/</span><a href="/#coleccion">Productos</a><span aria-hidden="true">/</span><b>{producto.nombre}</b>
+          </nav>
           <div className="product-page-grid">
             <div>
               <div className="modal-imgbox product-page-hero">
@@ -40,9 +44,9 @@ function ProductView({ producto, relacionados }) {
               )}
             </div>
             <div>
-              <span className="row-cat">{producto.categoria}</span>
-              <h1 className="display">{producto.nombre}</h1>
-              <p className="section-sub">{producto.descripcion}</p>
+              <div className="section-eyebrow">{producto.categoria}</div>
+              <h1 className="display product-title">{producto.nombre}</h1>
+              <p className="product-lead">{producto.descripcion}</p>
               {producto.especificaciones?.length > 0 && (
                 <div className="specs-box">
                   {producto.especificaciones.map((s, i) => <div className="spec-item" key={i}>{s}</div>)}
@@ -59,22 +63,27 @@ function ProductView({ producto, relacionados }) {
               <p className="q-min-note">
                 Pedido mínimo 10 unidades · múltiplos de 10 · precios por cotización a medida.
               </p>
-              <div className="row" style={{ marginTop: 20 }}>
+              <div className="product-actions">
                 <button className="btn btn--primary" onClick={() => setQuickOpen(true)}>
                   Personalizar y cotizar
+                </button>
+                <button className="btn btn--ghost" onClick={() => openWhatsApp(`¡Hola AIRO! Quiero consultar por *${producto.nombre}*.`)}>
+                  Consultar por WhatsApp
                 </button>
               </div>
             </div>
           </div>
 
           {relacionados.length > 0 && (
-            <>
-              <div className="section-title" style={{ marginTop: 56 }}>También te puede servir</div>
-              <div className="product-grid">
+            <section className="related" aria-labelledby="related-title">
+              <div className="section-eyebrow">Relacionados</div>
+              <h2 id="related-title" className="display section-title">También te puede servir</h2>
+              <div className="product-grid related-grid">
                 {relacionados.map((r) => (
                   <a key={r.id_producto} className="product-card product-card--link" href={productPath(r)}>
                     <div className="product-img">
                       {r.imagen_principal ? <img src={r.imagen_principal} alt={r.nombre} loading="lazy" /> : <div className="product-img-empty" />}
+                      <span className="product-cta">Ver producto →</span>
                     </div>
                     <div className="product-info">
                       <span className="row-cat">{r.categoria}</span>
@@ -83,7 +92,7 @@ function ProductView({ producto, relacionados }) {
                   </a>
                 ))}
               </div>
-            </>
+            </section>
           )}
         </div>
       </section>
@@ -105,7 +114,12 @@ export default function ProductPage({ id }) {
     [productos, id]
   );
   const relacionados = useMemo(
-    () => productos.filter((p) => p.activo && p.id_producto !== id && p.categoria === producto?.categoria).slice(0, 3),
+    () => {
+      const otros = productos.filter((p) => p.activo && p.id_producto !== id);
+      const misma = otros.filter((p) => p.categoria === producto?.categoria);
+      const resto = otros.filter((p) => p.categoria !== producto?.categoria);
+      return [...misma, ...resto].slice(0, 3);
+    },
     [productos, id, producto]
   );
 
