@@ -262,3 +262,27 @@ grant select, insert, update, delete on clientes, proveedores, inventario_produc
   inventario_materiales, movimientos_stock, remitos, remito_items, flujo_caja,
   gestion_audit_log, api_keys_integraciones to authenticated;
 
+-- ============================================================
+-- 11. GESTIÓN DE USUARIOS Y ROLES (RBAC) EN SUPABASE
+-- Las credenciales de acceso (email y contraseña) se gestionan
+-- exclusivamente en auth.users con encriptación nativa bcrypt (GoTrue).
+-- Esta tabla almacena perfiles y roles operativos de taller vinculados.
+-- ============================================================
+create table if not exists usuarios_gestion (
+  id              uuid primary key references auth.users(id) on delete cascade,
+  email           text not null unique,
+  nombre          text not null,
+  rol             text not null check (rol in ('admin', 'taller_produccion', 'logistica_despacho', 'tesoreria_caja', 'comercial_b2b')),
+  activo          boolean not null default true,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+
+alter table usuarios_gestion enable row level security;
+
+create policy "usuarios_gestion_admin_access" on usuarios_gestion
+  for all to authenticated using (public.is_airo_admin()) with check (public.is_airo_admin());
+
+revoke all on usuarios_gestion from anon, public;
+grant select, insert, update, delete on usuarios_gestion to authenticated;
+

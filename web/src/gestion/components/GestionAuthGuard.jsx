@@ -1,6 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase, supabaseEnabled } from '../../lib/supabase.js';
-import { setOperadorActual, getUsuarios } from '../services/storageService.js';
+import {
+  setOperadorActual,
+  getUsuarios,
+  verifyPasswordSync,
+  DEFAULT_ADMIN_HASH,
+} from '../services/storageService.js';
 
 // Inactividad máxima permitida antes de auto-cerrar sesión (30 minutos)
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
@@ -189,10 +194,10 @@ function SecureAdminLogin({ onSuccess, idleLockedMessage }) {
 
         let passwordOk = false;
         if (userMatch) {
-          passwordOk = userMatch.password ? userMatch.password === password : password.length >= 8;
+          passwordOk = userMatch.password ? verifyPasswordSync(password, userMatch.password) : password.length >= 8;
         } else {
           // Si no está registrado aún pero ingresa con la clave maestra de taller
-          passwordOk = password === 'AiroTaller2026!' || (cleanEmail.includes('admin') && password.length >= 8);
+          passwordOk = verifyPasswordSync(password, DEFAULT_ADMIN_HASH) || (cleanEmail.includes('admin') && password.length >= 8);
         }
 
         if (passwordOk) {

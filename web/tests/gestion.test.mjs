@@ -228,6 +228,8 @@ test('Matriz de Roles y Gestión de Usuarios (RBAC)', () => {
   });
   assert.ok(operarioTaller.id);
   assert.equal(operarioTaller.rol, 'taller_produccion');
+  assert.ok(operarioTaller.password.startsWith('sha256:'), 'Contraseña guardada debe tener hash sha256 con salt');
+  assert.ok(storage.verifyPasswordSync('PasswordTaller123!', operarioTaller.password), 'Debe verificar correctamente la clave del colaborador');
 
   // Validar permisos según matriz
   assert.equal(storage.isModuloPermitido(operarioTaller.rol, 'materiales'), true, 'Taller debe acceder a insumos');
@@ -279,16 +281,20 @@ test('Cambio y Reseteo Seguro de Contraseña', async () => {
     'Debe exigir mínimo 8 caracteres'
   );
 
-  // 3. Cambio correcto self-service
+  // 3. Cambio correcto self-service (debe encriptarse con SHA-256 + salt y no quedar en plano)
   const res = await storage.cambiarPasswordUsuario(testUser.id, 'PasswordInicial123!', 'NuevaClaveSegura2026!');
   assert.ok(res.ok);
 
   const actualizado = storage.getUsuarioPorEmail('test.pwd@airocolorlab.com');
-  assert.equal(actualizado.password, 'NuevaClaveSegura2026!');
+  assert.ok(storage.verifyPasswordSync('NuevaClaveSegura2026!', actualizado.password), 'Debe verificar correctamente la clave');
+  assert.ok(actualizado.password.startsWith('sha256:'), 'Debe estar hasheada con prefijo sha256:salt:hash');
+  assert.notEqual(actualizado.password, 'NuevaClaveSegura2026!', 'Jamás debe guardarse en texto plano');
 
   // 4. Reseteo administrativo (sin requerir la anterior)
   await storage.adminResetPassword(testUser.id, 'ResetPorAdmin888!');
   const reseteado = storage.getUsuarioPorEmail('test.pwd@airocolorlab.com');
-  assert.equal(reseteado.password, 'ResetPorAdmin888!');
+  assert.ok(storage.verifyPasswordSync('ResetPorAdmin888!', reseteado.password), 'Debe verificar correctamente la nueva clave reseteada');
+  assert.ok(reseteado.password.startsWith('sha256:'), 'La clave reseteada debe quedar hasheada');
+  assert.notEqual(reseteado.password, 'ResetPorAdmin888!', 'Jamás debe quedar en texto plano en la base');
 });
 
