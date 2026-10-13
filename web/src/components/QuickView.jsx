@@ -433,81 +433,87 @@ export default function QuickView({ producto, onClose, initialConfiguration = nu
               ))}
             </div>
           )}
-          <div className="logo-tools">
-            <button className="logo-btn" onClick={() => fileRef.current?.click()}>
-              ↑ {logo ? 'Cambiar logo' : 'Probar mi logo'}
-            </button>
-            {logo && (
-              <>
-                <button className="logo-btn" onClick={resetLogo}>Reiniciar</button>
-                <button className="logo-btn" onClick={() => setLogoRotValue(Math.round(normalizeRotation(logoRotRef.current - 90)))}>−90°</button>
-                <button className="logo-btn" onClick={() => setLogoRotValue(Math.round(normalizeRotation(logoRotRef.current + 90)))}>+90°</button>
-                <button className="logo-btn" onClick={() => setLogo(null)}>Quitar</button>
-              </>
+          <div className="mockup-controls">
+            <div className="logo-tools">
+              <button
+                type="button"
+                className={`logo-btn${logo ? ' logo-btn--active' : ' logo-btn--primary'}`}
+                onClick={() => fileRef.current?.click()}
+              >
+                ↑ {logo ? 'Cambiar logo' : 'Probar mi logo'}
+              </button>
+              {logo && (
+                <>
+                  <button type="button" className="logo-btn" onClick={resetLogo} title="Centrar y restablecer tamaño y rotación">Reiniciar</button>
+                  <button type="button" className="logo-btn" onClick={() => setLogoRotValue(Math.round(normalizeRotation(logoRotRef.current - 90)))} title="Girar 90° a la izquierda">−90°</button>
+                  <button type="button" className="logo-btn" onClick={() => setLogoRotValue(Math.round(normalizeRotation(logoRotRef.current + 90)))} title="Girar 90° a la derecha">+90°</button>
+                  <button type="button" className="logo-btn logo-btn--danger" onClick={() => setLogo(null)} title="Quitar logo">Quitar</button>
+                </>
+              )}
+              <button type="button" className="logo-btn" onClick={exportMockup} title="Guardar imagen del mockup referencial">⬇ Guardar mockup</button>
+              <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif,image/bmp,image/svg+xml,.png,.jpg,.jpeg,.webp,.gif,.avif,.bmp,.svg" hidden onChange={onLogo} />
+              <span className="logo-hint">
+                {logo ? 'Arrastrá para mover · pellizcá o usá los controles para tamaño y giro · referencial, no arte final' : 'Previsualización referencial'}
+              </span>
+            </div>
+            {isTintable(imgs[imgIndex]) && (
+              <div className="tint-row" role="group" aria-label="Color de la prenda en el mockup">
+                <span className="tint-label">Color</span>
+                {TINTS.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    className={`tint-swatch${tint === t.hex ? ' selected' : ''}`}
+                    style={{ '--swatch': t.hex }}
+                    aria-pressed={tint === t.hex}
+                    aria-label={t.label}
+                    title={t.label}
+                    onClick={() => setTint(t.hex)}
+                  />
+                ))}
+                <span className="tint-hint">Color referencial — el tono real depende del textil.</span>
+              </div>
             )}
-            <button className="logo-btn" onClick={exportMockup}>⬇ Guardar mockup</button>
-            <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif,image/bmp,image/svg+xml,.png,.jpg,.jpeg,.webp,.gif,.avif,.bmp,.svg" hidden onChange={onLogo} />
-            <span className="logo-hint">
-              {logo ? 'Arrastrá para mover · pellizcá o usá los controles para tamaño y giro · referencial, no arte final' : 'Previsualización referencial'}
-            </span>
+            {logoErr && <p className="field-error" role="alert">{logoErr}</p>}
+            {logo && (
+              <div className="logo-ranges" role="group" aria-label="Ajustes de imagen del logo">
+                <label className="logo-range">
+                  <span>Tamaño</span>
+                  <input
+                    type="range" min="30" max="250" step="5"
+                    value={Math.round(logoScale * 100)}
+                    aria-label="Tamaño del logo"
+                    onChange={(e) => setLogoScaleValue(Number(e.target.value) / 100)}
+                  />
+                  <b>{Math.round(logoScale * 100)}%</b>
+                </label>
+                <label className="logo-range">
+                  <span>Rotación</span>
+                  <input
+                    type="range" min="-180" max="180" step="1"
+                    value={logoRot}
+                    aria-label="Rotación del logo"
+                    onChange={(e) => setLogoRotValue(Number(e.target.value))}
+                  />
+                  <b>{logoRot}°</b>
+                </label>
+                <label className="logo-range">
+                  <span>Pos. X</span>
+                  <input type="range" min="0" max="100" step="1" value={Math.round(logoPos.x)}
+                    aria-label="Posición horizontal del logo"
+                    onChange={(e) => setLogoPosValue((p) => ({ ...p, x: Number(e.target.value) }))} />
+                  <b>{Math.round(logoPos.x)}%</b>
+                </label>
+                <label className="logo-range">
+                  <span>Pos. Y</span>
+                  <input type="range" min="0" max="100" step="1" value={Math.round(logoPos.y)}
+                    aria-label="Posición vertical del logo"
+                    onChange={(e) => setLogoPosValue((p) => ({ ...p, y: Number(e.target.value) }))} />
+                  <b>{Math.round(logoPos.y)}%</b>
+                </label>
+              </div>
+            )}
           </div>
-          {isTintable(imgs[imgIndex]) && (
-            <div className="tint-row" role="group" aria-label="Color de la prenda en el mockup">
-              <span className="tint-label">Color</span>
-              {TINTS.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  className={`tint-swatch${tint === t.hex ? ' selected' : ''}`}
-                  style={{ '--swatch': t.hex }}
-                  aria-pressed={tint === t.hex}
-                  aria-label={t.label}
-                  title={t.label}
-                  onClick={() => setTint(t.hex)}
-                />
-              ))}
-              <span className="tint-hint">Color referencial — el tono real depende del textil.</span>
-            </div>
-          )}
-          {logoErr && <p className="field-error" role="alert">{logoErr}</p>}
-          {logo && (
-            <div className="logo-ranges">
-              <label className="logo-range">
-                <span>X</span>
-                <input type="range" min="0" max="100" step="1" value={Math.round(logoPos.x)}
-                  aria-label="Posición horizontal del logo"
-                  onChange={(e) => setLogoPosValue((p) => ({ ...p, x: Number(e.target.value) }))} />
-                <b>{Math.round(logoPos.x)}%</b>
-              </label>
-              <label className="logo-range">
-                <span>Y</span>
-                <input type="range" min="0" max="100" step="1" value={Math.round(logoPos.y)}
-                  aria-label="Posición vertical del logo"
-                  onChange={(e) => setLogoPosValue((p) => ({ ...p, y: Number(e.target.value) }))} />
-                <b>{Math.round(logoPos.y)}%</b>
-              </label>
-              <label className="logo-range">
-                <span>Tamaño</span>
-                <input
-                  type="range" min="30" max="250" step="5"
-                  value={Math.round(logoScale * 100)}
-                  aria-label="Tamaño del logo"
-                  onChange={(e) => setLogoScaleValue(Number(e.target.value) / 100)}
-                />
-                <b>{Math.round(logoScale * 100)}%</b>
-              </label>
-              <label className="logo-range">
-                <span>Rotación</span>
-                <input
-                  type="range" min="-180" max="180" step="1"
-                  value={logoRot}
-                  aria-label="Rotación del logo"
-                  onChange={(e) => setLogoRotValue(Number(e.target.value))}
-                />
-                <b>{logoRot}°</b>
-              </label>
-            </div>
-          )}
         </div>
 
         <div className="modal-right">
