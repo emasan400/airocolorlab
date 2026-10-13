@@ -11,7 +11,6 @@ import {
   KEYS,
 } from '../services/storageService.js';
 import {
-  IconLock,
   IconShield,
   IconWarning,
   IconEye,
@@ -323,10 +322,10 @@ function SecureAdminLogin({ onSuccess, idleLockedMessage }) {
         setFailedAttempts(0);
         onSuccess(mfaChallenge.session);
       } else {
-        handleAuthFailure('Código 2FA incorrecto o expirado. Verificá tu aplicación autenticadora.');
+        handleAuthFailure('Código incorrecto o expirado. Verificá tu aplicación.');
       }
-    } catch (err) {
-      setErrorMsg('Error al validar código 2FA: ' + err.message);
+    } catch {
+      setErrorMsg('Error al validar código de verificación.');
     } finally {
       setBusy(false);
     }
@@ -369,10 +368,6 @@ function SecureAdminLogin({ onSuccess, idleLockedMessage }) {
             AIRO COLOR LAB.<span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--cyan)', display: 'inline-block' }} />
           </h2>
           <p className="auth-subtitle">Estudio Textil · Acceso al Sistema de Gestión B2B</p>
-          <div className="auth-security-badge">
-            <IconLock size={13} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 6 }} />
-            Conexión Cifrada SSL · Hashing Criptográfico SHA-256 + MFA
-          </div>
         </div>
 
         {mfaChallenge ? (
@@ -384,27 +379,21 @@ function SecureAdminLogin({ onSuccess, idleLockedMessage }) {
               </div>
             )}
 
-            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-              <div style={{ display: 'inline-flex', padding: '12px', borderRadius: '50%', background: 'rgba(26, 66, 149, 0.08)', color: 'var(--blue)', marginBottom: '10px' }}>
-                <IconShield size={32} />
+            <div style={{ textAlign: 'center', marginBottom: '18px' }}>
+              <div style={{ display: 'inline-flex', padding: '10px', borderRadius: '50%', background: 'rgba(26, 66, 149, 0.08)', color: 'var(--blue)', marginBottom: '8px' }}>
+                <IconShield size={28} />
               </div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--cyan-ink)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>
-                Paso 2 de 2 · Verificación de Identidad
-              </div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 6px 0', color: 'var(--blue)' }}>
-                Doble Factor de Autenticación (MFA)
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 4px 0', color: 'var(--blue)' }}>
+                Código de verificación
               </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--ink-70)', margin: '0 0 8px 0', lineHeight: 1.4 }}>
-                Ingresá el código de 6 dígitos generado por tu app autenticadora para <strong>{mfaChallenge.userObj.email}</strong>.
+              <p style={{ fontSize: '0.85rem', color: 'var(--ink-70)', margin: 0 }}>
+                Ingresá el código de 6 dígitos de tu aplicación.
               </p>
-              <div style={{ fontSize: '0.76rem', color: 'var(--ink-45)', background: 'var(--neutral)', padding: '6px 12px', borderRadius: '6px', display: 'inline-block' }}>
-                Estándar RFC 6238 (TOTP) · Rota cada 30 segundos
-              </div>
             </div>
 
             <div className="auth-form-group">
               <label htmlFor="auth-mfa-code" style={{ textAlign: 'center', fontWeight: 600 }}>
-                Código Numérico Temporal (6 dígitos)
+                Código de seguridad
               </label>
               <input
                 id="auth-mfa-code"
