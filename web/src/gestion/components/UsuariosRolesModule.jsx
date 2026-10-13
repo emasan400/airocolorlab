@@ -5,6 +5,10 @@ import {
   deleteUsuario,
   cambiarPasswordUsuario,
   adminResetPassword,
+  generateTotpSecret,
+  verifyTotpCode,
+  enableMfaForUser,
+  disableMfaForUser,
   ROLES_DEFINICION,
   getOperadorActual,
 } from '../services/storageService.js';
@@ -49,10 +53,68 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
     success: '',
   });
 
+  // Modal Configuración de MFA TOTP (Doble Factor)
+  const [modalMfa, setModalMfa] = useState({
+    open: false,
+    secret: '',
+    testCode: '',
+    error: '',
+    success: '',
+    busy: false,
+  });
+
   const reloadUsuarios = () => {
     const list = getUsuarios();
     setUsuarios(list);
     if (onProfileUpdated) onProfileUpdated();
+  };
+
+  const handleOpenSetupMfa = () => {
+    const sec = generateTotpSecret();
+    setModalMfa({
+      open: true,
+      secret: sec,
+      testCode: '',
+      error: '',
+      success: '',
+      busy: false,
+    });
+  };
+
+  const handleConfirmMfa = async (e) => {
+    e.preventDefault();
+    if (modalMfa.testCode.length !== 6) {
+      setModalMfa((m) => ({ ...m, error: 'El código debe tener 6 dígitos numéricos.' }));
+      return;
+    }
+    setModalMfa((m) => ({ ...m, busy: true, error: '' }));
+    try {
+      const isValid = await verifyTotpCode(modalMfa.secret, modalMfa.testCode);
+      if (!isValid) {
+        setModalMfa((m) => ({ ...m, error: 'Código 2FA incorrecto. Asegurate de que la hora de tu teléfono esté sincronizada.', busy: false }));
+        return;
+      }
+      enableMfaForUser(currentUserEmail || getOperadorActual(), modalMfa.secret);
+      setModalMfa((m) => ({ ...m, success: '¡Doble factor (MFA) activado con éxito!', busy: false }));
+      reloadUsuarios();
+      setTimeout(() => {
+        setModalMfa({ open: false, secret: '', testCode: '', error: '', success: '', busy: false });
+      }, 1500);
+    } catch (err) {
+      setModalMfa((m) => ({ ...m, error: err.message, busy: false }));
+    }
+  };
+
+  const handleDisableMfa = () => {
+    if (confirm('¿Estás seguro de que deseás desactivar la verificación en dos pasos (MFA)? Tu cuenta quedará protegida solo con contraseña.')) {
+      try {
+        disableMfaForUser(currentUserEmail || getOperadorActual());
+        reloadUsuarios();
+        alert('Doble factor (MFA) desactivado.');
+      } catch (err) {
+        alert(err.message);
+      }
+    }
   };
 
   const handleOpenNuevo = () => {
@@ -580,6 +642,141 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                   style={{ width: '100%' }}
                 >
                   {selfPassword.busy ? 'Guardando nueva clave…' : 'Actualizar Mi Contraseña'}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Card MFA / 2FA TOTP */}
+          <div className="gestion-kpi-card" style={{ padding: '32px', marginTop: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+              <h3 className="display" style={{ fontSize: '22px', margin: 0 }}>
+                Verificación en Dos Pasos (MFA / 2FA)
+              </h3>
+              <span className={`g-badge ${usuarios.find((u) => u.email.toLowerCase() === (currentUserEmail || getOperadorActual()).toLowerCase())?.mfa_enabled ? 'g-badge-success' : 'g-badge-neutral'}`}>
+                {usuarios.find((u) => u.email.toLowerCase() === (currentUserEmail || getOperadorActual()).toLowerCase())?.mfa_enabled ? '🛡️ Activado y Seguro' : '⚠️ Desactivado'}
+              </span>
+            </div>
+
+            <p style={{ fontSize: '13.5px', color: 'var(--ink-70)', marginBottom: '20px' }}>
+              Protegé tu acceso con una capa extra de seguridad sin costo ($0). Compatible con <strong>Google Authenticator</strong>, <strong>Microsoft Authenticator</strong> o <strong>Authy</strong>.
+            </p>
+
+            {usuarios.find((u) => u.email.toLowerCase() === (currentUserEmail || getOperadorActual()).toLowerCase())?.mfa_enabled ? (
+              <div style={{ background: 'rgba(34, 177, 94, 0.08)', padding: '16px', borderRadius: 'var(--r-m)', border: '1px solid rgba(34, 177, 94, 0.2)' }}>
+                <p style={{ fontSize: '0.85rem', color: '#15803d', margin: '0 0 12px 0' }}>
+                  ✓ El doble factor está habilitado. Al iniciar sesión, el sistema te solicitará el código de 6 dígitos generado en tu aplicación autenticadora.
+                </p>
+                <button
+                  type="button"
+                  className="g-btn g-btn-outline"
+                  style={{ color: '#c0392b', borderColor: 'rgba(192, 57, 43, 0.4)' }}
+                  onClick={handleDisableMfa}
+                >
+                  Desactivar 2FA en esta cuenta
+                </button>
+              </div>
+            ) : (
+              <div style={{ background: 'var(--neutral)', padding: '16px', borderRadius: 'var(--r-m)', border: '1px solid var(--line)' }}>
+                <p style={{ fontSize: '0.85rem', color: 'var(--ink-70)', margin: '0 0 12px 0' }}>
+                  Al activarlo, vincularás tu aplicación autenticadora escaneando un código QR único o ingresando una clave secreta. No requiere SMS ni servidores externos.
+                </p>
+                <button
+                  type="button"
+                  className="g-btn g-btn-primary"
+                  onClick={handleOpenSetupMfa}
+                >
+                  📲 Configurar 2FA con App Autenticadora
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: CONFIGURACIÓN DE MFA TOTP */}
+      {modalMfa.open && (
+        <div className="gestion-modal-backdrop">
+          <div className="gestion-modal" style={{ maxWidth: '520px' }}>
+            <div className="gestion-modal-header">
+              <h3 className="display">Configurar 2FA con App Autenticadora</h3>
+              <button
+                className="gestion-modal-close"
+                onClick={() => setModalMfa({ open: false, secret: '', testCode: '', error: '', success: '', busy: false })}
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmMfa}>
+              <div className="gestion-modal-body" style={{ textAlign: 'center' }}>
+                <p style={{ fontSize: '0.85rem', color: 'var(--ink-70)', margin: '0 0 16px 0' }}>
+                  1. Abrí <strong>Google Authenticator</strong> o <strong>Microsoft Authenticator</strong> en tu celular y escaneá el código QR:
+                </p>
+
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
+                      `otpauth://totp/AIRO%20Color%20Lab:${currentUserEmail || getOperadorActual()}?secret=${modalMfa.secret}&issuer=AIRO%20Color%20Lab`
+                    )}`}
+                    alt="Código QR MFA TOTP"
+                    style={{ border: '2px solid var(--line)', borderRadius: '12px', padding: '6px', background: '#fff' }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--ink-45)', display: 'block', marginBottom: '4px' }}>
+                    O ingresá manualmente esta clave secreta en la aplicación:
+                  </span>
+                  <code style={{ fontSize: '1rem', letterSpacing: '2px', background: 'var(--neutral)', padding: '6px 12px', borderRadius: '6px', fontWeight: 700, color: 'var(--blue)' }}>
+                    {modalMfa.secret}
+                  </code>
+                </div>
+
+                <div style={{ borderTop: '1px solid var(--line)', paddingTop: '16px', textAlign: 'left' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
+                    2. Ingresá el código de 6 dígitos generado en tu teléfono para confirmar:
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    required
+                    placeholder="123456"
+                    value={modalMfa.testCode}
+                    onChange={(e) => setModalMfa({ ...modalMfa, testCode: e.target.value.replace(/\D/g, '') })}
+                    style={{ textAlign: 'center', fontSize: '1.4rem', letterSpacing: '6px', fontWeight: 700, width: '100%' }}
+                  />
+                </div>
+
+                {modalMfa.error && (
+                  <div className="auth-alert-error" style={{ marginTop: '12px' }}>
+                    <span>⚠️</span>
+                    <div>{modalMfa.error}</div>
+                  </div>
+                )}
+
+                {modalMfa.success && (
+                  <div style={{ marginTop: '12px', color: '#15803d', fontWeight: 600, fontSize: '0.9rem' }}>
+                    ✓ {modalMfa.success}
+                  </div>
+                )}
+              </div>
+
+              <div className="gestion-modal-footer">
+                <button
+                  type="button"
+                  className="g-btn g-btn-outline"
+                  onClick={() => setModalMfa({ open: false, secret: '', testCode: '', error: '', success: '', busy: false })}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="g-btn g-btn-primary"
+                  disabled={modalMfa.busy || modalMfa.testCode.length !== 6}
+                >
+                  {modalMfa.busy ? 'Validando…' : 'Confirmar y Activar 2FA'}
                 </button>
               </div>
             </form>

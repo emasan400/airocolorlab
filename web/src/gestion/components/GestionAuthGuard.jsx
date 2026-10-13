@@ -4,6 +4,7 @@ import {
   setOperadorActual,
   getUsuarios,
   verifyPasswordSync,
+  verifyTotpCode,
   DEFAULT_ADMIN_HASH,
 } from '../services/storageService.js';
 
@@ -142,6 +143,9 @@ function SecureAdminLogin({ onSuccess, idleLockedMessage }) {
   });
   const [lockoutTimer, setLockoutTimer] = useState(0);
 
+  const [mfaChallenge, setMfaChallenge] = useState(null);
+  const [mfaCode, setMfaCode] = useState('');
+
   // Manejo del temporizador de bloqueo por fuerza bruta
   useEffect(() => {
     let interval = null;
@@ -214,6 +218,18 @@ function SecureAdminLogin({ onSuccess, idleLockedMessage }) {
             },
             token: 'local-session-token-' + Date.now(),
           };
+
+          // Desafío MFA si el usuario tiene doble factor activado
+          if (userMatch?.mfa_enabled && userMatch?.mfa_secret) {
+            setMfaChallenge({
+              secret: userMatch.mfa_secret,
+              session: mockSession,
+              userObj,
+            });
+            setBusy(false);
+            return;
+          }
+
           sessionStorage.setItem('airo_auth_session', JSON.stringify(mockSession));
           sessionStorage.removeItem('airo_login_fails');
           onSuccess(mockSession);
@@ -223,6 +239,31 @@ function SecureAdminLogin({ onSuccess, idleLockedMessage }) {
       }
     } catch (err) {
       handleAuthFailure(err.message || 'Error de conexión con el servicio de autenticación.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleMfaSubmit = async (e) => {
+    e.preventDefault();
+    if (!mfaCode || mfaCode.trim().length !== 6) {
+      setErrorMsg('El código debe contener 6 dígitos numéricos.');
+      return;
+    }
+    setBusy(true);
+    setErrorMsg('');
+    try {
+      const isValid = await verifyTotpCode(mfaChallenge.secret, mfaCode.trim());
+      if (isValid) {
+        sessionStorage.setItem('airo_auth_session', JSON.stringify(mfaChallenge.session));
+        sessionStorage.removeItem('airo_login_fails');
+        setFailedAttempts(0);
+        onSuccess(mfaChallenge.session);
+      } else {
+        handleAuthFailure('Código 2FA incorrecto o expirado. Verificá tu aplicación autenticadora.');
+      }
+    } catch (err) {
+      setErrorMsg('Error al validar código 2FA: ' + err.message);
     } finally {
       setBusy(false);
     }
@@ -268,66 +309,123 @@ function SecureAdminLogin({ onSuccess, idleLockedMessage }) {
           <div className="auth-security-badge">🔒 Conexión Cifrada SSL & Auth Seguro</div>
         </div>
 
-        <form onSubmit={handleSubmit} className="auth-form" noValidate>
-          {errorMsg && (
-            <div className="auth-alert-error" role="alert">
-              <span>⚠️</span>
-              <div>{errorMsg}</div>
+        {mfaChallenge ? (
+          <form onSubmit={handleMfaSubmit} className="auth-form" noValidate>
+            {errorMsg && (
+              <div className="auth-alert-error" role="alert">
+                <span>⚠️</span>
+                <div>{errorMsg}</div>
+              </div>
+            )}
+
+            <div style={{ textAlign: 'center', marginBottom: '18px' }}>
+              <div style={{ fontSize: '2.2rem', marginBottom: '8px' }}>📲</div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 6px 0', color: 'var(--blue)' }}>
+                Doble Factor de Autenticación (MFA)
+              </h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--ink-70)', margin: 0 }}>
+                Ingresá el código de 6 dígitos generado por tu app autenticadora para <strong>{mfaChallenge.userObj.email}</strong>.
+              </p>
             </div>
-          )}
 
-          <div className="auth-form-group">
-            <label htmlFor="auth-email">Correo Electrónico de Administrador</label>
-            <input
-              id="auth-email"
-              type="email"
-              required
-              autoFocus
-              autoComplete="username"
-              placeholder="ejemplo@airocolorlab.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={busy || lockoutTimer > 0}
-            />
-          </div>
-
-          <div className="auth-form-group">
-            <label htmlFor="auth-password">Contraseña</label>
-            <div className="auth-password-wrapper">
+            <div className="auth-form-group">
+              <label htmlFor="auth-mfa-code" style={{ textAlign: 'center' }}>Código de Verificación (TOTP)</label>
               <input
-                id="auth-password"
-                type={showPassword ? 'text' : 'password'}
+                id="auth-mfa-code"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
                 required
-                autoComplete="current-password"
-                placeholder="••••••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                autoFocus
+                autoComplete="one-time-code"
+                placeholder="123456"
+                value={mfaCode}
+                onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
+                disabled={busy}
+                style={{ textAlign: 'center', fontSize: '1.5rem', letterSpacing: '6px', fontWeight: 700 }}
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="auth-btn-submit"
+              disabled={busy || mfaCode.length !== 6}
+            >
+              {busy ? 'Verificando código…' : 'Verificar e Ingresar'}
+            </button>
+
+            <button
+              type="button"
+              className="auth-back-link"
+              onClick={() => { setMfaChallenge(null); setMfaCode(''); setErrorMsg(''); }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', marginTop: '14px', width: '100%', textAlign: 'center' }}
+            >
+              ← Cancelar y volver al login
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleSubmit} className="auth-form" noValidate>
+            {errorMsg && (
+              <div className="auth-alert-error" role="alert">
+                <span>⚠️</span>
+                <div>{errorMsg}</div>
+              </div>
+            )}
+
+            <div className="auth-form-group">
+              <label htmlFor="auth-email">Correo Electrónico de Administrador</label>
+              <input
+                id="auth-email"
+                type="email"
+                required
+                autoFocus
+                autoComplete="username"
+                placeholder="ejemplo@airocolorlab.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 disabled={busy || lockoutTimer > 0}
               />
-              <button
-                type="button"
-                className="auth-btn-toggle-pwd"
-                onClick={() => setShowPassword((v) => !v)}
-                tabIndex={-1}
-                aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
-              >
-                {showPassword ? '👁️' : '👁️‍🗨️'}
-              </button>
             </div>
-          </div>
 
-          <button
-            type="submit"
-            className="auth-btn-submit"
-            disabled={busy || lockoutTimer > 0}
-          >
-            {lockoutTimer > 0
-              ? `Bloqueado (${lockoutTimer}s)`
-              : busy
-              ? 'Verificando autorización…'
-              : 'Ingresar al Sistema'}
-          </button>
-        </form>
+            <div className="auth-form-group">
+              <label htmlFor="auth-password">Contraseña</label>
+              <div className="auth-password-wrapper">
+                <input
+                  id="auth-password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  autoComplete="current-password"
+                  placeholder="••••••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={busy || lockoutTimer > 0}
+                />
+                <button
+                  type="button"
+                  className="auth-btn-toggle-pwd"
+                  onClick={() => setShowPassword((v) => !v)}
+                  tabIndex={-1}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                >
+                  {showPassword ? '👁️' : '👁️‍🗨️'}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="auth-btn-submit"
+              disabled={busy || lockoutTimer > 0}
+            >
+              {lockoutTimer > 0
+                ? `Bloqueado (${lockoutTimer}s)`
+                : busy
+                ? 'Verificando autorización…'
+                : 'Ingresar al Sistema'}
+            </button>
+          </form>
+        )}
 
         <div className="auth-footer-links">
           <a href="#/" className="auth-back-link">

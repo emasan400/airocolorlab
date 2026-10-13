@@ -1524,3 +1524,117 @@ export function importQuotesToLeads(quotesArray, actor = null) {
 
   return { imported, merged, errors };
 }
+
+// ============================================================
+// 10. DOBLE FACTOR DE AUTENTICACIÓN (MFA / 2FA - TOTP RFC 6238)
+// Estándar seguro sin costo ($0) para Google / Microsoft Authenticator y Supabase
+// ============================================================
+
+export function generateTotpSecret(length = 16) {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  let secret = '';
+  for (let i = 0; i < length; i++) {
+    secret += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return secret;
+}
+
+function base32ToBytes(str) {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  let bits = 0;
+  let value = 0;
+  const bytes = [];
+  for (let i = 0; i < str.length; i++) {
+    const c = str[i].toUpperCase();
+    const idx = alphabet.indexOf(c);
+    if (idx === -1) continue;
+    value = (value << 5) | idx;
+    bits += 5;
+    if (bits >= 8) {
+      bytes.push((value >>> (bits - 8)) & 255);
+      bits -= 8;
+    }
+  }
+  return new Uint8Array(bytes);
+}
+
+export async function computeTotpCode(secretBase32, timeWindow = null) {
+  const keyBytes = base32ToBytes(secretBase32);
+  const windowIndex = timeWindow !== null ? timeWindow : Math.floor(Date.now() / 30000);
+
+  // Buffer de 8 bytes para el contador (big-endian 64-bit int)
+  const counterBuffer = new ArrayBuffer(8);
+  const counterView = new DataView(counterBuffer);
+  counterView.setBigUint64(0, BigInt(windowIndex));
+
+  const cryptoObj = globalThis.crypto;
+  if (cryptoObj?.subtle) {
+    const key = await cryptoObj.subtle.importKey(
+      'raw',
+      keyBytes,
+      { name: 'HMAC', hash: 'SHA-1' },
+      false,
+      ['sign']
+    );
+    const signature = await cryptoObj.subtle.sign('HMAC', key, counterBuffer);
+    const hmacBytes = new Uint8Array(signature);
+    const offset = hmacBytes[hmacBytes.length - 1] & 0x0f;
+    const binary =
+      ((hmacBytes[offset] & 0x7f) << 24) |
+      ((hmacBytes[offset + 1] & 0xff) << 16) |
+      ((hmacBytes[offset + 2] & 0xff) << 8) |
+      (hmacBytes[offset + 3] & 0xff);
+    const otp = binary % 1000000;
+    return otp.toString().padStart(6, '0');
+  }
+
+  return '000000';
+}
+
+export async function verifyTotpCode(secretBase32, inputCode) {
+  if (!secretBase32 || !inputCode) return false;
+  const cleanCode = String(inputCode).trim();
+  if (cleanCode.length !== 6) return false;
+
+  const currentWindow = Math.floor(Date.now() / 30000);
+  // Ventana de tolerancia: -1 (hace 30s), 0 (actual), +1 (próximos 30s)
+  for (let offset = -1; offset <= 1; offset++) {
+    const expected = await computeTotpCode(secretBase32, currentWindow + offset);
+    if (expected === cleanCode) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function enableMfaForUser(userIdOrEmail, secretBase32) {
+  const list = getUsuarios();
+  const clean = String(userIdOrEmail || '').trim().toLowerCase();
+  const idx = list.findIndex((u) => u.id === userIdOrEmail || u.email.toLowerCase() === clean);
+  if (idx === -1) throw new Error('Usuario no encontrado');
+
+  list[idx].mfa_enabled = true;
+  list[idx].mfa_secret = secretBase32;
+  list[idx].mfa_updated_at = new Date().toISOString();
+
+  setLocal(KEYS.USUARIOS, list);
+  logAudit(list[idx].email, 'HABILITAR_MFA', 'SEGURIDAD', `MFA TOTP activado para ${list[idx].email}`);
+  broadcastUpdate('USUARIOS_UPDATED', list);
+  return list[idx];
+}
+
+export function disableMfaForUser(userIdOrEmail) {
+  const list = getUsuarios();
+  const clean = String(userIdOrEmail || '').trim().toLowerCase();
+  const idx = list.findIndex((u) => u.id === userIdOrEmail || u.email.toLowerCase() === clean);
+  if (idx === -1) throw new Error('Usuario no encontrado');
+
+  list[idx].mfa_enabled = false;
+  list[idx].mfa_secret = null;
+  list[idx].mfa_updated_at = new Date().toISOString();
+
+  setLocal(KEYS.USUARIOS, list);
+  logAudit(list[idx].email, 'DESHABILITAR_MFA', 'SEGURIDAD', `MFA TOTP desactivado para ${list[idx].email}`);
+  broadcastUpdate('USUARIOS_UPDATED', list);
+  return list[idx];
+}

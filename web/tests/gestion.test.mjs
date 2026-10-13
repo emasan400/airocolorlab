@@ -373,3 +373,33 @@ test('CRM B2B — Pipeline, Deduplicación CRM-MATCH-EXPLICIT-IDENTITY y RBAC', 
   assert.equal(storage.getLeadById(lead1.lead.lead_id), null);
 });
 
+test('Seguridad — Doble Factor de Autenticación (MFA TOTP RFC 6238)', async () => {
+  // 1. Generación de clave secreta Base32
+  const secret = storage.generateTotpSecret(16);
+  assert.equal(secret.length, 16);
+  assert.ok(/^[A-Z2-7]+$/.test(secret), 'El secreto debe ser Base32 canónico');
+
+  // 2. Generación y verificación de código de 6 dígitos
+  const code = await storage.computeTotpCode(secret);
+  assert.equal(code.length, 6);
+  assert.ok(/^\d{6}$/.test(code), 'El código TOTP debe ser numérico de 6 dígitos');
+
+  const isValid = await storage.verifyTotpCode(secret, code);
+  assert.equal(isValid, true, 'El código actual debe ser validado con éxito');
+
+  const isInvalid = await storage.verifyTotpCode(secret, '000000');
+  assert.equal(isInvalid, false, 'Un código incorrecto debe ser rechazado');
+
+  // 3. Activación y desactivación de MFA en cuenta de usuario
+  const users = storage.getUsuarios();
+  const targetUser = users[0];
+
+  const userWithMfa = storage.enableMfaForUser(targetUser.id, secret);
+  assert.equal(userWithMfa.mfa_enabled, true);
+  assert.equal(userWithMfa.mfa_secret, secret);
+
+  const userWithoutMfa = storage.disableMfaForUser(targetUser.id);
+  assert.equal(userWithoutMfa.mfa_enabled, false);
+  assert.equal(userWithoutMfa.mfa_secret, null);
+});
+
