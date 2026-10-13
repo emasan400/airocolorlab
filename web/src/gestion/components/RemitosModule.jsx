@@ -103,6 +103,39 @@ export default function RemitosModule({ onRemitoEmitted }) {
     setModalOpen(true);
   };
 
+  const handleOpenEditar = (r) => {
+    setFormData({
+      id: r.id,
+      numero: r.numero,
+      fecha_emision: r.fecha_emision || new Date().toISOString().slice(0, 10),
+      fecha_entrega: r.fecha_entrega || r.fecha_emision || new Date().toISOString().slice(0, 10),
+      cliente_id: r.cliente_id || '',
+      cliente_nombre: r.cliente_nombre || '',
+      cliente_cuit: r.cliente_cuit || '',
+      cliente_direccion: r.cliente_direccion || '',
+      cliente_whatsapp: r.cliente_whatsapp || '',
+      contacto_receptor: r.contacto_receptor || '',
+      modalidad_envio: r.modalidad_envio || 'Mensajería Propia AIRO',
+      transportista: r.transportista || '',
+      dni_chofer: r.dni_chofer || '',
+      patente: r.patente || '',
+      cantidad_bultos: r.cantidad_bultos || 1,
+      descontar_stock: r.descontar_stock ?? true,
+      estado: r.estado || 'Emitido',
+      observaciones: r.observaciones || '',
+      items: r.items ? JSON.parse(JSON.stringify(r.items)) : [],
+    });
+    setTempItem({
+      producto_id: '',
+      sku: '',
+      descripcion: '',
+      cantidad: 10,
+      unidad: 'unidades',
+      bulto: `Caja ${(r.items?.length || 0) + 1}`,
+    });
+    setModalOpen(true);
+  };
+
   const handleSelectCliente = (clienteId) => {
     const c = clientes.find((item) => item.id === clienteId);
     if (c) {
@@ -391,6 +424,14 @@ export default function RemitosModule({ onRemitoEmitted }) {
                         <button
                           className="g-btn g-btn-outline g-btn-sm"
                           style={{ marginRight: '6px' }}
+                          onClick={() => handleOpenEditar(r)}
+                          title="Modificar datos del remito, transportista o ítems"
+                        >
+                          ✏️ Modificar
+                        </button>
+                        <button
+                          className="g-btn g-btn-outline g-btn-sm"
+                          style={{ marginRight: '6px' }}
                           onClick={() => handleOpenCambiarEstado(r)}
                           title="Cambiar estado o asentar recepción"
                         >
@@ -413,18 +454,32 @@ export default function RemitosModule({ onRemitoEmitted }) {
         </div>
       </div>
 
-      {/* MODAL CONFECCIÓN DE REMITO */}
+      {/* MODAL CONFECCIÓN Y MODIFICACIÓN DE REMITO (CON SCROLL FLUIDO) */}
       {modalOpen && (
         <div className="gestion-modal-backdrop" onClick={() => setModalOpen(false)}>
-          <div className="gestion-modal gestion-modal-lg" onClick={(e) => e.stopPropagation()}>
-            <div className="gestion-modal-header">
-              <h3>Confeccionar Remito Oficial AIRO Color Lab</h3>
+          <div
+            className="gestion-modal gestion-modal-lg"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}
+          >
+            <div className="gestion-modal-header" style={{ flexShrink: 0 }}>
+              <h3 className="display">
+                {formData.id
+                  ? `Modificar Remito Oficial ${formData.numero}`
+                  : 'Confeccionar Remito Oficial AIRO Color Lab'}
+              </h3>
               <button className="gestion-modal-close" onClick={() => setModalOpen(false)}>
                 ×
               </button>
             </div>
-            <form onSubmit={handleGuardarRemito}>
-              <div className="gestion-modal-body">
+            <form
+              onSubmit={handleGuardarRemito}
+              style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}
+            >
+              <div
+                className="gestion-modal-body"
+                style={{ overflowY: 'auto', flex: 1, minHeight: 0, padding: '24px 28px' }}
+              >
                 {/* Bloque 1: Datos Generales */}
                 <h4 style={{ margin: '0 0 0.85rem', color: 'var(--g-blue)', fontSize: '0.95rem' }}>
                   1. Datos del Documento & Destinatario
@@ -681,12 +736,12 @@ export default function RemitosModule({ onRemitoEmitted }) {
                 </div>
               </div>
 
-              <div className="gestion-modal-footer">
+              <div className="gestion-modal-footer" style={{ flexShrink: 0 }}>
                 <button type="button" className="g-btn g-btn-outline" onClick={() => setModalOpen(false)}>
                   Cancelar
                 </button>
                 <button type="submit" className="g-btn g-btn-primary">
-                  Emitir y Guardar Remito
+                  {formData.id ? 'Guardar Modificaciones del Remito' : 'Emitir y Guardar Remito'}
                 </button>
               </div>
             </form>

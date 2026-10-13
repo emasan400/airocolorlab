@@ -131,6 +131,18 @@ test('Confección de Remitos y Descuento Automático de Stock', () => {
   const prodActualizado = storage.getProductos().find((p) => p.id === prod.id);
   assert.equal(prodActualizado.stock_actual, stockInicial - 10, 'El stock debió descontarse en 10');
 
+  // Modificar remito existente
+  const modificado = storage.saveRemito({
+    ...emitido,
+    cliente_nombre: 'Cliente Test S.A. (Modificado)',
+    cantidad_bultos: 3,
+    observaciones: 'Observación modificada correctamente',
+  });
+  assert.equal(modificado.cliente_nombre, 'Cliente Test S.A. (Modificado)');
+  assert.equal(modificado.cantidad_bultos, 3);
+  const buscarMod = storage.getRemitos().find((r) => r.id === emitido.id);
+  assert.equal(buscarMod.cliente_nombre, 'Cliente Test S.A. (Modificado)');
+
   // Anular remito -> debe reponer stock
   storage.cambiarEstadoRemito(emitido.id, 'Anulado');
   const prodRepuesto = storage.getProductos().find((p) => p.id === prod.id);

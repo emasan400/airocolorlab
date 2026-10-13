@@ -803,11 +803,12 @@
 }
 
 .gestion-modal-header {
-  padding: 24px 28px;
+  padding: 20px 28px;
   border-bottom: 1px solid var(--line);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .gestion-modal-header h3 {
@@ -838,20 +839,31 @@
   transform: scale(1.05);
 }
 
-.gestion-modal-body {
-  padding: 28px;
-  overflow-y: auto;
+.gestion-modal form {
+  display: flex;
+  flex-direction: column;
   flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.gestion-modal-body {
+  padding: 24px 28px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+  min-height: 0;
 }
 
 .gestion-modal-footer {
-  padding: 18px 28px;
+  padding: 16px 28px;
   border-top: 1px solid var(--line);
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
   background: var(--neutral);
+  flex-shrink: 0;
 }
 
 /* Formularios en Modales */
