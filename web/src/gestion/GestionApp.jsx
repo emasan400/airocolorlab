@@ -7,6 +7,7 @@ import {
   getRemitos,
   getFlujoCaja,
   getLeads,
+  getApprovals,
   getOperadorActual,
   subscribeToSync,
   getUsuarioPorEmail,
@@ -22,6 +23,7 @@ import FlujoCajaModule from './components/FlujoCajaModule';
 import MovimientosKardex from './components/MovimientosKardex';
 import ContactosModule from './components/ContactosModule';
 import CrmModule from './components/CrmModule';
+import MarketingModule from './components/MarketingModule';
 import ConfiguracionModule from './components/ConfiguracionModule';
 import UsuariosRolesModule from './components/UsuariosRolesModule';
 
@@ -64,7 +66,7 @@ function GestionAppInner({ session, onSignOut }) {
   // Protección de navegación RBAC: redirigir si no tiene permiso
   useEffect(() => {
     if (activeTab !== 'perfil' && !isModuloPermitido(currentRol, activeTab)) {
-      const modulos = ['productos', 'materiales', 'remitos', 'caja', 'kardex', 'contactos', 'crm'];
+      const modulos = ['productos', 'materiales', 'remitos', 'caja', 'kardex', 'contactos', 'crm', 'marketing'];
       const primerPermitido = modulos.find((k) => isModuloPermitido(currentRol, k)) || 'perfil';
       setActiveTab(primerPermitido);
     }
@@ -79,6 +81,8 @@ function GestionAppInner({ session, onSignOut }) {
   const rems = getRemitos();
   const flujos = getFlujoCaja();
   const leadsList = getLeads();
+  const approvalsList = getApprovals();
+  const pendingApprovalsCount = approvalsList.filter((a) => a.estado === 'PENDING').length;
 
   const prodsAlert = prods.filter((p) => p.stock_actual <= p.stock_minimo).length;
   const matsAlert = mats.filter((m) => Number(m.stock_actual) <= Number(m.stock_minimo)).length;
@@ -262,6 +266,26 @@ function GestionAppInner({ session, onSignOut }) {
               </button>
             )}
 
+            {(isAdmin || isModuloPermitido(currentRol, 'marketing')) && (
+              <button
+                role="tab"
+                aria-selected={activeTab === 'marketing'}
+                className={`gestion-tab-btn ${activeTab === 'marketing' ? 'active' : ''}`}
+                onClick={() => setActiveTab('marketing')}
+              >
+                📢 Agentes & Marketing
+                <span
+                  className="gestion-tab-badge"
+                  style={{
+                    background: pendingApprovalsCount > 0 ? 'rgba(180, 83, 9, 0.16)' : undefined,
+                    color: pendingApprovalsCount > 0 ? '#b45309' : undefined,
+                  }}
+                >
+                  {pendingApprovalsCount > 0 ? `${pendingApprovalsCount} pend.` : 'IA'}
+                </span>
+              </button>
+            )}
+
             {isAdmin && (
               <button
                 role="tab"
@@ -324,6 +348,10 @@ function GestionAppInner({ session, onSignOut }) {
 
         {activeTab === 'crm' && (
           <CrmModule onLeadChanged={triggerRefresh} />
+        )}
+
+        {activeTab === 'marketing' && (
+          <MarketingModule onContentChanged={triggerRefresh} />
         )}
 
         {activeTab === 'usuarios' && (

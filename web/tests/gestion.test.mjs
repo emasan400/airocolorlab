@@ -403,3 +403,93 @@ test('Seguridad — Doble Factor de Autenticación (MFA TOTP RFC 6238)', async (
   assert.equal(userWithoutMfa.mfa_secret, null);
 });
 
+test('Marketing B2B — Sistema Multiagente, HITL Approvals, Calendario y Asistente CM', () => {
+  // 1. Directorio de Agentes
+  const agents = storage.getAgentRegistry();
+  assert.ok(agents.length >= 26, 'Debe haber al menos 26 agentes registrados');
+  const orc = agents.find((a) => a.id === 'ORC');
+  assert.ok(orc, 'Debe existir el agente ORC');
+  const cm = agents.find((a) => a.id === 'I-06');
+  assert.ok(cm, 'Debe existir el agente Community Manager I-06');
+
+  // 2. Cola de Aprobaciones HITL
+  storage.resetApprovals();
+  const approvals = storage.getApprovals();
+  assert.ok(approvals.length >= 3, 'Debe contener aprobaciones pendientes iniciales');
+  const pending = approvals.find((a) => a.id === 'APR-20261005-001');
+  assert.equal(pending.estado, 'PENDING');
+  assert.equal(pending.hitl_level, 2);
+
+  // Decisión HITL
+  const approved = storage.decideApproval('APR-20261005-001', 'APPROVED', 'Aprobado para publicar');
+  assert.equal(approved.estado, 'APPROVED');
+  assert.equal(approved.decision_comments, 'Aprobado para publicar');
+
+  // Verificar impacto en Calendario Editorial
+  const calendar = storage.getEditorialCalendar();
+  const entry = calendar.find((c) => c.content_id === 'CNT-20261005-001');
+  assert.equal(entry.status, 'APPROVED', 'La pieza en calendario debe pasar a APPROVED tras decisión');
+
+  // 3. Calendario Editorial: creación y cambio de estado
+  const newEntry = storage.saveCalendarEntry({
+    channel: 'LINKEDIN',
+    idea: 'Caso de éxito: 150 buzos para Fintech',
+    format: 'Post con imágenes reales',
+    product: 'Buzos friza premium',
+  });
+  assert.ok(newEntry.content_id.startsWith('CNT-'));
+  const updatedEntry = storage.updateCalendarEntryStatus(newEntry.content_id, 'PUBLISHED');
+  assert.equal(updatedEntry.status, 'PUBLISHED');
+
+  // 4. Asistente Community Manager: clasificación de mensajes y voseo rioplatense
+  // Caso A: Consulta con >= 10 unidades
+  const analysis1 = storage.classifyAndGenerateCmResponse('Hola, cuánto salen 25 buzos estampados en DTF para nuestra marca?', 'INSTAGRAM');
+  assert.equal(analysis1.category, 'LEAD');
+  assert.equal(analysis1.extractedData.quantity, 25);
+  assert.equal(analysis1.extractedData.isUnderMinimum, false);
+  assert.ok(analysis1.proposedResponse.includes('WhatsApp'), 'Debe incluir CTA a WhatsApp');
+  assert.ok(analysis1.proposedResponse.includes('escribinos') || analysis1.proposedResponse.includes('contanos') || analysis1.proposedResponse.includes('contactes'), 'Debe usar voseo rioplatense');
+
+  // Caso B: Consulta bajo mínimo (<10 unidades)
+  const analysis2 = storage.classifyAndGenerateCmResponse('Hola! Hacen 1 remera estampada?', 'WHATSAPP');
+  assert.equal(analysis2.category, 'LEAD_UNDER_MIN');
+  assert.equal(analysis2.extractedData.isUnderMinimum, true);
+  assert.ok(analysis2.proposedResponse.includes('10 unidades'), 'Debe explicar regla de mínimo 10 unidades');
+
+  // Caso C: Reclamo
+  const analysis3 = storage.classifyAndGenerateCmResponse('Hola, nos llegaron 2 buzos mal estampados y fallados', 'WHATSAPP');
+  assert.equal(analysis3.category, 'COMPLAINT');
+
+  // 5. Derivación directa de interacción asistida por CM a Lead en CRM (con deduplicación)
+  const leadRes = storage.convertCmInteractionToLead({
+    ...analysis1,
+    extractedData: {
+      ...analysis1.extractedData,
+      phone: '1165432198',
+      email: 'consultas@marcapyme.com',
+      company: 'Marca PyME',
+      contact: 'Martina',
+    },
+  });
+  assert.equal(leadRes.ok, true);
+  assert.ok(leadRes.lead.lead_id.startsWith('LEAD-'));
+  assert.equal(leadRes.lead.quantity, 25);
+  assert.equal(leadRes.lead.origin, 'CM_INSTAGRAM');
+
+  // Fusión por deduplicación si el mismo contacto vuelve a escribir
+  const leadResMerge = storage.convertCmInteractionToLead({
+    ...analysis1,
+    extractedData: {
+      ...analysis1.extractedData,
+      phone: '1165432198',
+      email: 'consultas@marcapyme.com',
+      company: 'Marca PyME',
+      contact: 'Martina',
+      interest: 'Ahora queremos agregar 30 remeras',
+    },
+  });
+  assert.equal(leadResMerge.type, 'merged', 'Debe fusionar automáticamente con lead existente');
+  assert.equal(leadResMerge.lead.lead_id, leadRes.lead.lead_id);
+});
+
+

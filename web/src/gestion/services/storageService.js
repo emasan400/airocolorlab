@@ -36,6 +36,8 @@ const KEYS = {
   OPERADOR: `${PREFIX}operador_actual`,
   USUARIOS: `${PREFIX}usuarios`,
   LEADS: `${PREFIX}leads`,
+  APPROVALS: `${PREFIX}approvals`,
+  EDITORIAL_CALENDAR: `${PREFIX}editorial_calendar`,
 };
 
 // Canal de sincronización en tiempo real para trabajo colaborativo multi-pestaña / local
@@ -216,6 +218,12 @@ export function initializeStorageIfEmpty() {
   }
   if (!localStorage.getItem(KEYS.LEADS)) {
     setLocal(KEYS.LEADS, []);
+  }
+  if (!localStorage.getItem(KEYS.APPROVALS)) {
+    setLocal(KEYS.APPROVALS, initialApprovals);
+  }
+  if (!localStorage.getItem(KEYS.EDITORIAL_CALENDAR)) {
+    setLocal(KEYS.EDITORIAL_CALENDAR, initialEditorialCalendar);
   }
   if (!localStorage.getItem(KEYS.AUDIT)) {
     setLocal(KEYS.AUDIT, [
@@ -856,6 +864,8 @@ export function exportarBackupCompleto() {
     flujo_caja: getFlujoCaja(),
     movimientos: getMovimientos(),
     leads: getLeads(),
+    approvals: getApprovals(),
+    editorial_calendar: getEditorialCalendar(),
     usuarios: getUsuarios().map((u) => ({ ...u, password: '***' })),
     audit_log: getAuditLogs(),
   };
@@ -876,6 +886,8 @@ export function importarBackupCompleto(jsonString) {
     if (Array.isArray(data.flujo_caja)) setLocal(KEYS.FLUJO_CAJA, data.flujo_caja);
     if (Array.isArray(data.movimientos)) setLocal(KEYS.MOVIMIENTOS, data.movimientos);
     if (Array.isArray(data.leads)) setLocal(KEYS.LEADS, data.leads);
+    if (Array.isArray(data.approvals)) setLocal(KEYS.APPROVALS, data.approvals);
+    if (Array.isArray(data.editorial_calendar)) setLocal(KEYS.EDITORIAL_CALENDAR, data.editorial_calendar);
     if (Array.isArray(data.usuarios)) {
       // Preservar passwords existentes si el backup viene sanitizado con '***'
       const actuales = getUsuarios();
@@ -917,10 +929,20 @@ export const ROLES_DEFINICION = [
       'kardex_r',
       'contactos_rw',
       'crm_rw',
+      'marketing_rw',
       'usuarios_rw',
       'config_rw',
     ],
-    modulosPermitidos: ['productos', 'materiales', 'remitos', 'caja', 'kardex', 'contactos', 'crm', 'usuarios', 'configuracion'],
+    modulosPermitidos: ['productos', 'materiales', 'remitos', 'caja', 'kardex', 'contactos', 'crm', 'marketing', 'usuarios', 'configuracion'],
+  },
+  {
+    id: 'marketing_cm',
+    nombre: 'Community Manager & Marketing B2B',
+    descripcion: 'Operación del sistema multiagente, revisión y aprobación de contenidos en cola HITL, calendario editorial y clasificación de consultas para CRM.',
+    color: '#00b4d8',
+    badgeClass: 'g-badge-brand',
+    permisos: ['marketing_rw', 'crm_rw', 'contactos_r'],
+    modulosPermitidos: ['marketing', 'crm', 'contactos'],
   },
   {
     id: 'taller_produccion',
@@ -955,8 +977,8 @@ export const ROLES_DEFINICION = [
     descripcion: 'Atención a clientes corporativos, gestión de leads y pipeline comercial CRM, existencias y precios para cotizaciones, y remitos.',
     color: '#7c3aed',
     badgeClass: 'g-badge-info',
-    permisos: ['crm_rw', 'productos_r', 'contactos_rw', 'remitos_r'],
-    modulosPermitidos: ['crm', 'productos', 'contactos', 'remitos'],
+    permisos: ['crm_rw', 'productos_r', 'contactos_rw', 'remitos_r', 'marketing_r'],
+    modulosPermitidos: ['crm', 'productos', 'contactos', 'remitos', 'marketing'],
   },
 ];
 
@@ -1638,3 +1660,530 @@ export function disableMfaForUser(userIdOrEmail) {
   broadcastUpdate('USUARIOS_UPDATED', list);
   return list[idx];
 }
+
+// ============================================================
+// 11. MARKETING B2B & SISTEMA MULTIAGENTE (COMMUNITY MANAGER, HITL, CALENDARIO)
+// ============================================================
+
+export const initialApprovals = [
+  {
+    id: 'APR-20261005-001',
+    titulo: 'Paquete de contenido Semana 1 — Publicación manual por el owner',
+    tipo: 'PAQUETE_CONTENIDO',
+    canal: 'MULTI_CANAL',
+    canales: ['INSTAGRAM', 'WHATSAPP_STATUS', 'LINKEDIN'],
+    hitl_level: 2,
+    hitl_tag: 'HITL-2 (Acción externa / Publicación)',
+    estado: 'PENDING',
+    fecha: '2026-10-05',
+    audit_ref: 'AUDIT-20261005-003',
+    autor: 'I-01 Content Planner + I-03 Copywriter + I-04 Creative Director',
+    qa_status: 'PASS',
+    qa_detalles: 'X-03 QA: voseo rioplatense ✓, B2B profesional ✓, mínimo 10 u ✓, CTA WhatsApp único ✓, sin precios ni plazos inventados ✓.',
+    piezas: [
+      {
+        id: 'PZ-01',
+        canal: 'INSTAGRAM',
+        formato: 'Carrusel 5 slides (1080×1350 px)',
+        idea: '¿DTF o sublimación? Elegir mal la técnica le cuesta plata a tu marca.',
+        slides: [
+          'Slide 1 (Hook): ¿DTF o sublimación? Elegir mal la técnica le cuesta plata a tu marca.',
+          'Slide 2: Sublimación — la tinta se funde en la tela. Colores vibrantes que no se agrietan. Funciona sobre poliéster y prendas claras.',
+          'Slide 3: DTF — el diseño se transfiere por film. Va sobre casi cualquier tela y cualquier color. Ideal para tiradas cortas y mucho detalle.',
+          'Slide 4: ¿Y si no sabés cuál conviene? Eso es exactamente lo que resolvemos antes de producir. Vos contás el proyecto, nosotros recomendamos la técnica.',
+          'Slide 5 (CTA): Producimos desde 10 unidades. Contanos tu idea por WhatsApp → te respondemos en menos de 24 h hábiles.',
+        ],
+        caption: 'El mismo logo puede quedar espectacular o mediocre según la técnica que elijas.\n\nSublimación y DTF no compiten: resuelven problemas distintos. En AIRO trabajamos las dos, y la recomendación sale de tu proyecto, no de una tabla.\n\n¿Tenés una marca, un evento o un equipo que vestir? Escribinos por WhatsApp y lo vemos juntos. Desde 10 unidades.\n\n#MerchandisingCorporativo #IndumentariaPersonalizada #DTF #Sublimacion #ProduccionTextil #MerchandisingArgentina #MarcaPropia',
+        cta: 'WhatsApp directo: wa.me/5491163553443',
+        content_ref: 'CNT-20261005-001',
+      },
+      {
+        id: 'PZ-02',
+        canal: 'WHATSAPP_STATUS',
+        formato: '2 Pantallas',
+        idea: 'Pedidos desde 10 unidades, sin mínimos de fábrica',
+        slides: [
+          'Pantalla 1: ¿Sabías que podés personalizar indumentaria con tu marca desde solo 10 unidades? Sin mínimos de fábrica. Sin vueltas.',
+          'Pantalla 2: Contanos qué necesitás → te cotizamos en menos de 24 h hábiles. Escribinos por acá mismo 👉 wa.me/5491163553443',
+        ],
+        caption: 'Estados para WhatsApp B2B',
+        cta: 'wa.me/5491163553443',
+        content_ref: 'CNT-20261005-003',
+      },
+      {
+        id: 'PZ-03',
+        canal: 'LINKEDIN',
+        formato: 'Post texto B2B',
+        idea: 'Merchandising que el equipo sí usa (ángulo RRHH/eventos)',
+        slides: [
+          'Texto post: ¿Por qué la mitad de los regalos corporativos terminan en el fondo de un cajón? Porque se piensan como souvenir genérico y no como indumentaria útil.',
+        ],
+        caption: 'El merchandising corporativo tiene que sumar valor de marca, no quedar olvidado. En AIRO confeccionamos prendas corporativas desde 10 unidades con calce actual y estampas duraderas.\n\n¿Estás organizando un evento corporativo o un welcome kit? Escribinos por WhatsApp y lo cotizamos en menos de 24 h hábiles.',
+        cta: 'WhatsApp: wa.me/5491163553443',
+        content_ref: 'CNT-20261005-004',
+      },
+    ],
+  },
+  {
+    id: 'APR-20261005-002',
+    titulo: 'Publicación de prueba — WhatsApp Estados (CNT-20261005-003 v1)',
+    tipo: 'PUBLICACION_PRUEBA',
+    canal: 'WHATSAPP_STATUS',
+    canales: ['WHATSAPP_STATUS'],
+    hitl_level: 2,
+    hitl_tag: 'HITL-2 (Acción externa / Publicación)',
+    estado: 'PENDING',
+    fecha: '2026-10-05',
+    audit_ref: 'AUDIT-20261005-004',
+    autor: 'W-02 Content Creator + W-01 Status Planner',
+    qa_status: 'PASS',
+    qa_detalles: 'X-03 QA: Aprobado sin observaciones. Listo para publicar en Estados de WhatsApp.',
+    piezas: [
+      {
+        id: 'PZ-01',
+        canal: 'WHATSAPP_STATUS',
+        formato: '2 Pantallas sobre fondo azul marca #1A4295',
+        idea: 'Indumentaria desde 10 unidades',
+        slides: [
+          'Pantalla 1: ¿Sabías que podés personalizar indumentaria con tu marca desde solo 10 unidades? Sin mínimos de fábrica. Sin vueltas.',
+          'Pantalla 2: Contanos qué necesitás → te cotizamos en menos de 24 h hábiles. Escribinos por acá mismo 👉 wa.me/5491163553443',
+        ],
+        caption: 'Prompt visual (Gemini/Express): abstract textile texture background, woven fabric threads in deep blue #1A4295 with cyan #00B4D8 accents, macro photography, minimal negative space.',
+        cta: 'wa.me/5491163553443',
+        content_ref: 'CNT-20261005-003',
+      },
+    ],
+  },
+  {
+    id: 'DEC-WEB-BACKEND-20261008-v1',
+    titulo: 'Decisión técnica sobre permisos y variables de Supabase en producción',
+    tipo: 'SISTEMA_DECISION',
+    canal: 'SISTEMA',
+    canales: ['SISTEMA'],
+    hitl_level: 3,
+    hitl_tag: 'HITL-3 (Estrategia / Seguridad / Riesgo Crítico)',
+    estado: 'PENDING',
+    fecha: '2026-10-08',
+    audit_ref: 'AUDIT-20261008-004',
+    autor: 'Orquestador / Seguridad',
+    qa_status: 'REVIEW',
+    qa_detalles: 'X-04 Brand Guardian / Auditoría: Requiere validación del administrador para definir esquema de migración RPC.',
+    piezas: [
+      {
+        id: 'PZ-DEC-01',
+        canal: 'SISTEMA',
+        formato: 'Decisión Arquitectura Cloud',
+        idea: 'Validación en staging vs preservación de cotizaciones manuales',
+        slides: [
+          'Opción A: Inspeccionar y validar en staging antes de producción.',
+          'Opción B: Mantener cotización visual con recepción por WhatsApp.',
+        ],
+        caption: 'Verificar la recepción de cotizaciones y el acceso exclusivo de administradores sin alterar datos reales en producción.',
+        cta: 'Autorización requerida del Administrador General',
+      },
+    ],
+  },
+];
+
+export const initialEditorialCalendar = [
+  {
+    content_id: 'CNT-20261005-001',
+    channel: 'INSTAGRAM',
+    idea: 'DTF vs sublimación — cuándo conviene cada técnica',
+    objective: 'Educar y posicionar asesoramiento técnico como diferencial',
+    audience: 'Marcas, PyMEs, emprendedores textiles',
+    format: 'Carrusel 5 slides 1080x1350',
+    product: 'DTF / sublimación',
+    cta: 'WhatsApp',
+    kpi: 'Guardados + consultas entrantes',
+    proposed_date: '2026-10-05',
+    status: 'PENDING_APPROVAL',
+    version: 'v1',
+    approval_ref: 'APR-20261005-001',
+    audit_id: 'AUDIT-20261005-003',
+  },
+  {
+    content_id: 'CNT-20261005-002',
+    channel: 'INSTAGRAM',
+    idea: 'BTS producción en curso',
+    objective: 'Mostrar capacidad real y generar confianza',
+    audience: 'Empresas, eventos, marcas',
+    format: 'Reel 15-30s o foto',
+    product: 'Producción real',
+    cta: 'WhatsApp',
+    kpi: 'Alcance + nuevos seguidores',
+    proposed_date: '2026-10-07',
+    status: 'IDEA',
+    version: null,
+    approval_ref: null,
+    audit_id: null,
+  },
+  {
+    content_id: 'CNT-20261005-003',
+    channel: 'WHATSAPP_STATUS',
+    idea: 'Pedidos desde 10 unidades, sin mínimos de fábrica',
+    objective: 'Confianza + conversión',
+    audience: 'Contactos existentes WhatsApp',
+    format: '2 pantallas',
+    product: 'Indumentaria personalizada',
+    cta: 'WhatsApp directo',
+    kpi: 'Respuestas al estado',
+    proposed_date: '2026-10-07',
+    status: 'PENDING_APPROVAL',
+    version: 'v1',
+    approval_ref: 'APR-20261005-001',
+    audit_id: 'AUDIT-20261005-003',
+  },
+  {
+    content_id: 'CNT-20261005-004',
+    channel: 'LINKEDIN',
+    idea: 'Merchandising que el equipo sí usa (ángulo RRHH/eventos)',
+    objective: 'Autoridad B2B + generar conversaciones',
+    audience: 'RRHH, agencias, organizadores de eventos',
+    format: 'Post texto',
+    product: 'Merchandising corporativo',
+    cta: 'WhatsApp',
+    kpi: 'Reacciones + conversaciones iniciadas',
+    proposed_date: '2026-10-09',
+    status: 'PENDING_APPROVAL',
+    version: 'v1',
+    approval_ref: 'APR-20261005-001',
+    audit_id: 'AUDIT-20261005-003',
+  },
+  {
+    content_id: 'CNT-20261005-005',
+    channel: 'WHATSAPP_STATUS',
+    idea: '¿Tenés un evento próximo? — hook de cotización',
+    objective: 'Conversión',
+    audience: 'Contactos WhatsApp',
+    format: '1-2 pantallas',
+    product: 'Merchandising eventos',
+    cta: 'Cotización WhatsApp',
+    kpi: 'Consultas entrantes',
+    proposed_date: '2026-10-09',
+    status: 'DRAFT',
+    version: null,
+    approval_ref: null,
+    audit_id: 'AUDIT-20261005-003',
+  },
+];
+
+export const AGENT_REGISTRY = [
+  { id: 'ORC', module: 'ORCHESTRATOR', name: 'AIRO Marketing Orchestrator', role: 'Orquestador General', responsibility: 'Decidir qué hacer, qué agente lo hace, inputs, validaciones, nivel HITL, autorización, registro, medición y aprendizaje.', output: 'Plan de acción + delegación', hitl: 0 },
+  { id: 'I-01', module: 'INSTAGRAM', name: 'Content Planner', role: 'Planificador de Contenido', responsibility: 'Planificar contenido: idea, objetivo, audiencia, formato, producto, CTA, KPI, fecha.', output: 'Plan editorial semanal', hitl: 0 },
+  { id: 'I-02', module: 'INSTAGRAM', name: 'Idea Generator', role: 'Generador de Ideas', responsibility: 'Generar ideas (máx. 10/solicitud) sin duplicados ni claims no verificables.', output: 'Ideas validadas', hitl: 0 },
+  { id: 'I-03', module: 'INSTAGRAM', name: 'Copywriter', role: 'Redactor Creativo', responsibility: 'Crear copy con voseo rioplatense, hook, cuerpo, CTA prioritario a WhatsApp y hashtags.', output: 'Copy final con voseo', hitl: 0 },
+  { id: 'I-04', module: 'INSTAGRAM', name: 'Creative Director', role: 'Director Creativo Visual', responsibility: 'Definir pieza visual: dimensiones, composición, paleta (#1A4295, #00B4D8, #111111) y prompts.', output: 'Spec Adobe / Prompt Gemini', hitl: 0 },
+  { id: 'I-05', module: 'INSTAGRAM', name: 'Trend Researcher', role: 'Investigador de Tendencias', responsibility: 'Investigar tendencias textiles B2B, evaluar relevancia, impacto, costo y riesgo.', output: 'Informe de tendencias', hitl: 0 },
+  { id: 'I-06', module: 'INSTAGRAM', name: 'Community Manager', role: 'Gestor de Comunidad Instagram', responsibility: 'Clasificar interacciones (LEAD, QUESTION, CUSTOMER, SPAM) y preparar respuestas asistidas.', output: 'Clasificación + respuesta', hitl: 2 },
+  { id: 'I-07', module: 'INSTAGRAM', name: 'Supplier Scout', role: 'Scout de Proveedores', responsibility: 'Descubrir proveedores y talleres aliados (selección final = HITL-3).', output: 'Shortlist de proveedores', hitl: 3 },
+  { id: 'L-01', module: 'LINKEDIN', name: 'ICP Finder', role: 'Buscador de Perfiles ICP', responsibility: 'Identificar perfiles corporativos compatibles con el ICP de compras B2B y RRHH.', output: 'Perfiles calificados', hitl: 0 },
+  { id: 'L-02', module: 'LINKEDIN', name: 'Company Scout', role: 'Scout de Empresas', responsibility: 'Monitorear empresas con señales de eventos, aniversarios o lanzamientos.', output: 'Empresas objetivo', hitl: 0 },
+  { id: 'L-03', module: 'LINKEDIN', name: 'Event Scout', role: 'Scout de Eventos', responsibility: 'Detectar exposiciones y congresos que requieran merchandising y welcome kits.', output: 'Listado de eventos B2B', hitl: 0 },
+  { id: 'L-04', module: 'LINKEDIN', name: 'Lead Scorer', role: 'Calificador de Oportunidades', responsibility: 'Scoring explicable 0–100 (LOW, NURTURE, QUALIFIED, HOT) con justificación objetiva.', output: 'Scoring y factores', hitl: 0 },
+  { id: 'L-05', module: 'LINKEDIN', name: 'Content Planner', role: 'Planificador de Posts B2B', responsibility: 'Diseñar 5 ideas de contenido B2B orientadas a directores de marketing y compras.', output: 'Calendario LinkedIn', hitl: 0 },
+  { id: 'L-06', module: 'LINKEDIN', name: 'Outreach Writer', role: 'Redactor de Mensajes B2B', responsibility: 'Crear borradores personalizados respetuosos con información pública (sin enviar directo).', output: 'Borrador para aprobación', hitl: 2 },
+  { id: 'L-07', module: 'LINKEDIN', name: 'CRM Assistant', role: 'Asistente de Pipeline', responsibility: 'Actualizar estado de leads en el pipeline B2B y registrar notas de seguimiento.', output: 'Transición en CRM', hitl: 1 },
+  { id: 'W-01', module: 'WHATSAPP', name: 'Status Planner', role: 'Planificador de Estados', responsibility: 'Planificar Estados semanales para generar confianza, retención y conversión en la base.', output: 'Plan de Estados', hitl: 0 },
+  { id: 'W-02', module: 'WHATSAPP', name: 'Content Creator', role: 'Creador de Estados', responsibility: 'Convertir ideas aprobadas en Estados de máximo 2 pantallas por pieza.', output: 'Piezas WhatsApp', hitl: 2 },
+  { id: 'W-03', module: 'WHATSAPP', name: 'Response Assistant', role: 'Asistente de Respuestas', responsibility: 'Clasificar consultas entrantes y redactar respuestas con tono rioplatense cercano.', output: 'Respuesta sugerida', hitl: 2 },
+  { id: 'W-04', module: 'WHATSAPP', name: 'Lead Qualifier', role: 'Calificador de Consultas', responsibility: 'Extraer empresa, producto, cantidad (mínimo 10), fecha estimada y urgencia.', output: 'Ficha para CRM', hitl: 1 },
+  { id: 'W-05', module: 'WHATSAPP', name: 'Retention Agent', role: 'Agente de Recompra', responsibility: 'Detectar clientes corporativos inactivos para reactivación periódica.', output: 'Propuesta de contacto', hitl: 2 },
+  { id: 'W-06', module: 'WHATSAPP', name: 'Supplier Researcher', role: 'Investigador de Insumos', responsibility: 'Investigar precios y calidades de insumos textiles (hilados, tintas, bobinas).', output: 'Comparativa de costos', hitl: 3 },
+  { id: 'G-01', module: 'GMAIL', name: 'Template Builder', role: 'Creador de Plantillas', responsibility: 'Templates para cotizaciones, bienvenida a agencias y seguimiento comercial.', output: 'Plantillas de correo', hitl: 0 },
+  { id: 'G-02', module: 'GMAIL', name: 'Personalization Agent', role: 'Personalizador de Emails', responsibility: 'Personalizar propuestas con datos específicos de la empresa receptora.', output: 'Correo personalizado', hitl: 2 },
+  { id: 'G-03', module: 'GMAIL', name: 'Prospecting Agent', role: 'Prospección por Email', responsibility: 'Identificar cuentas corporativas estratégicas sin spam.', output: 'Prospectos para revisión', hitl: 0 },
+  { id: 'G-04', module: 'GMAIL', name: 'Follow-Up Agent', role: 'Seguimiento Respetuoso', responsibility: 'Un único follow-up cordial si no hubo respuesta a una cotización previa.', output: 'Borrador de seguimiento', hitl: 2 },
+  { id: 'G-05', module: 'GMAIL', name: 'CRM Agent', role: 'Clasificador de Respuestas', responsibility: 'Clasificar respuestas entrantes (INTERESTED, WON, NOT_NOW) y actualizar CRM.', output: 'Actualización en CRM', hitl: 1 },
+  { id: 'G-06', module: 'GMAIL', name: 'Deliverability Guardian', role: 'Guardián de Entregabilidad', responsibility: 'Control de reputación, formato antispam y cumplimiento normativo.', output: 'Veredicto de entrega', hitl: 0 },
+  { id: 'X-01', module: 'TRANSVERSAL', name: 'Central CRM Agent', role: 'Guardián del CRM Central', responsibility: 'Consolidar canales, aplicar CRM-MATCH-EXPLICIT-IDENTITY y evitar duplicados.', output: 'CRM unificado', hitl: 1 },
+  { id: 'X-02', module: 'TRANSVERSAL', name: 'Analytics Agent', role: 'Analista de Rendimiento', responsibility: 'Informes de cotizaciones, conversión de leads y métricas de contenido.', output: 'Reportes periódicos', hitl: 0 },
+  { id: 'X-03', module: 'TRANSVERSAL', name: 'Content QA Agent', role: 'Control de Calidad de Contenido', responsibility: 'Validar tono voseo, regla de mínimo 10, ortografía, ausencia de precios inventados.', output: 'PASS / FAIL con feedback', hitl: 0 },
+  { id: 'X-04', module: 'TRANSVERSAL', name: 'Brand Guardian', role: 'Guardián de Identidad y Marca', responsibility: 'Asegurar paleta oficial, coherencia estética y valores del estudio textil.', output: 'Veredicto de marca', hitl: 0 },
+  { id: 'X-05', module: 'TRANSVERSAL', name: 'Research Agent', role: 'Investigador de Mercado', responsibility: 'Estudios de mercado textil y evaluación de nuevas tecnologías de estampado.', output: 'Informe de viabilidad', hitl: 0 },
+  { id: 'X-06', module: 'TRANSVERSAL', name: 'Experiment Manager', role: 'Gestor de Experimentos', responsibility: 'Ciclo estructurado de experimentos de marketing en registry.json.', output: 'Registro de hipótesis', hitl: 2 },
+];
+
+export function getApprovals(filtro = 'ALL') {
+  const list = getLocal(KEYS.APPROVALS, initialApprovals);
+  if (filtro === 'ALL') return list;
+  return list.filter((a) => a.estado === filtro);
+}
+
+export function getApprovalById(id) {
+  const list = getApprovals();
+  return list.find((a) => a.id === id) || null;
+}
+
+export function decideApproval(approvalId, decision, comments = '', actor = null) {
+  const list = getApprovals();
+  const operador = actor || getOperadorActual();
+  const idx = list.findIndex((a) => a.id === approvalId);
+  if (idx === -1) throw new Error('Aprobación no encontrada');
+
+  const prev = list[idx];
+  const nowIso = new Date().toISOString();
+
+  prev.estado = decision; // 'APPROVED' | 'REJECTED' | 'MODIFIED'
+  prev.decision_by = operador;
+  prev.decision_at = nowIso;
+  prev.decision_comments = comments || (decision === 'APPROVED' ? 'Aprobado para publicación manual' : 'Rechazado/Ajustes solicitados');
+
+  list[idx] = prev;
+  setLocal(KEYS.APPROVALS, list);
+
+  // Si la aprobación tiene piezas con referencia al calendario editorial, actualizamos el calendario
+  if (Array.isArray(prev.piezas)) {
+    const calendar = getEditorialCalendar();
+    let calChanged = false;
+    prev.piezas.forEach((pz) => {
+      if (pz.content_ref) {
+        const cIdx = calendar.findIndex((c) => c.content_id === pz.content_ref);
+        if (cIdx !== -1) {
+          calendar[cIdx].status = decision === 'APPROVED' ? 'APPROVED' : 'DRAFT';
+          calendar[cIdx].updated_at = nowIso;
+          calChanged = true;
+        }
+      }
+    });
+    if (calChanged) {
+      setLocal(KEYS.EDITORIAL_CALENDAR, calendar);
+      broadcastUpdate('CALENDAR_UPDATED', calendar);
+    }
+  }
+
+  logAudit(
+    operador,
+    decision === 'APPROVED' ? 'APROBACION_HITL' : 'RECHAZO_HITL',
+    'MARKETING',
+    `Decisión HITL sobre ${approvalId}: ${decision}. ${comments ? `Comentarios: ${comments}` : ''}`
+  );
+  broadcastUpdate('APPROVALS_UPDATED', list);
+  return prev;
+}
+
+export function resetApprovals() {
+  setLocal(KEYS.APPROVALS, initialApprovals);
+  broadcastUpdate('APPROVALS_UPDATED', initialApprovals);
+  return initialApprovals;
+}
+
+export function getEditorialCalendar(filterChannel = 'ALL', filterStatus = 'ALL') {
+  let list = getLocal(KEYS.EDITORIAL_CALENDAR, initialEditorialCalendar);
+  if (filterChannel !== 'ALL') {
+    list = list.filter((c) => c.channel === filterChannel);
+  }
+  if (filterStatus !== 'ALL') {
+    list = list.filter((c) => c.status === filterStatus);
+  }
+  return list;
+}
+
+export function saveCalendarEntry(entry, actor = null) {
+  const list = getEditorialCalendar();
+  const operador = actor || getOperadorActual();
+  const nowIso = new Date().toISOString();
+
+  if (entry.content_id) {
+    const idx = list.findIndex((c) => c.content_id === entry.content_id);
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], ...entry, updated_at: nowIso };
+      setLocal(KEYS.EDITORIAL_CALENDAR, list);
+      logAudit(operador, 'EDITAR_CALENDARIO', 'MARKETING', `Actualizada pieza ${entry.content_id} en calendario editorial`);
+      broadcastUpdate('CALENDAR_UPDATED', list);
+      return list[idx];
+    }
+  }
+
+  const newId = `CNT-${nowIso.slice(0, 10).replace(/-/g, '')}-${String(list.length + 1).padStart(3, '0')}`;
+  const newEntry = {
+    content_id: newId,
+    channel: entry.channel || 'INSTAGRAM',
+    idea: entry.idea || 'Nueva idea de contenido',
+    objective: entry.objective || 'Generar autoridad B2B',
+    audience: entry.audience || 'Marcas y empresas',
+    format: entry.format || 'Post carrusel',
+    product: entry.product || 'Indumentaria personalizada',
+    cta: entry.cta || 'WhatsApp directo',
+    kpi: entry.kpi || 'Consultas entrantes',
+    proposed_date: entry.proposed_date || nowIso.slice(0, 10),
+    status: entry.status || 'IDEA',
+    version: 'v1',
+    created_at: nowIso,
+  };
+
+  list.unshift(newEntry);
+  setLocal(KEYS.EDITORIAL_CALENDAR, list);
+  logAudit(operador, 'CREAR_CALENDARIO', 'MARKETING', `Creada pieza ${newId} en calendario editorial`);
+  broadcastUpdate('CALENDAR_UPDATED', list);
+  return newEntry;
+}
+
+export function updateCalendarEntryStatus(contentId, newStatus, actor = null) {
+  const list = getEditorialCalendar();
+  const operador = actor || getOperadorActual();
+  const idx = list.findIndex((c) => c.content_id === contentId);
+  if (idx === -1) throw new Error('Entrada de calendario no encontrada');
+
+  list[idx].status = newStatus;
+  list[idx].updated_at = new Date().toISOString();
+  setLocal(KEYS.EDITORIAL_CALENDAR, list);
+  logAudit(operador, 'ESTADO_CALENDARIO', 'MARKETING', `Pieza ${contentId} movida a estado ${newStatus}`);
+  broadcastUpdate('CALENDAR_UPDATED', list);
+  return list[idx];
+}
+
+export function resetEditorialCalendar() {
+  setLocal(KEYS.EDITORIAL_CALENDAR, initialEditorialCalendar);
+  broadcastUpdate('CALENDAR_UPDATED', initialEditorialCalendar);
+  return initialEditorialCalendar;
+}
+
+export function getAgentRegistry() {
+  return AGENT_REGISTRY;
+}
+
+// Clasificador inteligente y generador de respuestas del Community Manager (I-06 / W-03 / L-06)
+export function classifyAndGenerateCmResponse(messageText, channel = 'WHATSAPP') {
+  const text = String(messageText || '').toLowerCase().trim();
+  const cleanOriginal = String(messageText || '').trim();
+
+  // Detección de cantidades numéricas
+  let detectedQuantity = null;
+  const numMatch = text.match(/(\d+)\s*(remeras?|buzos?|prendas?|unidades?|gorras?|totes?|camperas?|u\b)?/);
+  if (numMatch && numMatch[1]) {
+    detectedQuantity = parseInt(numMatch[1], 10);
+  }
+
+  // Detección de prenda
+  let detectedProduct = 'Indumentaria textil personalizada';
+  if (text.includes('buzo')) detectedProduct = 'Buzos estampados';
+  else if (text.includes('remera')) detectedProduct = 'Remeras de algodón / técnicas';
+  else if (text.includes('gorra')) detectedProduct = 'Gorras con bordado o DTF';
+  else if (text.includes('tote') || text.includes('bolsa')) detectedProduct = 'Tote bags de lienzo';
+  else if (text.includes('campera')) detectedProduct = 'Camperas / chalecos corporativos';
+
+  // Detección de posible nombre de empresa
+  let detectedCompany = '';
+  const compMatch = cleanOriginal.match(/somos (?:de |la empresa )?([A-Za-z0-9\s]+?)(?:[.,]|\s+y\s|\s+queremos|\s+buscamos|$)/i);
+  if (compMatch && compMatch[1]) {
+    detectedCompany = compMatch[1].trim();
+  }
+
+  const isUnderMinimum = detectedQuantity !== null && detectedQuantity < 10;
+
+  // Clasificación de intención
+  let category = 'LEAD';
+  let categoryLabel = 'Cotización / Lead B2B';
+  let confidence = 0.95;
+  let proposedResponse = '';
+  let score = 70;
+
+  // Normalización de texto sin acentos para análisis lingüístico
+  const normText = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  const isReclamo = normText.includes('fallad') || normText.includes('mal estampad') || normText.includes('roto') || normText.includes('reclamo') || normText.includes('no llego') || normText.includes('error');
+  const isSeguimiento = normText.includes('como viene') || normText.includes('cuando entregan') || normText.includes('mi pedido') || normText.includes('remito') || normText.includes('estado de mi');
+  const isConsultaTecnica = normText.includes('sublimacion') || normText.includes('dtf') || normText.includes('bordado') || normText.includes('algodon') || normText.includes('tela') || normText.includes('catalogo');
+  const isSpam = normText.includes('crypto') || normText.includes('prestamo') || normText.includes('viagra') || normText.includes('casino');
+  const hasCotizarIntent = normText.includes('cuanto') || normText.includes('precio') || normText.includes('costo') || normText.includes('cotiz') || normText.includes('presupuesto') || normText.includes('salen') || (detectedQuantity !== null && detectedQuantity >= 10);
+
+  if (isSpam) {
+    category = 'SPAM';
+    categoryLabel = 'Mensaje no deseado / Spam';
+    confidence = 0.98;
+    score = 0;
+    proposedResponse = 'Sin respuesta (marcar como spam y archivar).';
+  } else if (isReclamo) {
+    category = 'COMPLAINT';
+    categoryLabel = 'Reclamo / Prioridad Alta';
+    confidence = 0.92;
+    score = 30;
+    proposedResponse = '¡Hola! Lamentamos el inconveniente. En AIRO nos tomamos muy en serio la calidad y terminación de cada producción. Por favor pasanos fotos del detalle y tu número de remito por WhatsApp al 11-6355-3443 para que el encargado de taller lo revise de inmediato y te demos una respuesta hoy mismo.';
+  } else if (isSeguimiento) {
+    category = 'CUSTOMER';
+    categoryLabel = 'Cliente Existente / Seguimiento';
+    confidence = 0.9;
+    score = 50;
+    proposedResponse = '¡Hola! Con gusto te chequeamos el estado de tu pedido en taller. Por favor pasanos el nombre de tu empresa o número de remito para consultar la fecha exacta de entrega con el sector de logística. También podés escribirnos al WhatsApp de taller: wa.me/5491163553443.';
+  } else if (isUnderMinimum) {
+    category = 'LEAD_UNDER_MIN';
+    categoryLabel = 'Consulta Bajo Mínimo (<10 unidades)';
+    confidence = 0.94;
+    score = 40;
+    proposedResponse = `¡Hola! Gracias por escribirnos. Te comento que en AIRO trabajamos exclusivamente con producciones personalizadas desde un mínimo de 10 unidades por modelo (en múltiplos de 10). Si te sirve armar una tanda a partir de esa cantidad para tu marca o equipo, escribinos a nuestro WhatsApp oficial 👉 wa.me/5491163553443 y te preparamos una cotización en menos de 24 h hábiles.`;
+  } else if (isConsultaTecnica && !hasCotizarIntent) {
+    category = 'QUESTION';
+    categoryLabel = 'Consulta Técnica / Catálogo';
+    confidence = 0.88;
+    score = 60;
+    proposedResponse = '¡Hola! En AIRO te asesoramos técnica y estéticamente para elegir la técnica ideal según el uso de las prendas (trabajamos DTF textil para diseños detallados a todo color, sublimación para poliéster claro y bordado de alta precisión). Mínimo de confección: 10 unidades. Escribinos a WhatsApp al 11-6355-3443 y te compartimos muestras y catálogo.';
+  } else {
+    category = 'LEAD';
+    categoryLabel = 'Cotización / Lead B2B';
+    confidence = 0.93;
+    score = detectedQuantity && detectedQuantity >= 50 ? 90 : 75;
+    proposedResponse = `¡Hola! Qué bueno que nos contactes. Producimos ${detectedProduct.toLowerCase()} con estampas de alta durabilidad (DTF, sublimación y bordado) a partir de 10 unidades. Para pasarte un presupuesto exacto y plazos de entrega, escribinos directamente por WhatsApp 👉 wa.me/5491163553443 contándonos si ya tenés el diseño listo, y te respondemos en menos de 24 h hábiles.`;
+  }
+
+  const agentId = channel === 'INSTAGRAM' ? 'I-06' : channel === 'LINKEDIN' ? 'L-06' : 'W-03';
+
+  return {
+    category,
+    categoryLabel,
+    confidence,
+    agentId,
+    originalMessage: cleanOriginal,
+    proposedResponse,
+    extractedData: {
+      company: detectedCompany,
+      contact: 'Contacto ' + channel,
+      product: detectedProduct,
+      quantity: detectedQuantity,
+      channel,
+      interest: `Consulta por ${detectedProduct}${detectedQuantity ? ` (${detectedQuantity} u.)` : ''}`,
+      score,
+      isUnderMinimum,
+    },
+    rulesApplied: [
+      'Español rioplatense y voseo profesional',
+      'Mínimo comercial de 10 unidades y múltiplos de 10',
+      'Precios por cotización personalizada (sin inventar tarifas fijas)',
+      'CTA prioritario: WhatsApp oficial (wa.me/5491163553443)',
+      'Compromiso de respuesta <24 h hábiles',
+    ],
+  };
+}
+
+// Conversión y derivación directa de interacción asistida por CM a Lead en CRM
+export function convertCmInteractionToLead(interactionData, actor = null) {
+  const operador = actor || getOperadorActual();
+  const ext = interactionData.extractedData || interactionData;
+
+  const leadPayload = {
+    origin: `CM_${ext.channel || 'WHATSAPP'}`,
+    company: ext.company || null,
+    contact: ext.contact || `Prospecto ${ext.channel || 'Redes'}`,
+    channel: ext.channel || 'WHATSAPP',
+    interest: ext.interest || 'Consulta entrante clasificada por Agente CM',
+    product: ext.product || 'Indumentaria textil',
+    quantity: ext.quantity || null,
+    score: ext.score || 65,
+    status: 'NEW',
+    priority: ext.score >= 80 ? 'HIGH' : 'NORMAL',
+    notes: `Mensaje recibido: "${interactionData.originalMessage || ''}"\nRespuesta sugerida CM: "${interactionData.proposedResponse || ''}"`,
+    phone: ext.phone || null,
+    email: ext.email || null,
+    forzar_creacion: ext.forzar_creacion || false,
+  };
+
+  const res = saveLead(leadPayload, operador);
+  logAudit(
+    operador,
+    'CM_LEAD_INJECTED',
+    'CRM',
+    `Lead derivado por Community Manager (${ext.channel}): ${leadPayload.contact}${ext.company ? ` - ${ext.company}` : ''}`
+  );
+  return res;
+}
+
