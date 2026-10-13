@@ -35,6 +35,7 @@ const KEYS = {
   AUDIT: `${PREFIX}audit_log`,
   OPERADOR: `${PREFIX}operador_actual`,
   USUARIOS: `${PREFIX}usuarios`,
+  LEADS: `${PREFIX}leads`,
 };
 
 // Canal de sincronización en tiempo real para trabajo colaborativo multi-pestaña / local
@@ -212,6 +213,9 @@ export function initializeStorageIfEmpty() {
         password: DEFAULT_ADMIN_HASH,
       },
     ]);
+  }
+  if (!localStorage.getItem(KEYS.LEADS)) {
+    setLocal(KEYS.LEADS, []);
   }
   if (!localStorage.getItem(KEYS.AUDIT)) {
     setLocal(KEYS.AUDIT, [
@@ -841,7 +845,7 @@ export function deleteProveedor(id) {
 // ============================================================
 export function exportarBackupCompleto() {
   const data = {
-    version: '1.1',
+    version: '1.2',
     export_date: new Date().toISOString(),
     empresa: 'AIRO COLOR LAB.',
     productos: getProductos(),
@@ -851,6 +855,7 @@ export function exportarBackupCompleto() {
     remitos: getRemitos(),
     flujo_caja: getFlujoCaja(),
     movimientos: getMovimientos(),
+    leads: getLeads(),
     usuarios: getUsuarios().map((u) => ({ ...u, password: '***' })),
     audit_log: getAuditLogs(),
   };
@@ -870,6 +875,7 @@ export function importarBackupCompleto(jsonString) {
     if (Array.isArray(data.remitos)) setLocal(KEYS.REMITOS, data.remitos);
     if (Array.isArray(data.flujo_caja)) setLocal(KEYS.FLUJO_CAJA, data.flujo_caja);
     if (Array.isArray(data.movimientos)) setLocal(KEYS.MOVIMIENTOS, data.movimientos);
+    if (Array.isArray(data.leads)) setLocal(KEYS.LEADS, data.leads);
     if (Array.isArray(data.usuarios)) {
       // Preservar passwords existentes si el backup viene sanitizado con '***'
       const actuales = getUsuarios();
@@ -910,10 +916,11 @@ export const ROLES_DEFINICION = [
       'caja_rw',
       'kardex_r',
       'contactos_rw',
+      'crm_rw',
       'usuarios_rw',
       'config_rw',
     ],
-    modulosPermitidos: ['productos', 'materiales', 'remitos', 'caja', 'kardex', 'contactos', 'usuarios', 'configuracion'],
+    modulosPermitidos: ['productos', 'materiales', 'remitos', 'caja', 'kardex', 'contactos', 'crm', 'usuarios', 'configuracion'],
   },
   {
     id: 'taller_produccion',
@@ -945,11 +952,11 @@ export const ROLES_DEFINICION = [
   {
     id: 'comercial_ventas',
     nombre: 'Asesor Comercial B2B',
-    descripcion: 'Atención a clientes corporativos, consulta de existencias y precios para cotizaciones, y seguimiento de remitos.',
+    descripcion: 'Atención a clientes corporativos, gestión de leads y pipeline comercial CRM, existencias y precios para cotizaciones, y remitos.',
     color: '#7c3aed',
     badgeClass: 'g-badge-info',
-    permisos: ['productos_r', 'contactos_rw', 'remitos_r'],
-    modulosPermitidos: ['productos', 'contactos', 'remitos'],
+    permisos: ['crm_rw', 'productos_r', 'contactos_rw', 'remitos_r'],
+    modulosPermitidos: ['crm', 'productos', 'contactos', 'remitos'],
   },
 ];
 
@@ -1212,4 +1219,308 @@ export async function syncWithSupabase() {
   } catch (err) {
     return { ok: false, error: err.message };
   }
+}
+
+// ============================================================
+// 9. CRM B2B — GESTIÓN DE LEADS, PIPELINE Y REGLAS DE MATCH
+// (Portado bajo la regla canónica CRM-MATCH-EXPLICIT-IDENTITY)
+// ============================================================
+
+export const CRM_RULE_ID = 'CRM-MATCH-EXPLICIT-IDENTITY';
+export const CRM_RULE_VERSION = '1.0';
+
+export const CRM_ESTADOS = [
+  { id: 'NEW', label: 'Nuevo', badge: 'g-badge-brand', color: '#1a4295' },
+  { id: 'QUALIFIED', label: 'Calificado', badge: 'g-badge-info', color: '#0284c7' },
+  { id: 'CONTACTED', label: 'Contactado', badge: 'g-badge-neutral', color: '#64748b' },
+  { id: 'ENGAGED', label: 'En Conversación', badge: 'g-badge-neutral', color: '#475569' },
+  { id: 'QUOTATION', label: 'En Cotización', badge: 'g-badge-warning', color: '#b45309' },
+  { id: 'NEGOTIATION', label: 'En Negociación', badge: 'g-badge-warning', color: '#d97706' },
+  { id: 'WON', label: 'Ganado (Cliente)', badge: 'g-badge-success', color: '#15803d' },
+  { id: 'LOST', label: 'Perdido', badge: 'g-badge-danger', color: '#b91c1c' },
+  { id: 'NURTURE', label: 'Seguimiento / Nutrición', badge: 'g-badge-neutral', color: '#6b7280' },
+  { id: 'REACTIVATION', label: 'Reactivación', badge: 'g-badge-info', color: '#7c3aed' },
+];
+
+export const normEmail = (s) => (s || '').toLowerCase().trim() || null;
+export const normPhone = (s) => (s || '').replace(/\D/g, '') || null;
+export const normText = (s) => (s || '').toLowerCase().trim().replace(/\s+/g, ' ') || null;
+
+export function matchLeadInList(leads, { email, phone }) {
+  const em = normEmail(email);
+  const ph = normPhone(phone);
+  if (!em && !ph) return [];
+  return (leads || []).filter(
+    (l) => !l.merged_into &&
+      ((em && normEmail(l.email) === em) || (ph && normPhone(l.phone) && normPhone(l.phone) === ph))
+  );
+}
+
+export function ambiguousByCompanyContactInList(leads, { company, contact }) {
+  const comp = normText(company);
+  const cont = normText(contact);
+  if (!comp && !cont) return [];
+  return (leads || []).filter(
+    (l) => !l.merged_into &&
+      (comp && cont
+        ? normText(l.company) === comp && normText(l.contact) === cont
+        : (comp && normText(l.company) === comp) || (cont && normText(l.contact) === cont))
+  );
+}
+
+export function nextLeadIdGenerator(leads, dayStr) {
+  const day = dayStr || new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const prefix = `LEAD-${day}-`;
+  let n = 0;
+  for (const l of leads || []) {
+    const m = String(l.lead_id || '').match(/^LEAD-\d{8}-(\d+)$/);
+    if (m && l.lead_id.startsWith(prefix)) {
+      n = Math.max(n, parseInt(m[1], 10));
+    }
+  }
+  return `${prefix}${String(n + 1).padStart(3, '0')}`;
+}
+
+export function getLeads() {
+  return getLocal(KEYS.LEADS, []);
+}
+
+export function getLeadById(leadId) {
+  const list = getLeads();
+  return list.find((l) => l.lead_id === leadId) || null;
+}
+
+export function saveLead(inputData, actor = null) {
+  const leads = getLeads();
+  const operador = actor || getOperadorActual();
+  const nowIso = new Date().toISOString();
+  const day = nowIso.slice(0, 10).replace(/-/g, '');
+
+  const email = normEmail(inputData.email);
+  const phone = normPhone(inputData.phone);
+  const company = (inputData.company || '').trim();
+  const contact = (inputData.contact || '').trim();
+
+  if (!email && !phone && !company && !contact) {
+    throw new Error('Debe proporcionar al menos un medio de contacto (email, teléfono/WhatsApp) o razón social.');
+  }
+
+  // 1. Edición explícita por ID existente
+  if (inputData.lead_id) {
+    const idx = leads.findIndex((l) => l.lead_id === inputData.lead_id);
+    if (idx === -1) throw new Error('Lead no encontrado');
+
+    const prev = leads[idx];
+    const prevStatus = prev.status;
+    const newStatus = inputData.status || prevStatus;
+
+    const history = [...(prev.history || [])];
+    if (newStatus !== prevStatus) {
+      history.push({
+        at: nowIso,
+        event: 'status_changed',
+        by: operador,
+        from: prevStatus,
+        to: newStatus,
+        notes: inputData.notes || 'Cambio de estado desde el CRM',
+      });
+    } else {
+      history.push({
+        at: nowIso,
+        event: 'updated',
+        by: operador,
+        changes: 'Edición de datos de lead',
+      });
+    }
+
+    const updated = {
+      ...prev,
+      ...inputData,
+      email: email || prev.email,
+      phone: phone || prev.phone,
+      company: company || prev.company,
+      contact: contact || prev.contact,
+      status: newStatus,
+      history,
+      updated_at: nowIso,
+    };
+
+    leads[idx] = updated;
+    setLocal(KEYS.LEADS, leads);
+    logAudit(operador, 'EDITAR_LEAD', 'CRM', `Actualizado lead ${updated.lead_id} (${updated.company || updated.contact})`);
+    broadcastUpdate('LEADS_UPDATED', leads);
+    return { ok: true, lead: updated, type: 'updated' };
+  }
+
+  // 2. Alta nueva: evaluar matching y reglas de deduplicación
+  const matches = matchLeadInList(leads, { email, phone });
+  if (matches.length > 1) {
+    throw new Error('Conflicto: identificadores explícitos (email o teléfono) coinciden con múltiples leads diferentes. Requiere resolución manual.');
+  }
+
+  if (matches.length === 1) {
+    const l = matches[0];
+    const emDiff = email && l.email && normEmail(l.email) !== email;
+    const phDiff = phone && l.phone && normPhone(l.phone) && normPhone(l.phone) !== phone;
+    if (emDiff || phDiff) {
+      throw new Error(`Conflicto de identidad: un identificador coincide pero el otro difiere en ${l.lead_id}. Revisión requerida.`);
+    }
+
+    // Merge bajo regla CRM-MATCH-EXPLICIT-IDENTITY
+    const MERGE_FIELDS = ['company', 'contact', 'channel', 'interest', 'product', 'quantity', 'timing', 'email', 'phone', 'next_action'];
+    for (const f of MERGE_FIELDS) {
+      if ((l[f] === null || l[f] === undefined || l[f] === '') && inputData[f] != null && inputData[f] !== '') {
+        l[f] = inputData[f];
+      }
+    }
+    const newOrigin = inputData.origin || 'DIRECTO';
+    l.origins = [...new Set([...(l.origins || [l.origin].filter(Boolean)), newOrigin])];
+    l.history = [
+      ...(l.history || []),
+      {
+        at: nowIso,
+        event: 'merged',
+        by: operador,
+        matched_by: email ? 'email' : 'phone',
+        origin: newOrigin,
+        incoming: { company, contact, interest: inputData.interest, channel: inputData.channel },
+      },
+    ];
+    l.updated_at = nowIso;
+
+    setLocal(KEYS.LEADS, leads);
+    logAudit(operador, 'MERGE_LEAD', 'CRM', `Lead ${l.lead_id} fusionado automáticamente por coincidencia de ${email ? 'email' : 'teléfono'}`);
+    broadcastUpdate('LEADS_UPDATED', leads);
+    return { ok: true, lead: l, type: 'merged' };
+  }
+
+  // Alerta de ambigüedad si coincide empresa/contacto pero no hay teléfono/email idéntico
+  const amb = ambiguousByCompanyContactInList(leads, { company, contact });
+  if (amb.length && !inputData.forzar_creacion) {
+    return {
+      ambiguous: true,
+      candidates: amb.map((a) => a.lead_id),
+      message: `Existe coincidencia de empresa/contacto con ${amb.map((a) => a.lead_id).join(', ')}. Verificá si es la misma persona antes de crear un duplicado.`,
+    };
+  }
+
+  // Creación limpia
+  const newLead = {
+    lead_id: nextLeadIdGenerator(leads, day),
+    origin: inputData.origin || 'DIRECTO',
+    origins: [inputData.origin || 'DIRECTO'],
+    company: company || null,
+    contact: contact || null,
+    channel: inputData.channel || 'WHATSAPP',
+    interest: inputData.interest || null,
+    product: inputData.product || null,
+    quantity: inputData.quantity ? Number(inputData.quantity) : null,
+    timing: inputData.timing || null,
+    score: inputData.score !== undefined && inputData.score !== null ? Number(inputData.score) : 50,
+    status: inputData.status || 'NEW',
+    priority: inputData.priority || 'NORMAL',
+    last_contact: nowIso.slice(0, 10),
+    next_action: inputData.next_action || 'Contactar y calificar requerimiento',
+    owner: inputData.owner || operador,
+    email: email || null,
+    phone: phone || null,
+    notes: inputData.notes || null,
+    carrito: inputData.carrito || null,
+    history: [
+      {
+        at: nowIso,
+        event: 'created',
+        by: operador,
+        via: 'gestion_web',
+      },
+    ],
+    created_at: nowIso,
+    updated_at: nowIso,
+  };
+
+  leads.unshift(newLead);
+  setLocal(KEYS.LEADS, leads);
+  logAudit(operador, 'CREAR_LEAD', 'CRM', `Alta de lead ${newLead.lead_id} (${newLead.company || newLead.contact || newLead.email})`);
+  broadcastUpdate('LEADS_UPDATED', leads);
+  return { ok: true, lead: newLead, type: 'created' };
+}
+
+export function updateLeadStatus(leadId, newStatus, notes = '', actor = null) {
+  const leads = getLeads();
+  const operador = actor || getOperadorActual();
+  const idx = leads.findIndex((l) => l.lead_id === leadId);
+  if (idx === -1) throw new Error('Lead no encontrado');
+
+  const prev = leads[idx];
+  const prevStatus = prev.status;
+  const nowIso = new Date().toISOString();
+
+  prev.status = newStatus;
+  prev.last_contact = nowIso.slice(0, 10);
+  prev.history = [
+    ...(prev.history || []),
+    {
+      at: nowIso,
+      event: 'status_changed',
+      by: operador,
+      from: prevStatus,
+      to: newStatus,
+      notes: notes || `Movido a estado ${newStatus}`,
+    },
+  ];
+  prev.updated_at = nowIso;
+
+  leads[idx] = prev;
+  setLocal(KEYS.LEADS, leads);
+  logAudit(operador, 'CAMBIO_ESTADO_LEAD', 'CRM', `Lead ${leadId} pasó de ${prevStatus} a ${newStatus}`);
+  broadcastUpdate('LEADS_UPDATED', leads);
+  return prev;
+}
+
+export function deleteLead(leadId, actor = null) {
+  const leads = getLeads();
+  const operador = actor || getOperadorActual();
+  const target = leads.find((l) => l.lead_id === leadId);
+  if (!target) return false;
+
+  const filtered = leads.filter((l) => l.lead_id !== leadId);
+  setLocal(KEYS.LEADS, filtered);
+  logAudit(operador, 'ELIMINAR_LEAD', 'CRM', `Eliminado lead ${leadId} (${target.company || target.contact})`);
+  broadcastUpdate('LEADS_UPDATED', filtered);
+  return true;
+}
+
+export function importQuotesToLeads(quotesArray, actor = null) {
+  if (!Array.isArray(quotesArray)) return { imported: 0, merged: 0, errors: [] };
+  let imported = 0;
+  let merged = 0;
+  const errors = [];
+  const operador = actor || getOperadorActual();
+
+  for (const q of quotesArray) {
+    try {
+      const res = saveLead(
+        {
+          origin: q.origen || 'WEB_CATALOGO',
+          company: q.empresa || '',
+          contact: q.nombre || '',
+          email: q.email || '',
+          phone: q.whatsapp || '',
+          interest: q.objetivo || q.comentarios || 'Solicitud de cotización web',
+          timing: q.fecha_estimada || '',
+          carrito: q.carrito || '',
+          notes: q.comentarios ? `Comentarios del cliente: ${q.comentarios}` : '',
+          status: 'NEW',
+          forzar_creacion: true,
+        },
+        operador
+      );
+      if (res.type === 'created') imported++;
+      if (res.type === 'merged') merged++;
+    } catch (err) {
+      errors.push({ quote: q, error: err.message });
+    }
+  }
+
+  return { imported, merged, errors };
 }

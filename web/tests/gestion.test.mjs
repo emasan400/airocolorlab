@@ -298,3 +298,78 @@ test('Cambio y Reseteo Seguro de Contraseña', async () => {
   assert.notEqual(reseteado.password, 'ResetPorAdmin888!', 'Jamás debe quedar en texto plano en la base');
 });
 
+test('CRM B2B — Pipeline, Deduplicación CRM-MATCH-EXPLICIT-IDENTITY y RBAC', () => {
+  // 1. Inicialización y alta de lead
+  const initial = storage.getLeads();
+  assert.ok(Array.isArray(initial));
+
+  const lead1 = storage.saveLead({
+    company: 'Cervecera Quilmes B2B',
+    contact: 'Federico Gómez',
+    email: 'compras@quilmes-merch.com',
+    phone: '1155443322',
+    channel: 'WHATSAPP',
+    origin: 'INSTAGRAM',
+    interest: '100 Remeras Oversize DTF 24/1 Peinado',
+    quantity: 100,
+    score: 85,
+    status: 'NEW',
+    next_action: 'Enviar cotización formal con tabla de talles',
+  });
+
+  assert.equal(lead1.type, 'created');
+  assert.ok(lead1.lead.lead_id.startsWith('LEAD-'));
+  assert.equal(lead1.lead.status, 'NEW');
+  assert.equal(lead1.lead.email, 'compras@quilmes-merch.com');
+  assert.equal(lead1.lead.phone, '1155443322');
+  assert.equal(lead1.lead.history.length, 1);
+  assert.equal(lead1.lead.history[0].event, 'created');
+
+  // 2. Deduplicación por email idéntico -> debe fusionar sin duplicar
+  const leadMerge = storage.saveLead({
+    company: 'Cervecería Quilmes SA',
+    email: 'compras@quilmes-merch.com',
+    channel: 'WHATSAPP',
+    origin: 'WHATSAPP',
+    interest: '50 Buzos Frizados adicionales',
+    quantity: 50,
+  });
+
+  assert.equal(leadMerge.type, 'merged', 'Debe detectar identidad explícita y fusionar');
+  assert.equal(leadMerge.lead.lead_id, lead1.lead.lead_id, 'Debe preservar el ID original');
+  assert.ok(leadMerge.lead.origins.includes('INSTAGRAM'));
+  assert.ok(leadMerge.lead.origins.includes('WHATSAPP'));
+  assert.ok(leadMerge.lead.history.some((h) => h.event === 'merged'), 'Debe registrar evento merged en historial');
+
+  // 3. Identidad conflictiva (mismo teléfono pero distinto email no vacío) -> debe rechazar
+  assert.throws(
+    () =>
+      storage.saveLead({
+        company: 'Otra Empresa SRL',
+        phone: '1155443322', // Mismo teléfono
+        email: 'otro-distinto@otraempresa.com', // Pero email contradictorio
+      }),
+    /Conflicto de identidad/,
+    'Debe evitar merge silencioso si los identificadores difieren'
+  );
+
+  // 4. Avance de etapas del pipeline con historial append-only
+  const leadCalificado = storage.updateLeadStatus(lead1.lead.lead_id, 'QUALIFIED', 'Cliente confirmó presupuesto');
+  assert.equal(leadCalificado.status, 'QUALIFIED');
+  assert.ok(leadCalificado.history.some((h) => h.event === 'status_changed' && h.to === 'QUALIFIED'));
+
+  const leadGanado = storage.updateLeadStatus(lead1.lead.lead_id, 'WON', 'Seña del 50% transferida');
+  assert.equal(leadGanado.status, 'WON');
+
+  // 5. Permisos RBAC de acceso al CRM
+  assert.equal(storage.isModuloPermitido('admin', 'crm'), true, 'Admin debe acceder a CRM');
+  assert.equal(storage.isModuloPermitido('comercial_ventas', 'crm'), true, 'Comercial B2B debe acceder a CRM');
+  assert.equal(storage.isModuloPermitido('taller_produccion', 'crm'), false, 'Taller no debe acceder a cartera comercial');
+  assert.equal(storage.isModuloPermitido('finanzas_caja', 'crm'), false, 'Finanzas no debe acceder a CRM');
+
+  // 6. Eliminación de lead
+  const eliminado = storage.deleteLead(lead1.lead.lead_id);
+  assert.equal(eliminado, true);
+  assert.equal(storage.getLeadById(lead1.lead.lead_id), null);
+});
+

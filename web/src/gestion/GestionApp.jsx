@@ -6,6 +6,7 @@ import {
   getMateriales,
   getRemitos,
   getFlujoCaja,
+  getLeads,
   getOperadorActual,
   subscribeToSync,
   getUsuarioPorEmail,
@@ -20,6 +21,7 @@ import RemitosModule from './components/RemitosModule';
 import FlujoCajaModule from './components/FlujoCajaModule';
 import MovimientosKardex from './components/MovimientosKardex';
 import ContactosModule from './components/ContactosModule';
+import CrmModule from './components/CrmModule';
 import ConfiguracionModule from './components/ConfiguracionModule';
 import UsuariosRolesModule from './components/UsuariosRolesModule';
 
@@ -62,7 +64,7 @@ function GestionAppInner({ session, onSignOut }) {
   // Protección de navegación RBAC: redirigir si no tiene permiso
   useEffect(() => {
     if (activeTab !== 'perfil' && !isModuloPermitido(currentRol, activeTab)) {
-      const modulos = ['productos', 'materiales', 'remitos', 'caja', 'kardex', 'contactos'];
+      const modulos = ['productos', 'materiales', 'remitos', 'caja', 'kardex', 'contactos', 'crm'];
       const primerPermitido = modulos.find((k) => isModuloPermitido(currentRol, k)) || 'perfil';
       setActiveTab(primerPermitido);
     }
@@ -76,6 +78,7 @@ function GestionAppInner({ session, onSignOut }) {
   const mats = getMateriales();
   const rems = getRemitos();
   const flujos = getFlujoCaja();
+  const leadsList = getLeads();
 
   const prodsAlert = prods.filter((p) => p.stock_actual <= p.stock_minimo).length;
   const matsAlert = mats.filter((m) => Number(m.stock_actual) <= Number(m.stock_minimo)).length;
@@ -245,6 +248,20 @@ function GestionAppInner({ session, onSignOut }) {
               </button>
             )}
 
+            {(isAdmin || isModuloPermitido(currentRol, 'crm')) && (
+              <button
+                role="tab"
+                aria-selected={activeTab === 'crm'}
+                className={`gestion-tab-btn ${activeTab === 'crm' ? 'active' : ''}`}
+                onClick={() => setActiveTab('crm')}
+              >
+                💼 CRM & Leads B2B
+                <span className="gestion-tab-badge">
+                  {leadsList.length}
+                </span>
+              </button>
+            )}
+
             {isAdmin && (
               <button
                 role="tab"
@@ -303,6 +320,10 @@ function GestionAppInner({ session, onSignOut }) {
 
         {activeTab === 'contactos' && (
           <ContactosModule />
+        )}
+
+        {activeTab === 'crm' && (
+          <CrmModule onLeadChanged={triggerRefresh} />
         )}
 
         {activeTab === 'usuarios' && (
