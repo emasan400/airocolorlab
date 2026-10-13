@@ -9,7 +9,20 @@ import {
   initialMovimientos,
 } from './seedData.js';
 
-const PREFIX = 'airo_gestion_v1_';
+const PREFIX = 'airo_gestion_v2_';
+
+// Limpieza automática de claves v1 con datos de muestra previos
+try {
+  if (typeof localStorage !== 'undefined') {
+    Object.keys(localStorage).forEach((k) => {
+      if (k.startsWith('airo_gestion_v1_')) {
+        localStorage.removeItem(k);
+      }
+    });
+  }
+} catch {
+  // Ignorar error de acceso a storage
+}
 
 const KEYS = {
   PRODUCTOS: `${PREFIX}productos`,

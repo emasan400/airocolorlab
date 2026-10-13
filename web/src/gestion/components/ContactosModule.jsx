@@ -140,21 +140,46 @@ export default function ContactosModule() {
                 </tr>
               </thead>
               <tbody>
-                {clientesFiltrados.map((c) => (
-                  <tr key={c.id}>
-                    <td><strong>{c.razon_social}</strong></td>
-                    <td style={{ fontSize: '0.8rem', fontFamily: 'monospace' }}>{c.cuit || '—'}</td>
-                    <td>{c.contacto || '—'}</td>
-                    <td>{c.whatsapp || '—'}</td>
-                    <td style={{ fontSize: '0.8rem' }}>{c.email || '—'}</td>
-                    <td style={{ fontSize: '0.8rem' }}>{c.direccion || '—'}</td>
-                    <td><span className="g-badge g-badge-neutral">{c.rubro || 'General'}</span></td>
-                    <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                      <button className="g-btn g-btn-outline g-btn-sm" style={{ marginRight: '6px' }} onClick={() => handleOpenEditarCli(c)}>✏️</button>
-                      <button className="g-btn g-btn-danger g-btn-sm" onClick={() => handleEliminarCli(c.id, c.razon_social)}>🗑️</button>
+                {clientes.length === 0 ? (
+                  <tr>
+                    <td colSpan={8}>
+                      <div className="gestion-empty-state">
+                        <div className="gestion-empty-icon">👥</div>
+                        <h4>Tu agenda de clientes B2B</h4>
+                        <p>
+                          Aún no cargaste clientes. Agregá empresas, marcas y agencias para autocompletar remitos y cobros en un segundo.
+                        </p>
+                        <button className="g-btn g-btn-primary" onClick={handleOpenNuevoCli}>
+                          + Cargar Mi Primer Cliente
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                ))}
+                ) : clientesFiltrados.length === 0 ? (
+                  <tr>
+                    <td colSpan={8}>
+                      <div className="gestion-empty-state">
+                        <p>No se encontraron clientes con el filtro ingresado.</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  clientesFiltrados.map((c) => (
+                    <tr key={c.id}>
+                      <td><strong>{c.razon_social}</strong></td>
+                      <td style={{ fontSize: '0.8rem', fontFamily: 'monospace' }}>{c.cuit || '—'}</td>
+                      <td>{c.contacto || '—'}</td>
+                      <td>{c.whatsapp || '—'}</td>
+                      <td style={{ fontSize: '0.8rem' }}>{c.email || '—'}</td>
+                      <td style={{ fontSize: '0.8rem' }}>{c.direccion || '—'}</td>
+                      <td><span className="g-badge g-badge-neutral">{c.rubro || 'General'}</span></td>
+                      <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        <button className="g-btn g-btn-outline g-btn-sm" style={{ marginRight: '6px' }} onClick={() => handleOpenEditarCli(c)}>✏️</button>
+                        <button className="g-btn g-btn-danger g-btn-sm" onClick={() => handleEliminarCli(c.id, c.razon_social)}>🗑️</button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -175,20 +200,45 @@ export default function ContactosModule() {
                 </tr>
               </thead>
               <tbody>
-                {proveedoresFiltrados.map((p) => (
-                  <tr key={p.id}>
-                    <td><strong>{p.nombre}</strong></td>
-                    <td><span className="g-badge g-badge-brand">{p.rubro}</span></td>
-                    <td>{p.contacto || '—'}</td>
-                    <td>{p.whatsapp || '—'}</td>
-                    <td style={{ fontSize: '0.8rem' }}>{p.email || '—'}</td>
-                    <td style={{ fontSize: '0.8rem', fontFamily: 'monospace' }}>{p.cbu_alias || '—'}</td>
-                    <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                      <button className="g-btn g-btn-outline g-btn-sm" style={{ marginRight: '6px' }} onClick={() => handleOpenEditarProv(p)}>✏️</button>
-                      <button className="g-btn g-btn-danger g-btn-sm" onClick={() => handleEliminarProv(p.id, p.nombre)}>🗑️</button>
+                {proveedores.length === 0 ? (
+                  <tr>
+                    <td colSpan={7}>
+                      <div className="gestion-empty-state">
+                        <div className="gestion-empty-icon">🏭</div>
+                        <h4>Directorio de talleres y proveedores</h4>
+                        <p>
+                          Aún no cargaste proveedores. Registrá tus hilanderías, importadores de DTF, talleres de costura y packaging.
+                        </p>
+                        <button className="g-btn g-btn-primary" onClick={handleOpenNuevoProv}>
+                          + Cargar Mi Primer Proveedor
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                ))}
+                ) : proveedoresFiltrados.length === 0 ? (
+                  <tr>
+                    <td colSpan={7}>
+                      <div className="gestion-empty-state">
+                        <p>No se encontraron proveedores con el filtro ingresado.</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  proveedoresFiltrados.map((p) => (
+                    <tr key={p.id}>
+                      <td><strong>{p.nombre}</strong></td>
+                      <td><span className="g-badge g-badge-brand">{p.rubro}</span></td>
+                      <td>{p.contacto || '—'}</td>
+                      <td>{p.whatsapp || '—'}</td>
+                      <td style={{ fontSize: '0.8rem' }}>{p.email || '—'}</td>
+                      <td style={{ fontSize: '0.8rem', fontFamily: 'monospace' }}>{p.cbu_alias || '—'}</td>
+                      <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        <button className="g-btn g-btn-outline g-btn-sm" style={{ marginRight: '6px' }} onClick={() => handleOpenEditarProv(p)}>✏️</button>
+                        <button className="g-btn g-btn-danger g-btn-sm" onClick={() => handleEliminarProv(p.id, p.nombre)}>🗑️</button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

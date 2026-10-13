@@ -236,11 +236,26 @@ export default function InventarioMateriales({ onStockChange }) {
               </tr>
             </thead>
             <tbody>
-              {materialesFiltrados.length === 0 ? (
+              {materiales.length === 0 ? (
                 <tr>
                   <td colSpan={11}>
                     <div className="gestion-empty-state">
-                      <p>No se encontraron insumos con los filtros seleccionados.</p>
+                      <div className="gestion-empty-icon">🧵</div>
+                      <h4>Controlá tu materia prima e insumos</h4>
+                      <p>
+                        Aún no diste de alta materiales. Registrá tus rollos de tela, tintas DTF, films, hilos o packaging para controlar los costos y no quedarte sin existencias en producción.
+                      </p>
+                      <button className="g-btn g-btn-primary" onClick={handleOpenNuevo}>
+                        + Cargar Mi Primer Material / Insumo
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ) : materialesFiltrados.length === 0 ? (
+                <tr>
+                  <td colSpan={11}>
+                    <div className="gestion-empty-state">
+                      <p>No se encontraron insumos coincidentes con los filtros aplicados.</p>
                     </div>
                   </td>
                 </tr>

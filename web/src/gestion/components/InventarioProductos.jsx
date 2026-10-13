@@ -235,11 +235,26 @@ export default function InventarioProductos({ onStockChange }) {
               </tr>
             </thead>
             <tbody>
-              {productosFiltrados.length === 0 ? (
+              {productos.length === 0 ? (
                 <tr>
                   <td colSpan={12}>
                     <div className="gestion-empty-state">
-                      <p>No se encontraron productos con los filtros seleccionados.</p>
+                      <div className="gestion-empty-icon">📦</div>
+                      <h4>Tu inventario de productos está listo</h4>
+                      <p>
+                        Aún no diste de alta productos terminados. Cargá las prendas o artículos que disponés en stock para comenzar a gestionar existencias y despachos.
+                      </p>
+                      <button className="g-btn g-btn-primary" onClick={handleOpenNuevo}>
+                        + Cargar Mi Primer Producto
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ) : productosFiltrados.length === 0 ? (
+                <tr>
+                  <td colSpan={12}>
+                    <div className="gestion-empty-state">
+                      <p>No se encontraron productos coincidentes con los filtros aplicados.</p>
                     </div>
                   </td>
                 </tr>

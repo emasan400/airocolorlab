@@ -62,7 +62,11 @@ export default function MovimientosKardex() {
                 <tr>
                   <td colSpan={8}>
                     <div className="gestion-empty-state">
-                      <p>No hay registros de movimientos en el Kardex.</p>
+                      <div className="gestion-empty-icon">📊</div>
+                      <h3 className="gestion-empty-title">Sin movimientos registrados aún</h3>
+                      <p className="gestion-empty-text">
+                        Cada ajuste manual de stock, alta de productos o materiales, y despacho de remitos generará automáticamente una traza inmutable en este Kardex.
+                      </p>
                     </div>
                   </td>
                 </tr>

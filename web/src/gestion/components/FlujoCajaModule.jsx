@@ -279,11 +279,31 @@ export default function FlujoCajaModule({ onCajaUpdated }) {
               </tr>
             </thead>
             <tbody>
-              {transaccionesFiltradas.length === 0 ? (
+              {transacciones.length === 0 ? (
                 <tr>
                   <td colSpan={9}>
                     <div className="gestion-empty-state">
-                      <p>No se encontraron movimientos de caja registrados.</p>
+                      <div className="gestion-empty-icon">💰</div>
+                      <h4>Controlá los ingresos y egresos de tu taller</h4>
+                      <p>
+                        Aún no registraste movimientos de caja. Cargá los cobros de señas de clientes o pagos de telas y confección para visualizar tu balance financiero en tiempo real.
+                      </p>
+                      <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                        <button className="g-btn g-btn-primary" onClick={() => handleOpenNuevo('ingreso')}>
+                          + Cargar Cobro (Ingreso)
+                        </button>
+                        <button className="g-btn g-btn-outline" onClick={() => handleOpenNuevo('egreso')}>
+                          - Cargar Pago (Egreso)
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ) : transaccionesFiltradas.length === 0 ? (
+                <tr>
+                  <td colSpan={9}>
+                    <div className="gestion-empty-state">
+                      <p>No se encontraron movimientos de caja con los filtros seleccionados.</p>
                     </div>
                   </td>
                 </tr>

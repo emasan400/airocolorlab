@@ -20,23 +20,20 @@ global.BroadcastChannel = class {
 const storage = await import('../src/gestion/services/storageService.js');
 const seed = await import('../src/gestion/services/seedData.js');
 
-test('Inicialización de base de datos con datos de AIRO Color Lab', () => {
+test('Inicialización de base de datos con inicio limpio sin datos de muestra', () => {
   storage.initializeStorageIfEmpty();
 
   const prods = storage.getProductos();
-  assert.ok(prods.length >= 10, 'Debe haber productos de muestra cargados');
-  assert.ok(prods.some((p) => p.sku === 'PROD-REM-001'), 'Debe existir Remera 24/1');
+  assert.equal(prods.length, 0, 'Los productos deben iniciar vacíos');
 
   const mats = storage.getMateriales();
-  assert.ok(mats.length >= 10, 'Debe haber insumos textiles y DTF cargados');
-  assert.ok(mats.some((m) => m.codigo === 'MAT-TEL-001'), 'Debe existir Jersey 24/1');
-  assert.ok(mats.some((m) => m.codigo === 'MAT-DTF-001'), 'Debe existir Film DTF');
+  assert.equal(mats.length, 0, 'Los insumos deben iniciar vacíos');
 
   const rems = storage.getRemitos();
-  assert.ok(rems.length >= 2, 'Debe haber remitos cargados');
+  assert.equal(rems.length, 0, 'Los remitos deben iniciar vacíos');
 
   const flujos = storage.getFlujoCaja();
-  assert.ok(flujos.length >= 6, 'Debe haber transacciones de flujo de caja');
+  assert.equal(flujos.length, 0, 'El flujo de caja debe iniciar vacío');
 });
 
 test('ABM de Productos en Stock', () => {
@@ -91,9 +88,17 @@ test('ABM de Materiales e Insumos', () => {
 });
 
 test('Confección de Remitos y Descuento Automático de Stock', () => {
-  // Tomamos el producto PROD-REM-001
-  const prods = storage.getProductos();
-  const prod = prods.find((p) => p.sku === 'PROD-REM-001');
+  const prod = storage.saveProducto({
+    sku: 'PROD-REM-TEST',
+    nombre: 'Remera Algodón Peinado Test',
+    categoria: 'indumentaria',
+    talle: 'L',
+    color: 'Negro',
+    stock_actual: 50,
+    stock_minimo: 10,
+    costo_unitario: 4500,
+    precio_venta: 8900,
+  });
   const stockInicial = prod.stock_actual;
 
   const num = storage.getNextRemitoNumero();

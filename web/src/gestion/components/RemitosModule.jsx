@@ -309,11 +309,26 @@ export default function RemitosModule({ onRemitoEmitted }) {
               </tr>
             </thead>
             <tbody>
-              {remitosFiltrados.length === 0 ? (
+              {remitos.length === 0 ? (
                 <tr>
                   <td colSpan={9}>
                     <div className="gestion-empty-state">
-                      <p>No se encontraron remitos con los criterios de búsqueda.</p>
+                      <div className="gestion-empty-icon">📄</div>
+                      <h4>Emití remitos oficiales de entrega B2B</h4>
+                      <p>
+                        Aún no emitiste ningún remito. Confeccioná tu primer documento oficial con membrete AIRO Color Lab, asignación de bultos y descuento automático de inventario.
+                      </p>
+                      <button className="g-btn g-btn-primary" onClick={handleOpenNuevo}>
+                        📄 Confeccionar Mi Primer Remito
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ) : remitosFiltrados.length === 0 ? (
+                <tr>
+                  <td colSpan={9}>
+                    <div className="gestion-empty-state">
+                      <p>No se encontraron remitos con los criterios de búsqueda aplicados.</p>
                     </div>
                   </td>
                 </tr>
