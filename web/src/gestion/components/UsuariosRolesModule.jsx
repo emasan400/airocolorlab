@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   getUsuarios,
   saveUsuario,
@@ -14,16 +14,24 @@ import {
 } from '../services/storageService.js';
 import { IconUsers, IconShield, IconKey, IconEdit, IconTrash, IconWarning } from './Icons';
 
-export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated }) {
-  const [activeSubTab, setActiveSubTab] = useState('usuarios'); // 'usuarios' | 'matriz' | 'password'
+export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated, initialSubTab = 'usuarios' }) {
+  const [activeSubTab, setActiveSubTab] = useState(initialSubTab); // 'usuarios' | 'matriz' | 'password'
   const [usuarios, setUsuarios] = useState(getUsuarios());
   const [busqueda, setBusqueda] = useState('');
   const [filtroRol, setFiltroRol] = useState('todos');
+
+  useEffect(() => {
+    if (initialSubTab) {
+      setActiveSubTab(initialSubTab);
+    }
+  }, [initialSubTab]);
 
   // Modal Alta / Edición de Usuario
   const [modalUsuario, setModalUsuario] = useState({
     open: false,
     isEdit: false,
+    error: '',
+    success: '',
     data: {
       id: '',
       nombre: '',
@@ -122,6 +130,8 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
     setModalUsuario({
       open: true,
       isEdit: false,
+      error: '',
+      success: '',
       data: {
         id: '',
         nombre: '',
@@ -137,6 +147,8 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
     setModalUsuario({
       open: true,
       isEdit: true,
+      error: '',
+      success: '',
       data: {
         id: u.id,
         nombre: u.nombre,
@@ -150,13 +162,19 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
 
   const handleGuardarUsuario = (e) => {
     e.preventDefault();
+    setModalUsuario((m) => ({ ...m, error: '', success: '' }));
     try {
       saveUsuario(modalUsuario.data);
-      setModalUsuario({ open: false, isEdit: false, data: {} });
       reloadUsuarios();
-      alert(modalUsuario.isEdit ? 'Usuario actualizado con éxito.' : 'Nuevo usuario dado de alta.');
+      setModalUsuario((m) => ({
+        ...m,
+        success: m.isEdit ? '¡Usuario actualizado con éxito!' : '¡Nuevo colaborador registrado exitosamente!',
+      }));
+      setTimeout(() => {
+        setModalUsuario({ open: false, isEdit: false, error: '', success: '', data: {} });
+      }, 1000);
     } catch (err) {
-      alert('Error: ' + err.message);
+      setModalUsuario((m) => ({ ...m, error: err.message }));
     }
   };
 
@@ -806,6 +824,18 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
             </div>
             <form onSubmit={handleGuardarUsuario}>
               <div className="gestion-modal-body">
+                {modalUsuario.error && (
+                  <div className="auth-alert-error" style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <IconWarning size={16} />
+                    <div>{modalUsuario.error}</div>
+                  </div>
+                )}
+                {modalUsuario.success && (
+                  <div style={{ marginBottom: '16px', padding: '10px 14px', borderRadius: 'var(--r-s, 8px)', background: 'rgba(34, 177, 94, 0.1)', color: '#15803d', fontWeight: 600, fontSize: '0.9rem' }}>
+                    ✓ {modalUsuario.success}
+                  </div>
+                )}
+
                 <div className="g-form-grid">
                   <div className="g-form-group">
                     <label>Nombre y Apellido:</label>
@@ -813,7 +843,7 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                       type="text"
                       required
                       placeholder="Ej: Laura Martínez"
-                      value={modalUsuario.data.nombre}
+                      value={modalUsuario.data.nombre || ''}
                       onChange={(e) =>
                         setModalUsuario((p) => ({ ...p, data: { ...p.data, nombre: e.target.value } }))
                       }
@@ -826,7 +856,7 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                       type="email"
                       required
                       placeholder="usuario@airocolorlab.com"
-                      value={modalUsuario.data.email}
+                      value={modalUsuario.data.email || ''}
                       onChange={(e) =>
                         setModalUsuario((p) => ({ ...p, data: { ...p.data, email: e.target.value } }))
                       }
@@ -836,7 +866,7 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                   <div className="g-form-group g-form-col-full">
                     <label>Rol Asignado (Matriz Operativa):</label>
                     <select
-                      value={modalUsuario.data.rol}
+                      value={modalUsuario.data.rol || 'taller_produccion'}
                       onChange={(e) =>
                         setModalUsuario((p) => ({ ...p, data: { ...p.data, rol: e.target.value } }))
                       }
@@ -849,14 +879,26 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                     </select>
                   </div>
 
-                  {!modalUsuario.isEdit && (
+                  {modalUsuario.isEdit ? (
+                    <div className="g-form-group g-form-col-full">
+                      <label>Cambiar Contraseña (opcional, mín. 8 caracteres para actualizarla):</label>
+                      <input
+                        type="password"
+                        placeholder="Dejar en blanco para mantener la clave actual"
+                        value={modalUsuario.data.password || ''}
+                        onChange={(e) =>
+                          setModalUsuario((p) => ({ ...p, data: { ...p.data, password: e.target.value } }))
+                        }
+                      />
+                    </div>
+                  ) : (
                     <div className="g-form-group g-form-col-full">
                       <label>Contraseña Inicial (mínimo 8 caracteres):</label>
                       <input
                         type="password"
                         required
                         placeholder="••••••••••••"
-                        value={modalUsuario.data.password}
+                        value={modalUsuario.data.password || ''}
                         onChange={(e) =>
                           setModalUsuario((p) => ({ ...p, data: { ...p.data, password: e.target.value } }))
                         }
@@ -868,7 +910,7 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                     <input
                       type="checkbox"
                       id="usr-activo-chk"
-                      checked={modalUsuario.data.activo}
+                      checked={modalUsuario.data.activo ?? true}
                       onChange={(e) =>
                         setModalUsuario((p) => ({ ...p, data: { ...p.data, activo: e.target.checked } }))
                       }

@@ -665,6 +665,7 @@ function GestionAppInner({ session, onSignOut }) {
           <UsuariosRolesModule
             currentUserEmail={currentUserEmail}
             onProfileUpdated={triggerRefresh}
+            initialSubTab="usuarios"
           />
         )}
 
@@ -672,6 +673,7 @@ function GestionAppInner({ session, onSignOut }) {
           <UsuariosRolesModule
             currentUserEmail={currentUserEmail}
             onProfileUpdated={triggerRefresh}
+            initialSubTab="password"
           />
         )}
 
