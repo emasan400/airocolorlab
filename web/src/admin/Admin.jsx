@@ -86,6 +86,13 @@ function LiveAdmin() {
                 className={`admin-btn${tab === 'leads' ? ' admin-btn--primary' : ''}`}
                 onClick={() => setTab('leads')}
               >Leads</button>
+              <a
+                href="#/gestion"
+                className="admin-btn"
+                style={{ background: '#00b4d8', borderColor: '#00b4d8', color: '#fff', fontWeight: 'bold' }}
+              >
+                ⚡ Inventario, Remitos & Caja
+              </a>
             </div>
             <a href="#/" className="admin-btn">← Ver sitio</a>
             <button className="admin-btn" onClick={() => supabase.auth.signOut()}>

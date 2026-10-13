@@ -9,6 +9,7 @@ import ProductPage from './components/ProductPage.jsx';
 
 // Admin + Supabase se descargan solo al entrar a #/admin (code splitting)
 const Admin = lazy(() => import('./admin/Admin.jsx'));
+const GestionApp = lazy(() => import('./gestion/GestionApp.jsx'));
 
 // Rutas path estables de producto (/productos/{id}-{slug}/) — generadas en
 // build por scripts/product-pages.mjs; React monta sobre el prerender.
@@ -21,6 +22,13 @@ function Router() {
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
+  if (hash.startsWith('#/gestion')) {
+    return (
+      <Suspense fallback={<div style={{ padding: '4rem 1.5rem', textAlign: 'center', fontFamily: 'sans-serif' }}>Iniciando Sistema de Gestión AIRO Color Lab…</div>}>
+        <GestionApp />
+      </Suspense>
+    );
+  }
   if (hash.startsWith('#/admin')) {
     return (
       <Suspense fallback={<div className="admin-login">Cargando…</div>}>
