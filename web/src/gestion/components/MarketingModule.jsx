@@ -1,26 +1,66 @@
 import { useState, useMemo, useEffect } from 'react';
 import {
-  getApprovals,
-  decideApproval,
-  resetApprovals,
-  getEditorialCalendar,
-  saveCalendarEntry,
-  updateCalendarEntryStatus,
-  resetEditorialCalendar,
+  MARKETING_CHANNELS,
+  getCampaigns,
+  saveCampaign,
+  deleteCampaign,
+  getPrompts,
+  savePrompt,
+  deletePrompt,
+  decidePromptApproval,
+  generateAiPrompt,
   getAgentRegistry,
   classifyAndGenerateCmResponse,
   convertCmInteractionToLead,
   getOperadorActual,
-} from '../services/storageService';
+} from '../services/storageService.js';
+import {
+  IconPrompt,
+  IconImage,
+  IconVideo,
+  IconInstagram,
+  IconWhatsApp,
+  IconLinkedIn,
+  IconGmail,
+  IconFacebook,
+  IconCheck,
+  IconPlus,
+  IconEdit,
+  IconTrash,
+} from './Icons.jsx';
 
 export default function MarketingModule({ onContentChanged }) {
-  const [activeSubTab, setActiveSubTab] = useState('approvals'); // 'approvals' | 'calendar' | 'cm' | 'agents'
-  const [approvals, setApprovals] = useState([]);
-  const [calendar, setCalendar] = useState([]);
-  const [filterApprovalStatus, setFilterApprovalStatus] = useState('ALL');
-  const [filterCalChannel, setFilterCalChannel] = useState('ALL');
-  const [filterCalStatus, setFilterCalStatus] = useState('ALL');
-  const [filterAgentModule, setFilterAgentModule] = useState('ALL');
+  // Pestañas: 'campaigns' | 'prompts' | 'approvals' | 'cm' | 'agents'
+  const [activeSubTab, setActiveSubTab] = useState('campaigns');
+
+  // Estados de Campañas
+  const [campaigns, setCampaigns] = useState([]);
+  const [filterCampStatus, setFilterCampStatus] = useState('ALL');
+  const [modalCamp, setModalCamp] = useState({ open: false, data: null });
+  const [modalPub, setModalPub] = useState({ open: false, campId: null, data: null });
+
+  // Estados de Prompts
+  const [prompts, setPrompts] = useState([]);
+  const [filterPromptStatus, setFilterPromptStatus] = useState('ALL');
+  const [filterPromptTipo, setFilterPromptTipo] = useState('ALL');
+  const [filterPromptCanal, setFilterPromptCanal] = useState('ALL');
+
+  // Creador / Generador de Prompts
+  const [promptForm, setPromptForm] = useState({
+    id: null,
+    campaign_id: '',
+    tipo: 'COPY',
+    canal: 'INSTAGRAM',
+    modelo_destino: 'ChatGPT / Claude / Gemini',
+    titulo: '',
+    objetivo: 'Lanzamiento de temporada y captación B2B',
+    producto: 'Hoodie Frisado Premium 100% Algodón Peinado',
+    audiencia: 'Responsables de marketing, RRHH y directores de agencia',
+    detalleExtra: '',
+    prompt_text: '',
+    prompt_negativo: '',
+  });
+  const [editingPromptId, setEditingPromptId] = useState(null);
 
   // Estados del Asistente Community Manager
   const [cmChannel, setCmChannel] = useState('WHATSAPP');
@@ -32,17 +72,22 @@ export default function MarketingModule({ onContentChanged }) {
   const [cmExtraEmail, setCmExtraEmail] = useState('');
   const [cmExtraCompany, setCmExtraCompany] = useState('');
   const [cmExtraContact, setCmExtraContact] = useState('');
-  const [copyFeedback, setCopyFeedback] = useState(null);
-  const [injectFeedback, setInjectFeedback] = useState(null);
 
-  // Modal para nueva idea de calendario
-  const [modalNewIdea, setModalNewIdea] = useState({ open: false, data: {} });
-  // Modal para decisión HITL con observaciones
-  const [modalDecision, setModalDecision] = useState({ open: false, approval: null, decision: 'APPROVED', notes: '' });
+  // Feedback y Notificaciones
+  const [copyNotice, setCopyNotice] = useState(null);
+  const [statusNotice, setStatusNotice] = useState(null);
+
+  // Modal para decisión HITL de prompt
+  const [modalDecision, setModalDecision] = useState({
+    open: false,
+    prompt: null,
+    decision: 'APPROVED',
+    notes: '',
+  });
 
   const reloadData = () => {
-    setApprovals(getApprovals());
-    setCalendar(getEditorialCalendar());
+    setCampaigns(getCampaigns());
+    setPrompts(getPrompts());
     if (onContentChanged) onContentChanged();
   };
 
@@ -50,56 +95,270 @@ export default function MarketingModule({ onContentChanged }) {
     reloadData();
   }, []);
 
-  // Métricas rápidas
-  const pendingApprovalsCount = approvals.filter((a) => a.estado === 'PENDING').length;
-  const totalCalendarEntries = calendar.length;
-  const approvedEntriesCount = calendar.filter((c) => c.status === 'APPROVED' || c.status === 'PUBLISHED').length;
+  // Prompts pendientes de aprobación HITL
+  const pendingPrompts = useMemo(() => {
+    return prompts.filter((p) => p.estado_aprobacion === 'PENDING');
+  }, [prompts]);
 
-  // Filtrado de Aprobaciones
-  const filteredApprovals = useMemo(() => {
-    if (filterApprovalStatus === 'ALL') return approvals;
-    return approvals.filter((a) => a.estado === filterApprovalStatus);
-  }, [approvals, filterApprovalStatus]);
+  const pendingCount = pendingPrompts.length;
 
-  // Filtrado de Calendario
-  const filteredCalendar = useMemo(() => {
-    return calendar.filter((c) => {
-      const matchChan = filterCalChannel === 'ALL' || c.channel === filterCalChannel;
-      const matchStat = filterCalStatus === 'ALL' || c.status === filterCalStatus;
-      return matchChan && matchStat;
+  // Filtrado de Campañas
+  const filteredCampaigns = useMemo(() => {
+    if (filterCampStatus === 'ALL') return campaigns;
+    return campaigns.filter((c) => c.estado === filterCampStatus);
+  }, [campaigns, filterCampStatus]);
+
+  // Filtrado de Prompts
+  const filteredPrompts = useMemo(() => {
+    return prompts.filter((p) => {
+      const mStatus = filterPromptStatus === 'ALL' || p.estado_aprobacion === filterPromptStatus;
+      const mTipo = filterPromptTipo === 'ALL' || p.tipo === filterPromptTipo;
+      const mCanal = filterPromptCanal === 'ALL' || p.canal === filterPromptCanal;
+      return mStatus && mTipo && mCanal;
     });
-  }, [calendar, filterCalChannel, filterCalStatus]);
+  }, [prompts, filterPromptStatus, filterPromptTipo, filterPromptCanal]);
 
-  // Filtrado de Agentes
+  // Lista de Agentes
   const agentsList = useMemo(() => {
-    const list = getAgentRegistry();
-    if (filterAgentModule === 'ALL') return list;
-    return list.filter((a) => a.module === filterAgentModule);
-  }, [filterAgentModule]);
+    return getAgentRegistry();
+  }, []);
 
-  // Manejador de copia al portapapeles
-  const handleCopyText = (text, label) => {
+  // Helper para copiar texto
+  const copyToClipboard = (text, label) => {
     if (!text) return;
     navigator.clipboard.writeText(text).then(() => {
-      setCopyFeedback(`¡${label} copiado al portapapeles!`);
-      setTimeout(() => setCopyFeedback(null), 3000);
+      setCopyNotice(`¡${label} copiado al portapapeles!`);
+      setTimeout(() => setCopyNotice(null), 3000);
     });
   };
 
-  // Ejecutar análisis de Community Manager
-  const handleRunCmAnalysis = (customMsg = null, customChan = null) => {
-    const msg = customMsg !== null ? customMsg : cmInputMessage;
-    const chan = customChan !== null ? customChan : cmChannel;
-    if (!msg.trim()) return;
-
-    const res = classifyAndGenerateCmResponse(msg, chan);
-    setCmAnalysis(res);
-    setCmExtraCompany(res.extractedData.company || '');
-    setCmExtraContact(res.extractedData.contact || `Contacto ${chan}`);
-    setInjectFeedback(null);
+  // Helper icono de canal
+  const renderChannelIcon = (chId) => {
+    switch (chId) {
+      case 'INSTAGRAM':
+        return <IconInstagram />;
+      case 'WHATSAPP':
+        return <IconWhatsApp />;
+      case 'LINKEDIN':
+        return <IconLinkedIn />;
+      case 'GMAIL':
+        return <IconGmail />;
+      case 'FACEBOOK':
+        return <IconFacebook />;
+      default:
+        return null;
+    }
   };
 
-  // Derivar interacción a CRM
+  // Generador con IA de AIRO
+  const handleAutoGeneratePrompt = () => {
+    const generated = generateAiPrompt({
+      tipo: promptForm.tipo,
+      canal: promptForm.canal,
+      objetivo: promptForm.objetivo,
+      producto: promptForm.producto,
+      audience: promptForm.audiencia,
+      detalleExtra: promptForm.detalleExtra,
+      modeloDestino: promptForm.modelo_destino,
+    });
+
+    setPromptForm((prev) => ({
+      ...prev,
+      titulo: generated.titulo,
+      prompt_text: generated.prompt_text,
+      prompt_negativo: generated.prompt_negativo || '',
+      modelo_destino: generated.modelo_destino,
+    }));
+
+    setStatusNotice({
+      type: 'success',
+      text: 'Prompt generado según directrices y manual de marca de AIRO Color Lab.',
+    });
+    setTimeout(() => setStatusNotice(null), 4000);
+  };
+
+  // Guardar prompt (entra siempre a PENDING para HITL)
+  const handleSavePrompt = (e) => {
+    e.preventDefault();
+    if (!promptForm.titulo.trim() || !promptForm.prompt_text.trim()) {
+      alert('El título y el contenido del prompt son obligatorios.');
+      return;
+    }
+
+    try {
+      const payload = {
+        id: editingPromptId || undefined,
+        campaign_id: promptForm.campaign_id || null,
+        tipo: promptForm.tipo,
+        canal: promptForm.canal,
+        modelo_destino: promptForm.modelo_destino,
+        titulo: promptForm.titulo.trim(),
+        prompt_text: promptForm.prompt_text.trim(),
+        prompt_negativo: promptForm.prompt_negativo ? promptForm.prompt_negativo.trim() : '',
+        variables: {
+          producto: promptForm.producto,
+          objetivo: promptForm.objetivo,
+          audiencia: promptForm.audiencia,
+        },
+      };
+
+      const saved = savePrompt(payload);
+      reloadData();
+      setEditingPromptId(null);
+      setPromptForm((prev) => ({
+        ...prev,
+        id: null,
+        titulo: '',
+        prompt_text: '',
+        prompt_negativo: '',
+      }));
+
+      setStatusNotice({
+        type: 'info',
+        text: `Prompt guardado en estado PENDING para revisión y aprobación humana (HITL): "${saved.titulo}".`,
+      });
+      setTimeout(() => setStatusNotice(null), 6000);
+    } catch (err) {
+      alert(`Error al guardar prompt: ${err.message}`);
+    }
+  };
+
+  // Editar prompt existente
+  const handleEditPrompt = (p) => {
+    setEditingPromptId(p.id);
+    setPromptForm({
+      id: p.id,
+      campaign_id: p.campaign_id || '',
+      tipo: p.tipo || 'COPY',
+      canal: p.canal || 'INSTAGRAM',
+      modelo_destino: p.modelo_destino || 'ChatGPT / Claude / Gemini',
+      titulo: p.titulo || '',
+      objetivo: p.variables?.objetivo || 'Lanzamiento y conversión B2B',
+      producto: p.variables?.producto || 'Indumentaria textil',
+      audiencia: p.variables?.audiencia || 'Empresas y marcas',
+      detalleExtra: '',
+      prompt_text: p.prompt_text || '',
+      prompt_negativo: p.prompt_negativo || '',
+    });
+    setActiveSubTab('prompts');
+  };
+
+  // Eliminar prompt
+  const handleDeletePrompt = (p) => {
+    if (!window.confirm(`¿Confirmás eliminar el prompt "${p.titulo}"?`)) return;
+    try {
+      deletePrompt(p.id);
+      reloadData();
+      setStatusNotice({ type: 'success', text: `Prompt "${p.titulo}" eliminado.` });
+      setTimeout(() => setStatusNotice(null), 3000);
+    } catch (err) {
+      alert(`Error al eliminar: ${err.message}`);
+    }
+  };
+
+  // Abrir modal de decisión HITL
+  const handleOpenDecision = (prompt, decision) => {
+    setModalDecision({
+      open: true,
+      prompt,
+      decision,
+      notes: decision === 'APPROVED' ? 'Aprobado conforme al manual de marca y directrices B2B.' : '',
+    });
+  };
+
+  // Confirmar decisión HITL
+  const handleConfirmDecision = () => {
+    if (!modalDecision.prompt) return;
+    try {
+      decidePromptApproval(
+        modalDecision.prompt.id,
+        modalDecision.decision,
+        modalDecision.notes
+      );
+      reloadData();
+      setModalDecision({ open: false, prompt: null, decision: 'APPROVED', notes: '' });
+      setStatusNotice({
+        type: 'success',
+        text: `Prompt ${modalDecision.decision === 'APPROVED' ? 'aprobado' : 'rechazado'} con éxito.`,
+      });
+      setTimeout(() => setStatusNotice(null), 4000);
+    } catch (err) {
+      alert(`Error en decisión: ${err.message}`);
+    }
+  };
+
+  // Guardar campaña
+  const handleSaveCampaign = (e) => {
+    e.preventDefault();
+    const data = modalCamp.data;
+    if (!data.titulo?.trim()) {
+      alert('El título de la campaña es obligatorio.');
+      return;
+    }
+    try {
+      saveCampaign(data);
+      reloadData();
+      setModalCamp({ open: false, data: null });
+      setStatusNotice({ type: 'success', text: 'Campaña guardada con éxito.' });
+      setTimeout(() => setStatusNotice(null), 3000);
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    }
+  };
+
+  // Eliminar campaña
+  const handleDeleteCampaign = (c) => {
+    if (!window.confirm(`¿Confirmás eliminar la campaña "${c.titulo}"?`)) return;
+    try {
+      deleteCampaign(c.id);
+      reloadData();
+      setStatusNotice({ type: 'success', text: 'Campaña eliminada.' });
+      setTimeout(() => setStatusNotice(null), 3000);
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    }
+  };
+
+  // Guardar publicación dentro de campaña
+  const handleSavePublicacion = (e) => {
+    e.preventDefault();
+    const camp = campaigns.find((c) => c.id === modalPub.campId);
+    if (!camp) return;
+
+    const pubData = modalPub.data;
+    const pubs = Array.isArray(camp.publicaciones) ? [...camp.publicaciones] : [];
+
+    if (pubData.id) {
+      const idx = pubs.findIndex((p) => p.id === pubData.id);
+      if (idx >= 0) pubs[idx] = pubData;
+    } else {
+      pubs.push({ ...pubData, id: `PUB-${Date.now()}` });
+    }
+
+    saveCampaign({ ...camp, publicaciones: pubs });
+    reloadData();
+    setModalPub({ open: false, campId: null, data: null });
+  };
+
+  // Eliminar publicación de campaña
+  const handleDeletePublicacion = (campId, pubId) => {
+    const camp = campaigns.find((c) => c.id === campId);
+    if (!camp) return;
+    const pubs = (camp.publicaciones || []).filter((p) => p.id !== pubId);
+    saveCampaign({ ...camp, publicaciones: pubs });
+    reloadData();
+  };
+
+  // Ejecutar análisis CM
+  const handleRunCmAnalysis = () => {
+    if (!cmInputMessage.trim()) return;
+    const res = classifyAndGenerateCmResponse(cmInputMessage, cmChannel);
+    setCmAnalysis(res);
+    setCmExtraCompany(res.extractedData.company || '');
+    setCmExtraContact(res.extractedData.contact || `Contacto ${cmChannel}`);
+  };
+
+  // Inyectar a CRM
   const handleInjectToCrm = () => {
     if (!cmAnalysis) return;
     try {
@@ -114,375 +373,951 @@ export default function MarketingModule({ onContentChanged }) {
         },
       };
       const res = convertCmInteractionToLead(payload);
-      setInjectFeedback({
-        ok: true,
-        type: res.type,
-        leadId: res.lead.lead_id,
-        message: `Lead ${res.lead.lead_id} ${res.type === 'merged' ? 'fusionado con éxito por coincidencia' : 'creado con éxito'} en el CRM central.`,
-      });
-      reloadData();
-    } catch (err) {
-      setInjectFeedback({ ok: false, message: `Error: ${err.message}` });
-    }
-  };
-
-  // Confirmar decisión HITL
-  const handleConfirmDecision = () => {
-    if (!modalDecision.approval) return;
-    try {
-      decideApproval(
-        modalDecision.approval.id,
-        modalDecision.decision,
-        modalDecision.notes
+      alert(
+        res.type === 'MATCH_EXPLICIT_MERGED'
+          ? `Lead existente actualizado en CRM (ID: ${res.lead.lead_id})`
+          : `Nuevo lead creado en CRM (ID: ${res.lead.lead_id})`
       );
-      setModalDecision({ open: false, approval: null, decision: 'APPROVED', notes: '' });
       reloadData();
     } catch (err) {
-      alert(`Error: ${err.message}`);
-    }
-  };
-
-  // Crear nueva idea en calendario
-  const handleSaveNewIdea = (e) => {
-    e.preventDefault();
-    try {
-      saveCalendarEntry(modalNewIdea.data);
-      setModalNewIdea({ open: false, data: {} });
-      reloadData();
-    } catch (err) {
-      alert(`Error: ${err.message}`);
+      alert(`Error al registrar en CRM: ${err.message}`);
     }
   };
 
   return (
-    <div className="gestion-container">
-      {/* Toast de Feedback */}
-      {copyFeedback && (
-        <div className="g-alert g-alert-success" style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999, boxShadow: 'var(--g-shadow-md)' }}>
-          {copyFeedback}
-        </div>
-      )}
-
-      {/* Header del Módulo */}
-      <div className="gestion-module-header" style={{ marginBottom: 20 }}>
+    <div className="gestion-module-container">
+      {/* Encabezado */}
+      <div className="gestion-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <div className="section-eyebrow">04 · SISTEMA MULTIAGENTE & MARKETING B2B</div>
-          <h2 className="display" style={{ fontSize: '1.75rem', margin: '4px 0 6px' }}>
-            Agentes & Community Manager AIRO
-          </h2>
-          <p style={{ color: 'var(--ink-70)', fontSize: '0.92rem', margin: 0, maxWidth: 740 }}>
-            Supervisión humana <strong>HITL</strong> de contenidos, calendario editorial y clasificación asistida de
-            consultas para inyección automática en el CRM B2B. Modo de ejecución: <em>assisted-total</em>.
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ display: 'flex', color: 'var(--c-brand-blue, #1A4295)' }}>
+              <IconPrompt />
+            </span>
+            <h1 className="gestion-title" style={{ margin: 0 }}>Agentes, Marketing & Prompts</h1>
+            {pendingCount > 0 && (
+              <span
+                style={{
+                  fontSize: 12,
+                  padding: '3px 8px',
+                  borderRadius: 12,
+                  background: '#FEF3C7',
+                  color: '#92400E',
+                  fontWeight: 700,
+                  border: '1px solid #FCD34D',
+                }}
+              >
+                {pendingCount} prompt{pendingCount > 1 ? 's' : ''} pendiente{pendingCount > 1 ? 's' : ''} de aprobación
+              </span>
+            )}
+          </div>
+          <p className="gestion-subtitle" style={{ margin: '4px 0 0 0' }}>
+            Planificación multicanal para <b>Instagram, WhatsApp, LinkedIn, Gmail y Facebook</b>, generador de prompts para IAs paralelas y flujo de validación humana (HITL).
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <button
-            className="btn--secondary"
-            onClick={() => {
-              if (confirm('¿Restablecer las aprobaciones y calendario a las piezas oficiales de AIRO?')) {
-                resetApprovals();
-                resetEditorialCalendar();
-                reloadData();
-              }
-            }}
-            title="Recargar piezas iniciales de AIRO"
-            style={{ fontSize: '0.82rem', padding: '8px 14px' }}
-          >
-            Recargar Datos Oficiales
-          </button>
+        {/* Canales Oficiales Badge */}
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', background: '#F9FAFB', padding: '6px 12px', borderRadius: 8, border: '1px solid #E5E7EB' }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: '#4B5563', marginRight: 4 }}>Canales Oficiales:</span>
+          {MARKETING_CHANNELS.map((ch) => (
+            <span
+              key={ch.id}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                fontSize: 11,
+                padding: '2px 8px',
+                borderRadius: 4,
+                background: '#FFFFFF',
+                border: '1px solid #E5E7EB',
+                color: ch.color,
+                fontWeight: 600,
+              }}
+              title={ch.desc}
+            >
+              {renderChannelIcon(ch.id)}
+              {ch.name}
+            </span>
+          ))}
         </div>
       </div>
 
-      {/* KPIs Editoriales Rápidos */}
-      <div className="gestion-kpi-grid" style={{ marginBottom: 24 }}>
-        <div className="gestion-kpi-card">
-          <div className="kpi-label">Cola HITL Pendiente</div>
-          <div className="kpi-value" style={{ color: pendingApprovalsCount > 0 ? '#b45309' : 'var(--blue)' }}>
-            {pendingApprovalsCount}
-          </div>
-          <div className="kpi-subtext">Piezas en espera de aprobación humana</div>
-        </div>
-
-        <div className="gestion-kpi-card">
-          <div className="kpi-label">Calendario Editorial</div>
-          <div className="kpi-value">{totalCalendarEntries}</div>
-          <div className="kpi-subtext">{approvedEntriesCount} aprobadas / publicadas</div>
-        </div>
-
-        <div className="gestion-kpi-card">
-          <div className="kpi-label">Agentes Registrados</div>
-          <div className="kpi-value" style={{ color: 'var(--cyan-ink)' }}>26</div>
-          <div className="kpi-subtext">5 módulos + Orquestador + Transversales</div>
-        </div>
-
-        <div className="gestion-kpi-card">
-          <div className="kpi-label">Voz de Marca & Reglas</div>
-          <div className="kpi-value" style={{ fontSize: '1.25rem', color: '#15803d' }}>
-            Voseo B2B
-          </div>
-          <div className="kpi-subtext">Mín. 10 u · CTA WhatsApp · QA PASS</div>
-        </div>
-      </div>
-
-      {/* Sub-navegación por Pestañas (Sin Emojis) */}
-      <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid var(--line)', paddingBottom: 12, marginBottom: 24 }}>
-        <button
-          className={`gestion-tab-btn ${activeSubTab === 'approvals' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('approvals')}
-          style={{ fontSize: '0.88rem' }}
+      {/* Avisos */}
+      {statusNotice && (
+        <div
+          style={{
+            marginTop: 16,
+            padding: '12px 16px',
+            borderRadius: 6,
+            fontSize: 13,
+            background: statusNotice.type === 'info' ? 'rgba(0, 180, 216, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+            color: statusNotice.type === 'info' ? '#0369a1' : '#065f46',
+            border: `1px solid ${statusNotice.type === 'info' ? 'rgba(0, 180, 216, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
+          }}
         >
-          Cola de Aprobaciones HITL
-          {pendingApprovalsCount > 0 && (
-            <span className="gestion-tab-badge" style={{ background: 'rgba(180, 83, 9, 0.15)', color: '#b45309' }}>
-              {pendingApprovalsCount} pend.
+          {statusNotice.text}
+        </div>
+      )}
+
+      {copyNotice && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            background: '#111827',
+            color: '#FFFFFF',
+            padding: '10px 18px',
+            borderRadius: 6,
+            fontSize: 13,
+            fontWeight: 600,
+            boxShadow: '0 4px 14px rgba(0,0,0,0.2)',
+            zIndex: 9999,
+          }}
+        >
+          {copyNotice}
+        </div>
+      )}
+
+      {/* Subpestañas del Módulo */}
+      <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid #E5E7EB', marginTop: 20, flexWrap: 'wrap' }}>
+        <button
+          className={`gestion-btn ${activeSubTab === 'campaigns' ? 'gestion-btn--primary' : ''}`}
+          onClick={() => setActiveSubTab('campaigns')}
+        >
+          Organizador de Campañas
+        </button>
+        <button
+          className={`gestion-btn ${activeSubTab === 'prompts' ? 'gestion-btn--primary' : ''}`}
+          onClick={() => setActiveSubTab('prompts')}
+        >
+          Generador de Prompts (IAs Paralelas)
+        </button>
+        <button
+          className={`gestion-btn ${activeSubTab === 'approvals' ? 'gestion-btn--primary' : ''}`}
+          onClick={() => setActiveSubTab('approvals')}
+          style={{ position: 'relative' }}
+        >
+          Aprobación HITL de Prompts
+          {pendingCount > 0 && (
+            <span
+              style={{
+                marginLeft: 8,
+                background: '#EF4444',
+                color: '#FFFFFF',
+                borderRadius: 10,
+                padding: '1px 6px',
+                fontSize: 11,
+                fontWeight: 700,
+              }}
+            >
+              {pendingCount}
             </span>
           )}
         </button>
-
         <button
-          className={`gestion-tab-btn ${activeSubTab === 'calendar' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('calendar')}
-          style={{ fontSize: '0.88rem' }}
-        >
-          Calendario Editorial ({totalCalendarEntries})
-        </button>
-
-        <button
-          className={`gestion-tab-btn ${activeSubTab === 'cm' ? 'active' : ''}`}
+          className={`gestion-btn ${activeSubTab === 'cm' ? 'gestion-btn--primary' : ''}`}
           onClick={() => setActiveSubTab('cm')}
-          style={{ fontSize: '0.88rem' }}
         >
-          Asistente Community Manager & CRM
+          Asistente de Redes (CM) & CRM
         </button>
-
         <button
-          className={`gestion-tab-btn ${activeSubTab === 'agents' ? 'active' : ''}`}
+          className={`gestion-btn ${activeSubTab === 'agents' ? 'gestion-btn--primary' : ''}`}
           onClick={() => setActiveSubTab('agents')}
-          style={{ fontSize: '0.88rem' }}
         >
-          Directorio de Agentes (26)
+          Directorio de Agentes IA
         </button>
       </div>
 
       {/* ========================================================
-          SUB-PESTAÑA 1: COLA DE APROBACIONES HITL
-         ======================================================== */}
-      {activeSubTab === 'approvals' && (
-        <div>
-          {/* Barra de Filtros */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {['ALL', 'PENDING', 'APPROVED', 'REJECTED'].map((st) => (
-                <button
-                  key={st}
-                  className={`btn--pill ${filterApprovalStatus === st ? 'active' : ''}`}
-                  onClick={() => setFilterApprovalStatus(st)}
-                  style={{
-                    fontSize: '0.8rem',
-                    padding: '6px 14px',
-                    borderRadius: 'var(--r-pill)',
-                    border: '1px solid var(--line)',
-                    background: filterApprovalStatus === st ? 'var(--blue)' : 'var(--neutral)',
-                    color: filterApprovalStatus === st ? '#ffffff' : 'var(--ink)',
-                    cursor: 'pointer',
-                    fontWeight: 500,
-                  }}
-                >
-                  {st === 'ALL' && 'Todas'}
-                  {st === 'PENDING' && `Pendientes (${approvals.filter((a) => a.estado === 'PENDING').length})`}
-                  {st === 'APPROVED' && `Aprobadas (${approvals.filter((a) => a.estado === 'APPROVED').length})`}
-                  {st === 'REJECTED' && `Rechazadas (${approvals.filter((a) => a.estado === 'REJECTED').length})`}
-                </button>
-              ))}
+          SUBPESTAÑA 1: ORGANIZADOR DE CAMPAÑAS
+          ======================================================== */}
+      {activeSubTab === 'campaigns' && (
+        <div style={{ marginTop: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#4B5563' }}>Filtrar estado:</span>
+              <select
+                className="gestion-input"
+                style={{ width: 'auto', padding: '4px 10px' }}
+                value={filterCampStatus}
+                onChange={(e) => setFilterCampStatus(e.target.value)}
+              >
+                <option value="ALL">Todas las campañas</option>
+                <option value="ACTIVA">Activas</option>
+                <option value="PLANIFICADA">Planificadas</option>
+                <option value="COMPLETADA">Completadas</option>
+              </select>
             </div>
-            <div style={{ fontSize: '0.82rem', color: 'var(--ink-70)' }}>
-              Mostrando {filteredApprovals.length} paquete(s) de aprobación
-            </div>
+            <button
+              className="gestion-btn gestion-btn--primary"
+              onClick={() =>
+                setModalCamp({
+                  open: true,
+                  data: {
+                    id: '',
+                    titulo: '',
+                    objetivo: '',
+                    canales: ['INSTAGRAM', 'LINKEDIN', 'WHATSAPP', 'GMAIL', 'FACEBOOK'],
+                    fecha_inicio: new Date().toISOString().split('T')[0],
+                    fecha_fin: '',
+                    estado: 'PLANIFICADA',
+                    kpi: '',
+                    notas: '',
+                    publicaciones: [],
+                  },
+                })
+              }
+            >
+              <IconPlus /> Nueva Campaña
+            </button>
           </div>
 
-          {filteredApprovals.length === 0 ? (
-            <div className="card" style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--ink-70)' }}>
-              <p style={{ margin: 0 }}>No hay aprobaciones en el estado seleccionado.</p>
+          {filteredCampaigns.length === 0 ? (
+            <div style={{ padding: 40, textAlign: 'center', background: '#FFFFFF', borderRadius: 8, border: '1px solid #E5E7EB', color: '#6B7280' }}>
+              No hay campañas en este estado. Creá una nueva para coordinar los 5 canales de AIRO.
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              {filteredApprovals.map((appr) => (
+              {filteredCampaigns.map((camp) => (
                 <div
-                  key={appr.id}
-                  className="card"
+                  key={camp.id}
                   style={{
-                    border: appr.estado === 'PENDING' ? '1px solid rgba(180, 83, 9, 0.4)' : '1px solid var(--line)',
-                    borderRadius: 'var(--r-m)',
-                    padding: '24px',
-                    boxShadow: 'var(--g-shadow-sm)',
-                    background: '#ffffff',
+                    background: '#FFFFFF',
+                    borderRadius: 8,
+                    border: '1px solid #E5E7EB',
+                    padding: 20,
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
                   }}
                 >
-                  {/* Encabezado del Paquete */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+                  {/* Encabezado de la campaña */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
                     <div>
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-                        <span className="g-badge" style={{ background: 'var(--neutral)', color: 'var(--blue)', fontWeight: 700 }}>
-                          {appr.id}
-                        </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <h2 style={{ fontSize: 17, fontWeight: 700, margin: 0, color: '#111827' }}>{camp.titulo}</h2>
                         <span
-                          className="g-badge"
                           style={{
-                            background: appr.hitl_level === 3 ? 'rgba(192, 57, 43, 0.12)' : 'rgba(26, 66, 149, 0.12)',
-                            color: appr.hitl_level === 3 ? '#c0392b' : 'var(--blue)',
+                            fontSize: 11,
+                            padding: '3px 8px',
+                            borderRadius: 12,
                             fontWeight: 600,
+                            background:
+                              camp.estado === 'ACTIVA'
+                                ? '#DCFCE7'
+                                : camp.estado === 'PLANIFICADA'
+                                ? '#FEF3C7'
+                                : '#F3F4F6',
+                            color:
+                              camp.estado === 'ACTIVA'
+                                ? '#166534'
+                                : camp.estado === 'PLANIFICADA'
+                                ? '#92400E'
+                                : '#374151',
                           }}
                         >
-                          {appr.hitl_tag}
-                        </span>
-                        <span className="g-badge g-badge-success" title="Validado por QA X-03">
-                          QA: {appr.qa_status}
-                        </span>
-                        <span style={{ fontSize: '0.78rem', color: 'var(--ink-45)' }}>
-                          Creado: {appr.fecha} · Ref: {appr.audit_ref}
+                          {camp.estado}
                         </span>
                       </div>
-                      <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--ink)' }}>{appr.titulo}</h3>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--ink-70)', marginTop: 4 }}>
-                        Producido por: <strong>{appr.autor}</strong>
-                      </div>
+                      <p style={{ margin: '4px 0 0 0', fontSize: 13, color: '#4B5563' }}>{camp.objetivo}</p>
                     </div>
 
-                    {/* Estado y Acciones HITL */}
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      {appr.estado === 'PENDING' ? (
-                        <>
-                          <button
-                            className="btn--secondary"
-                            onClick={() => setModalDecision({ open: true, approval: appr, decision: 'REJECTED', notes: '' })}
-                            style={{ fontSize: '0.82rem', padding: '6px 14px', color: '#c0392b' }}
-                          >
-                            Rechazar
-                          </button>
-                          <button
-                            className="btn--primary"
-                            onClick={() => setModalDecision({ open: true, approval: appr, decision: 'APPROVED', notes: '' })}
-                            style={{ fontSize: '0.82rem', padding: '6px 16px' }}
-                          >
-                            Aprobar para Publicación
-                          </button>
-                        </>
-                      ) : (
-                        <div
-                          style={{
-                            padding: '6px 14px',
-                            borderRadius: 'var(--r-pill)',
-                            background: appr.estado === 'APPROVED' ? 'rgba(34, 177, 94, 0.15)' : 'rgba(192, 57, 43, 0.15)',
-                            color: appr.estado === 'APPROVED' ? '#178a48' : '#c0392b',
-                            fontSize: '0.82rem',
-                            fontWeight: 600,
-                          }}
-                        >
-                          {appr.estado === 'APPROVED' ? 'Aprobado' : 'Rechazado'} por {appr.decision_by || 'Admin'}
-                          {appr.decision_at && ` (${appr.decision_at.slice(0, 10)})`}
-                        </div>
-                      )}
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        className="gestion-btn"
+                        style={{ padding: '4px 10px', fontSize: 12 }}
+                        onClick={() =>
+                          setModalPub({
+                            open: true,
+                            campId: camp.id,
+                            data: {
+                              id: '',
+                              canal: 'INSTAGRAM',
+                              formato: 'Carrusel 5 slides',
+                              fecha: new Date().toISOString().split('T')[0],
+                              titulo: '',
+                              estado: 'BORRADOR',
+                              prompt_ref: null,
+                            },
+                          })
+                        }
+                      >
+                        <IconPlus /> Agregar Publicación
+                      </button>
+                      <button
+                        className="gestion-btn"
+                        style={{ padding: '4px 8px', fontSize: 12 }}
+                        onClick={() => setModalCamp({ open: true, data: { ...camp } })}
+                        title="Editar Campaña"
+                      >
+                        <IconEdit />
+                      </button>
+                      <button
+                        className="gestion-btn"
+                        style={{ padding: '4px 8px', fontSize: 12, color: '#EF4444' }}
+                        onClick={() => handleDeleteCampaign(camp)}
+                        title="Eliminar Campaña"
+                      >
+                        <IconTrash />
+                      </button>
                     </div>
                   </div>
 
-                  {appr.qa_detalles && (
-                    <div style={{ background: 'var(--neutral)', padding: '10px 14px', borderRadius: 'var(--r-s)', fontSize: '0.82rem', color: 'var(--ink-70)', marginBottom: 16 }}>
-                      {appr.qa_detalles}
+                  {/* Metadatos y Canales */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: 20,
+                      alignItems: 'center',
+                      marginTop: 14,
+                      paddingTop: 12,
+                      borderTop: '1px solid #F3F4F6',
+                      flexWrap: 'wrap',
+                      fontSize: 12,
+                      color: '#6B7280',
+                    }}
+                  >
+                    <div>
+                      <b>Período:</b> {camp.fecha_inicio} al {camp.fecha_fin || 'Continuo'}
                     </div>
-                  )}
-
-                  {/* Listado de Piezas en el Paquete */}
-                  {Array.isArray(appr.piezas) && appr.piezas.length > 0 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                      <h4 style={{ margin: '8px 0 4px', fontSize: '0.92rem', color: 'var(--ink-70)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        Piezas listas para publicación:
-                      </h4>
-
-                      {appr.piezas.map((pz, idx) => (
-                        <div
-                          key={pz.id || idx}
+                    {camp.kpi && (
+                      <div>
+                        <b>KPI:</b> {camp.kpi}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <b>Canales:</b>
+                      {(camp.canales || []).map((ch) => (
+                        <span
+                          key={ch}
                           style={{
-                            border: '1px solid var(--line)',
-                            borderRadius: 'var(--r-s)',
-                            padding: '16px',
-                            background: '#fafbfc',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 3,
+                            padding: '2px 6px',
+                            background: '#F9FAFB',
+                            border: '1px solid #E5E7EB',
+                            borderRadius: 4,
+                            fontSize: 11,
+                            fontWeight: 600,
                           }}
                         >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 8 }}>
-                            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                              <span className="g-badge" style={{ background: 'var(--blue)', color: '#ffffff', fontWeight: 600 }}>
-                                {pz.canal}
-                              </span>
-                              <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>{pz.formato}</span>
-                              <span style={{ fontSize: '0.85rem', color: 'var(--ink-70)' }}>— {pz.idea}</span>
-                            </div>
-                            {pz.caption && (
-                              <button
-                                className="btn--secondary"
-                                onClick={() => handleCopyText(pz.caption, `Copy ${pz.canal}`)}
-                                style={{ fontSize: '0.78rem', padding: '4px 10px' }}
-                              >
-                                Copiar Copy
-                              </button>
-                            )}
-                          </div>
-
-                          {/* Slides / Pantallas */}
-                          {Array.isArray(pz.slides) && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
-                              {pz.slides.map((sl, sIdx) => (
-                                <div
-                                  key={sIdx}
-                                  style={{
-                                    fontSize: '0.85rem',
-                                    background: '#ffffff',
-                                    border: '1px solid var(--line)',
-                                    borderRadius: '6px',
-                                    padding: '8px 12px',
-                                    fontFamily: 'monospace',
-                                    color: 'var(--ink)',
-                                  }}
-                                >
-                                  {sl}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-
-                          {/* Caption completo */}
-                          {pz.caption && (
-                            <div style={{ marginBottom: 8 }}>
-                              <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--ink-70)', marginBottom: 4 }}>
-                                Caption oficial (Voseo rioplatense + hashtags):
-                              </div>
-                              <pre
-                                style={{
-                                  margin: 0,
-                                  whiteSpace: 'pre-wrap',
-                                  fontSize: '0.82rem',
-                                  background: '#ffffff',
-                                  border: '1px solid var(--line)',
-                                  borderRadius: '6px',
-                                  padding: '10px 12px',
-                                  color: 'var(--ink)',
-                                  maxHeight: '160px',
-                                  overflowY: 'auto',
-                                }}
-                              >
-                                {pz.caption}
-                              </pre>
-                            </div>
-                          )}
-
-                          {/* CTA oficial */}
-                          {pz.cta && (
-                            <div style={{ fontSize: '0.82rem', color: 'var(--cyan-ink)', fontWeight: 600 }}>
-                              CTA: {pz.cta}
-                            </div>
-                          )}
-                        </div>
+                          {renderChannelIcon(ch)} {ch}
+                        </span>
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Lista de Publicaciones de la Campaña */}
+                  <div style={{ marginTop: 16 }}>
+                    <h3 style={{ fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Publicaciones Coordinadas ({camp.publicaciones?.length || 0})
+                    </h3>
+
+                    {!camp.publicaciones || camp.publicaciones.length === 0 ? (
+                      <p style={{ fontSize: 12, color: '#9CA3AF', margin: 0 }}>
+                        Sin publicaciones planificadas todavía. Podés sumar piezas para cada canal.
+                      </p>
+                    ) : (
+                      <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                          <thead>
+                            <tr style={{ background: '#F9FAFB', borderBottom: '1px solid #E5E7EB', color: '#6B7280', textAlign: 'left' }}>
+                              <th style={{ padding: '8px 10px' }}>Canal</th>
+                              <th style={{ padding: '8px 10px' }}>Fecha</th>
+                              <th style={{ padding: '8px 10px' }}>Formato</th>
+                              <th style={{ padding: '8px 10px' }}>Título / Pieza</th>
+                              <th style={{ padding: '8px 10px' }}>Estado</th>
+                              <th style={{ padding: '8px 10px' }}>Prompt IA</th>
+                              <th style={{ padding: '8px 10px', textAlign: 'right' }}>Acción</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {camp.publicaciones.map((pub) => (
+                              <tr key={pub.id} style={{ borderBottom: '1px solid #F3F4F6' }}>
+                                <td style={{ padding: '8px 10px', fontWeight: 600 }}>
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                                    {renderChannelIcon(pub.canal)} {pub.canal}
+                                  </span>
+                                </td>
+                                <td style={{ padding: '8px 10px', color: '#4B5563' }}>{pub.fecha}</td>
+                                <td style={{ padding: '8px 10px', color: '#4B5563' }}>{pub.formato}</td>
+                                <td style={{ padding: '8px 10px', fontWeight: 600, color: '#111827' }}>{pub.titulo}</td>
+                                <td style={{ padding: '8px 10px' }}>
+                                  <span
+                                    style={{
+                                      fontSize: 10,
+                                      padding: '2px 6px',
+                                      borderRadius: 4,
+                                      fontWeight: 600,
+                                      background:
+                                        pub.estado === 'PUBLICADA'
+                                          ? '#DCFCE7'
+                                          : pub.estado === 'PROGRAMADA'
+                                          ? '#DBEAFE'
+                                          : '#F3F4F6',
+                                      color:
+                                        pub.estado === 'PUBLICADA'
+                                          ? '#166534'
+                                          : pub.estado === 'PROGRAMADA'
+                                          ? '#1E40AF'
+                                          : '#374151',
+                                    }}
+                                  >
+                                    {pub.estado}
+                                  </span>
+                                </td>
+                                <td style={{ padding: '8px 10px' }}>
+                                  {pub.prompt_ref ? (
+                                    <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#00B4D8' }}>
+                                      {pub.prompt_ref}
+                                    </span>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      className="gestion-btn"
+                                      style={{ padding: '2px 6px', fontSize: 10 }}
+                                      onClick={() => {
+                                        setPromptForm((prev) => ({
+                                          ...prev,
+                                          campaign_id: camp.id,
+                                          canal: pub.canal,
+                                          titulo: pub.titulo,
+                                        }));
+                                        setActiveSubTab('prompts');
+                                      }}
+                                    >
+                                      Crear Prompt
+                                    </button>
+                                  )}
+                                </td>
+                                <td style={{ padding: '8px 10px', textAlign: 'right' }}>
+                                  <button
+                                    type="button"
+                                    className="gestion-btn"
+                                    style={{ padding: '2px 6px', fontSize: 10, color: '#EF4444' }}
+                                    onClick={() => handleDeletePublicacion(camp.id, pub.id)}
+                                  >
+                                    ✕
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================
+          SUBPESTAÑA 2: GENERADOR DE PROMPTS PARA IAS PARALELAS
+          ======================================================== */}
+      {activeSubTab === 'prompts' && (
+        <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'start' }}>
+          {/* Panel Izquierdo: Formulario de Creación / Generación */}
+          <div style={{ background: '#FFFFFF', borderRadius: 8, border: '1px solid #E5E7EB', padding: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#111827' }}>
+                {editingPromptId ? 'Editar Prompt (Requerirá Re-aprobación)' : 'Generador de Prompts para IAs Paralelas'}
+              </h2>
+              {editingPromptId && (
+                <button
+                  type="button"
+                  className="gestion-btn"
+                  style={{ padding: '2px 8px', fontSize: 11 }}
+                  onClick={() => {
+                    setEditingPromptId(null);
+                    setPromptForm((prev) => ({ ...prev, id: null, titulo: '', prompt_text: '' }));
+                  }}
+                >
+                  Cancelar Edición
+                </button>
+              )}
+            </div>
+
+            <p style={{ fontSize: 12, color: '#6B7280', margin: '0 0 16px 0' }}>
+              Los prompts generados o modificados quedan en estado <b>PENDING</b> para aprobación humana (HITL) conforme a las normas operativas.
+            </p>
+
+            <form onSubmit={handleSavePrompt}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {/* Tipo de Prompt */}
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                    Tipo de Contenido / IA Destino
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                    {[
+                      { id: 'COPY', label: 'Copywriting', sub: 'ChatGPT / Claude', icon: <IconPrompt /> },
+                      { id: 'IMAGE', label: 'Foto Editorial', sub: 'Midjourney / Flux', icon: <IconImage /> },
+                      { id: 'VIDEO', label: 'Video Cinemático', sub: 'Runway / Sora', icon: <IconVideo /> },
+                    ].map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() =>
+                          setPromptForm((prev) => ({
+                            ...prev,
+                            tipo: t.id,
+                            modelo_destino:
+                              t.id === 'IMAGE'
+                                ? 'Midjourney / Flux / DALL-E'
+                                : t.id === 'VIDEO'
+                                ? 'Runway / Sora / Kling'
+                                : 'ChatGPT / Claude / Gemini',
+                          }))
+                        }
+                        style={{
+                          padding: '10px 8px',
+                          borderRadius: 6,
+                          border: `1px solid ${promptForm.tipo === t.id ? 'var(--c-brand-blue, #1A4295)' : '#E5E7EB'}`,
+                          background: promptForm.tipo === t.id ? 'rgba(26, 66, 149, 0.05)' : '#FFFFFF',
+                          color: promptForm.tipo === t.id ? 'var(--c-brand-blue, #1A4295)' : '#4B5563',
+                          cursor: 'pointer',
+                          textAlign: 'center',
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4 }}>{t.icon}</div>
+                        <div style={{ fontSize: 12, fontWeight: 700 }}>{t.label}</div>
+                        <div style={{ fontSize: 10, color: '#6B7280' }}>{t.sub}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Canal Oficial y Campaña */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                      Canal Oficial
+                    </label>
+                    <select
+                      className="gestion-input"
+                      value={promptForm.canal}
+                      onChange={(e) => setPromptForm({ ...promptForm, canal: e.target.value })}
+                    >
+                      {MARKETING_CHANNELS.map((ch) => (
+                        <option key={ch.id} value={ch.id}>
+                          {ch.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                      Asociar a Campaña
+                    </label>
+                    <select
+                      className="gestion-input"
+                      value={promptForm.campaign_id}
+                      onChange={(e) => setPromptForm({ ...promptForm, campaign_id: e.target.value })}
+                    >
+                      <option value="">Sin campaña específica</option>
+                      {campaigns.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.titulo}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Parámetros para la generación de AIRO */}
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                    Prenda o Producto a Destacar
+                  </label>
+                  <input
+                    type="text"
+                    className="gestion-input"
+                    value={promptForm.producto}
+                    onChange={(e) => setPromptForm({ ...promptForm, producto: e.target.value })}
+                    placeholder="ej: Hoodie frizado, remera peinada 24/1, tote bag..."
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                    Objetivo de Comunicación
+                  </label>
+                  <input
+                    type="text"
+                    className="gestion-input"
+                    value={promptForm.objetivo}
+                    onChange={(e) => setPromptForm({ ...promptForm, objetivo: e.target.value })}
+                    placeholder="ej: Captar pedidos de merchandising corporativo para eventos"
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                    Audiencia Target
+                  </label>
+                  <input
+                    type="text"
+                    className="gestion-input"
+                    value={promptForm.audiencia}
+                    onChange={(e) => setPromptForm({ ...promptForm, audiencia: e.target.value })}
+                    placeholder="ej: Directores de marketing, productoras de eventos, agencias"
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                    Contexto o Detalle Técnico Adicional (Opcional)
+                  </label>
+                  <input
+                    type="text"
+                    className="gestion-input"
+                    value={promptForm.detalleExtra}
+                    onChange={(e) => setPromptForm({ ...promptForm, detalleExtra: e.target.value })}
+                    placeholder="ej: Destacar estampa DTF textil resistente a lavados industriales..."
+                  />
+                </div>
+
+                {/* Botón de auto-generación asistida */}
+                <div>
+                  <button
+                    type="button"
+                    className="gestion-btn"
+                    style={{ width: '100%', padding: '10px 14px', background: 'rgba(0, 180, 216, 0.1)', borderColor: '#00B4D8', color: '#0369A1', fontWeight: 600 }}
+                    onClick={handleAutoGeneratePrompt}
+                  >
+                    ⚡ Formular Prompt con Criterios AIRO (Voseo, Mínimo 10, Hasselblad)
+                  </button>
+                </div>
+
+                {/* Título y Contenido del Prompt */}
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                    Título / Referencia del Prompt *
+                  </label>
+                  <input
+                    type="text"
+                    className="gestion-input"
+                    value={promptForm.titulo}
+                    onChange={(e) => setPromptForm({ ...promptForm, titulo: e.target.value })}
+                    placeholder="ej: Copy Carrusel Bienvenida Corporativa"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                    Prompt Final para la IA Paralela *
+                  </label>
+                  <textarea
+                    className="gestion-input"
+                    rows={6}
+                    value={promptForm.prompt_text}
+                    onChange={(e) => setPromptForm({ ...promptForm, prompt_text: e.target.value })}
+                    placeholder="Contenido exacto del prompt a copiar en ChatGPT, Midjourney, Sora..."
+                    required
+                  />
+                </div>
+
+                {promptForm.tipo !== 'COPY' && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                      Prompt Negativo (Evitar en la generación visual)
+                    </label>
+                    <textarea
+                      className="gestion-input"
+                      rows={2}
+                      value={promptForm.prompt_negativo}
+                      onChange={(e) => setPromptForm({ ...promptForm, prompt_negativo: e.target.value })}
+                      placeholder="blurry, low resolution, cheap fabric, synthetic sheen..."
+                    />
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+                  <button type="submit" className="gestion-btn gestion-btn--primary" style={{ flex: 1 }}>
+                    Guardar Prompt (Enviar a Aprobación HITL)
+                  </button>
+                  {promptForm.prompt_text && (
+                    <button
+                      type="button"
+                      className="gestion-btn"
+                      onClick={() => copyToClipboard(promptForm.prompt_text, 'Prompt')}
+                    >
+                      Copiar
+                    </button>
+                  )}
+                </div>
+              </div>
+            </form>
+          </div>
+
+          {/* Panel Derecho: Lista de Prompts Existentes */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ background: '#FFFFFF', borderRadius: 8, border: '1px solid #E5E7EB', padding: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 700, margin: 0, color: '#111827' }}>
+                  Banco de Prompts ({filteredPrompts.length})
+                </h3>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <select
+                    className="gestion-input"
+                    style={{ fontSize: 11, padding: '2px 8px', width: 'auto' }}
+                    value={filterPromptStatus}
+                    onChange={(e) => setFilterPromptStatus(e.target.value)}
+                  >
+                    <option value="ALL">Todos los estados</option>
+                    <option value="APPROVED">Aprobados</option>
+                    <option value="PENDING">Pendientes HITL</option>
+                    <option value="REJECTED">Rechazados</option>
+                  </select>
+                  <select
+                    className="gestion-input"
+                    style={{ fontSize: 11, padding: '2px 8px', width: 'auto' }}
+                    value={filterPromptTipo}
+                    onChange={(e) => setFilterPromptTipo(e.target.value)}
+                  >
+                    <option value="ALL">Todos los tipos</option>
+                    <option value="COPY">Copy</option>
+                    <option value="IMAGE">Imagen</option>
+                    <option value="VIDEO">Video</option>
+                  </select>
+                </div>
+              </div>
+
+              {filteredPrompts.length === 0 ? (
+                <p style={{ fontSize: 12, color: '#9CA3AF', margin: '20px 0', textAlign: 'center' }}>
+                  No se encontraron prompts con los filtros aplicados.
+                </p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 680, overflowY: 'auto' }}>
+                  {filteredPrompts.map((p) => (
+                    <div
+                      key={p.id}
+                      style={{
+                        padding: 14,
+                        borderRadius: 6,
+                        border: '1px solid #E5E7EB',
+                        background: '#F9FAFB',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span
+                              style={{
+                                fontSize: 10,
+                                fontWeight: 700,
+                                padding: '2px 6px',
+                                borderRadius: 4,
+                                background: p.tipo === 'COPY' ? '#E0F2FE' : p.tipo === 'IMAGE' ? '#FCE7F3' : '#FEF3C7',
+                                color: p.tipo === 'COPY' ? '#0369A1' : p.tipo === 'IMAGE' ? '#BE185D' : '#92400E',
+                              }}
+                            >
+                              {p.tipo}
+                            </span>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: '#4B5563', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                              {renderChannelIcon(p.canal)} {p.canal}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: 10,
+                                padding: '1px 6px',
+                                borderRadius: 10,
+                                fontWeight: 700,
+                                background:
+                                  p.estado_aprobacion === 'APPROVED'
+                                    ? '#DCFCE7'
+                                    : p.estado_aprobacion === 'PENDING'
+                                    ? '#FEF3C7'
+                                    : '#FEE2E2',
+                                color:
+                                  p.estado_aprobacion === 'APPROVED'
+                                    ? '#166534'
+                                    : p.estado_aprobacion === 'PENDING'
+                                    ? '#92400E'
+                                    : '#991B1B',
+                              }}
+                            >
+                              {p.estado_aprobacion === 'APPROVED' ? 'Aprobado' : p.estado_aprobacion === 'PENDING' ? 'Pendiente HITL' : 'Rechazado'}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: '#111827', marginTop: 4 }}>{p.titulo}</div>
+                          <div style={{ fontSize: 11, color: '#6B7280' }}>Destino: {p.modelo_destino}</div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <button
+                            type="button"
+                            className="gestion-btn"
+                            style={{ padding: '3px 8px', fontSize: 11 }}
+                            onClick={() => copyToClipboard(p.prompt_text, 'Prompt')}
+                            title="Copiar prompt listo para IA"
+                          >
+                            Copiar
+                          </button>
+                          <button
+                            type="button"
+                            className="gestion-btn"
+                            style={{ padding: '3px 8px', fontSize: 11 }}
+                            onClick={() => handleEditPrompt(p)}
+                            title="Editar prompt"
+                          >
+                            <IconEdit />
+                          </button>
+                          <button
+                            type="button"
+                            className="gestion-btn"
+                            style={{ padding: '3px 8px', fontSize: 11, color: '#EF4444' }}
+                            onClick={() => handleDeletePrompt(p)}
+                            title="Eliminar prompt"
+                          >
+                            <IconTrash />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          marginTop: 10,
+                          padding: 10,
+                          background: '#FFFFFF',
+                          borderRadius: 4,
+                          border: '1px solid #E5E7EB',
+                          fontSize: 12,
+                          color: '#374151',
+                          maxHeight: 120,
+                          overflowY: 'auto',
+                          whiteSpace: 'pre-wrap',
+                          fontFamily: p.tipo === 'COPY' ? 'inherit' : 'monospace',
+                        }}
+                      >
+                        {p.prompt_text}
+                      </div>
+
+                      {p.observaciones_rechazo && (
+                        <div style={{ marginTop: 6, fontSize: 11, color: '#991B1B', background: '#FEE2E2', padding: '4px 8px', borderRadius: 4 }}>
+                          <b>Observación rechazo:</b> {p.observaciones_rechazo}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          SUBPESTAÑA 3: APROBACIÓN HITL DE PROMPTS
+          ======================================================== */}
+      {activeSubTab === 'approvals' && (
+        <div style={{ marginTop: 20 }}>
+          <div
+            style={{
+              padding: 16,
+              background: '#FFFBEB',
+              borderRadius: 8,
+              border: '1px solid #FCD34D',
+              marginBottom: 20,
+            }}
+          >
+            <h3 style={{ fontSize: 14, fontWeight: 700, margin: '0 0 4px 0', color: '#92400E' }}>
+              Control Humano en el Bucle (HITL-2) — Aprobación de Prompts
+            </h3>
+            <p style={{ fontSize: 12, margin: 0, color: '#78350F' }}>
+              Regla de negocio: Toda creación o modificación de prompts para IAs paralelas debe ser validada por un administrador antes de su utilización en producción.
+            </p>
+          </div>
+
+          {pendingPrompts.length === 0 ? (
+            <div style={{ padding: 40, textAlign: 'center', background: '#FFFFFF', borderRadius: 8, border: '1px solid #E5E7EB', color: '#166534' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+                <IconCheck />
+              </div>
+              <b>No hay prompts pendientes de aprobación.</b>
+              <p style={{ fontSize: 12, color: '#6B7280', margin: '4px 0 0 0' }}>
+                Todos los prompts activos han sido revisados y autorizados conforme a los estándares de marca de AIRO.
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {pendingPrompts.map((p) => (
+                <div
+                  key={p.id}
+                  style={{
+                    background: '#FFFFFF',
+                    borderRadius: 8,
+                    border: '1px solid #E5E7EB',
+                    padding: 20,
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            padding: '2px 6px',
+                            borderRadius: 4,
+                            background: p.tipo === 'COPY' ? '#E0F2FE' : p.tipo === 'IMAGE' ? '#FCE7F3' : '#FEF3C7',
+                            color: p.tipo === 'COPY' ? '#0369A1' : p.tipo === 'IMAGE' ? '#BE185D' : '#92400E',
+                          }}
+                        >
+                          {p.tipo}
+                        </span>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: '#4B5563', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          {renderChannelIcon(p.canal)} {p.canal}
+                        </span>
+                        <span style={{ fontSize: 11, color: '#9CA3AF' }}>• Creado: {new Date(p.actualizado_en).toLocaleDateString()}</span>
+                      </div>
+                      <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '6px 0 2px 0' }}>{p.titulo}</h2>
+                      <div style={{ fontSize: 12, color: '#6B7280' }}>Modelo destino: <b>{p.modelo_destino}</b></div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        className="gestion-btn"
+                        style={{ background: '#DCFCE7', borderColor: '#86EFAC', color: '#166534', fontWeight: 700 }}
+                        onClick={() => handleOpenDecision(p, 'APPROVED')}
+                      >
+                        ✓ Aprobar Prompt
+                      </button>
+                      <button
+                        className="gestion-btn"
+                        style={{ background: '#FEE2E2', borderColor: '#FCA5A5', color: '#991B1B', fontWeight: 600 }}
+                        onClick={() => handleOpenDecision(p, 'REJECTED')}
+                      >
+                        Rechazar / Solicitar Ajustes
+                      </button>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 14,
+                      padding: 12,
+                      background: '#F9FAFB',
+                      borderRadius: 6,
+                      border: '1px solid #E5E7EB',
+                      fontSize: 13,
+                      color: '#1F2937',
+                      whiteSpace: 'pre-wrap',
+                      fontFamily: p.tipo === 'COPY' ? 'inherit' : 'monospace',
+                    }}
+                  >
+                    {p.prompt_text}
+                  </div>
+
+                  {p.prompt_negativo && (
+                    <div style={{ marginTop: 8, fontSize: 11, color: '#6B7280' }}>
+                      <b>Negativo:</b> {p.prompt_negativo}
                     </div>
                   )}
                 </div>
@@ -493,465 +1328,186 @@ export default function MarketingModule({ onContentChanged }) {
       )}
 
       {/* ========================================================
-          SUB-PESTAÑA 2: CALENDARIO EDITORIAL
-         ======================================================== */}
-      {activeSubTab === 'calendar' && (
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              <select
-                className="g-input"
-                value={filterCalChannel}
-                onChange={(e) => setFilterCalChannel(e.target.value)}
-                style={{ width: '180px', fontSize: '0.85rem', padding: '6px 10px' }}
-              >
-                <option value="ALL">Todos los canales</option>
-                <option value="INSTAGRAM">Instagram</option>
-                <option value="LINKEDIN">LinkedIn</option>
-                <option value="WHATSAPP_STATUS">WhatsApp Estados</option>
-                <option value="EMAIL">Gmail B2B</option>
-              </select>
-
-              <select
-                className="g-input"
-                value={filterCalStatus}
-                onChange={(e) => setFilterCalStatus(e.target.value)}
-                style={{ width: '180px', fontSize: '0.85rem', padding: '6px 10px' }}
-              >
-                <option value="ALL">Todos los estados</option>
-                <option value="PENDING_APPROVAL">En Aprobación</option>
-                <option value="APPROVED">Aprobadas</option>
-                <option value="PUBLISHED">Publicadas</option>
-                <option value="DRAFT">Borradores</option>
-                <option value="IDEA">Ideas</option>
-              </select>
-            </div>
-
-            <button
-              className="btn--primary"
-              onClick={() => setModalNewIdea({ open: true, data: { channel: 'INSTAGRAM', format: 'Post carrusel', status: 'IDEA' } })}
-              style={{ fontSize: '0.85rem', padding: '8px 16px' }}
-            >
-              Proponer Nueva Pieza
-            </button>
-          </div>
-
-          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Canal</th>
-                  <th>Fecha</th>
-                  <th>Idea & Objetivo</th>
-                  <th>Formato</th>
-                  <th>CTA / KPI</th>
-                  <th>Estado</th>
-                  <th>Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredCalendar.length === 0 ? (
-                  <tr>
-                    <td colSpan="8" style={{ textAlign: 'center', padding: '28px', color: 'var(--ink-70)' }}>
-                      No se encontraron piezas para los filtros seleccionados.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredCalendar.map((item) => (
-                    <tr key={item.content_id}>
-                      <td style={{ fontWeight: 600, fontSize: '0.82rem', fontFamily: 'monospace' }}>
-                        {item.content_id}
-                      </td>
-                      <td>
-                        <span
-                          className="g-badge"
-                          style={{
-                            background:
-                              item.channel === 'INSTAGRAM'
-                                ? 'rgba(26, 66, 149, 0.12)'
-                                : item.channel === 'LINKEDIN'
-                                ? 'rgba(14, 116, 144, 0.12)'
-                                : 'rgba(34, 177, 94, 0.12)',
-                            color:
-                              item.channel === 'INSTAGRAM'
-                                ? 'var(--blue)'
-                                : item.channel === 'LINKEDIN'
-                                ? 'var(--cyan-ink)'
-                                : '#15803d',
-                            fontWeight: 600,
-                          }}
-                        >
-                          {item.channel}
-                        </span>
-                      </td>
-                      <td style={{ fontSize: '0.85rem', color: 'var(--ink-70)' }}>
-                        {item.proposed_date || 'Sin fecha'}
-                      </td>
-                      <td>
-                        <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{item.idea}</div>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--ink-70)' }}>{item.objective}</div>
-                      </td>
-                      <td style={{ fontSize: '0.82rem' }}>{item.format}</td>
-                      <td style={{ fontSize: '0.82rem' }}>
-                        <div><strong>CTA:</strong> {item.cta || 'WhatsApp'}</div>
-                        <div style={{ color: 'var(--ink-70)', fontSize: '0.75rem' }}>{item.kpi}</div>
-                      </td>
-                      <td>
-                        <span
-                          className="g-badge"
-                          style={{
-                            background:
-                              item.status === 'PUBLISHED'
-                                ? 'rgba(34, 177, 94, 0.18)'
-                                : item.status === 'APPROVED'
-                                ? 'rgba(14, 116, 144, 0.18)'
-                                : item.status === 'PENDING_APPROVAL'
-                                ? 'rgba(180, 83, 9, 0.18)'
-                                : 'var(--neutral)',
-                            color:
-                              item.status === 'PUBLISHED'
-                                ? '#15803d'
-                                : item.status === 'APPROVED'
-                                ? 'var(--cyan-ink)'
-                                : item.status === 'PENDING_APPROVAL'
-                                ? '#b45309'
-                                : 'var(--ink)',
-                            fontWeight: 600,
-                          }}
-                        >
-                          {item.status}
-                        </span>
-                      </td>
-                      <td>
-                        {item.status === 'APPROVED' && (
-                          <button
-                            className="btn--secondary"
-                            onClick={() => {
-                              updateCalendarEntryStatus(item.content_id, 'PUBLISHED');
-                              reloadData();
-                            }}
-                            title="Marcar como publicado en redes"
-                            style={{ fontSize: '0.75rem', padding: '4px 8px' }}
-                          >
-                            Marcar Publicado
-                          </button>
-                        )}
-                        {item.status === 'IDEA' && (
-                          <button
-                            className="btn--secondary"
-                            onClick={() => {
-                              updateCalendarEntryStatus(item.content_id, 'DRAFT');
-                              reloadData();
-                            }}
-                            style={{ fontSize: '0.75rem', padding: '4px 8px' }}
-                          >
-                            Borrador
-                          </button>
-                        )}
-                        {item.status === 'PUBLISHED' && (
-                          <span style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: 600 }}>Publicado</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================
-          SUB-PESTAÑA 3: ASISTENTE COMMUNITY MANAGER & CRM
-         ======================================================== */}
+          SUBPESTAÑA 4: ASISTENTE DE REDES (CM) & CRM
+          ======================================================== */}
       {activeSubTab === 'cm' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-          {/* Columna Izquierda: Entrada y Clasificador */}
-          <div className="card" style={{ padding: '24px' }}>
-            <h3 style={{ margin: '0 0 12px', fontSize: '1.15rem' }}>
-              Simulador de Interacción & Clasificación Asistida
-            </h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--ink-70)', marginBottom: 16 }}>
-              Ingresá una consulta real o simulada para que los agentes <strong>I-06 / W-03</strong> la clasifiquen,
-              apliquen las reglas de marca (mínimo 10 u, voseo rioplatense, sin inventar precios) y preparen la ficha
-              para el CRM.
+        <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'start' }}>
+          <div style={{ background: '#FFFFFF', borderRadius: 8, border: '1px solid #E5E7EB', padding: 20 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px 0', color: '#111827' }}>
+              Simulador & Clasificador de Consultas Entrantes
+            </h2>
+            <p style={{ fontSize: 12, color: '#6B7280', margin: '0 0 16px 0' }}>
+              Analiza mensajes recibidos en cualquiera de los 5 canales, clasifica la intención, genera la respuesta con tono rioplatense y deriva directamente al CRM.
             </p>
 
-            {/* Selector de Canal */}
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>
-                Canal de Entrada:
-              </label>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {['WHATSAPP', 'INSTAGRAM', 'LINKEDIN'].map((ch) => (
-                  <button
-                    key={ch}
-                    type="button"
-                    className={`btn--pill ${cmChannel === ch ? 'active' : ''}`}
-                    onClick={() => setCmChannel(ch)}
-                    style={{
-                      fontSize: '0.8rem',
-                      padding: '6px 14px',
-                      borderRadius: 'var(--r-pill)',
-                      border: '1px solid var(--line)',
-                      background: cmChannel === ch ? 'var(--blue)' : 'var(--neutral)',
-                      color: cmChannel === ch ? '#ffffff' : 'var(--ink)',
-                      cursor: 'pointer',
-                      fontWeight: 600,
-                    }}
-                  >
-                    {ch === 'WHATSAPP' && 'WhatsApp'}
-                    {ch === 'INSTAGRAM' && 'Instagram DM'}
-                    {ch === 'LINKEDIN' && 'LinkedIn'}
-                  </button>
-                ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                  Canal de Entrada
+                </label>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {MARKETING_CHANNELS.map((ch) => (
+                    <button
+                      key={ch.id}
+                      type="button"
+                      onClick={() => setCmChannel(ch.id)}
+                      style={{
+                        padding: '6px 10px',
+                        borderRadius: 6,
+                        border: `1px solid ${cmChannel === ch.id ? ch.color : '#E5E7EB'}`,
+                        background: cmChannel === ch.id ? `${ch.color}15` : '#FFFFFF',
+                        color: cmChannel === ch.id ? ch.color : '#4B5563',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                      }}
+                    >
+                      {renderChannelIcon(ch.id)} {ch.name}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Ejemplos Rápidos */}
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--ink-70)', marginBottom: 6 }}>
-                Pruebas rápidas de situaciones reales:
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                  Mensaje Recibido
+                </label>
+                <textarea
+                  className="gestion-input"
+                  rows={4}
+                  value={cmInputMessage}
+                  onChange={(e) => setCmInputMessage(e.target.value)}
+                  placeholder="Pegá aquí el mensaje enviado por el prospecto..."
+                />
               </div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <button
-                  type="button"
-                  className="btn--secondary"
-                  onClick={() => {
-                    const m = 'Hola! Cuánto nos saldrían 25 buzos friza con estampa DTF para nuestra marca?';
-                    setCmInputMessage(m);
-                    handleRunCmAnalysis(m, cmChannel);
-                  }}
-                  style={{ fontSize: '0.72rem', padding: '4px 8px' }}
-                >
-                  25 Buzos DTF
-                </button>
-                <button
-                  type="button"
-                  className="btn--secondary"
-                  onClick={() => {
-                    const m = 'Buenas tardes, somos de una consultora y queremos hacer 80 remeras con logo para un evento fin de mes. Tienen catálogo?';
-                    setCmInputMessage(m);
-                    handleRunCmAnalysis(m, cmChannel);
-                  }}
-                  style={{ fontSize: '0.72rem', padding: '4px 8px' }}
-                >
-                  80 Remeras Evento
-                </button>
-                <button
-                  type="button"
-                  className="btn--secondary"
-                  onClick={() => {
-                    const m = 'Hola qué tal! Hacen 1 remera estampada con una foto para un regalo?';
-                    setCmInputMessage(m);
-                    handleRunCmAnalysis(m, cmChannel);
-                  }}
-                  style={{ fontSize: '0.72rem', padding: '4px 8px' }}
-                >
-                  1 Remera (Bajo Mínimo)
-                </button>
-                <button
-                  type="button"
-                  className="btn--secondary"
-                  onClick={() => {
-                    const m = 'Hola, quería consultar cómo viene la producción de las gorras con remito REM-001 que pedimos.';
-                    setCmInputMessage(m);
-                    handleRunCmAnalysis(m, cmChannel);
-                  }}
-                  style={{ fontSize: '0.72rem', padding: '4px 8px' }}
-                >
-                  Seguimiento de Producción
-                </button>
-              </div>
-            </div>
 
-            {/* Textarea */}
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>
-                Mensaje recibido:
-              </label>
-              <textarea
-                className="g-input"
-                rows="4"
-                value={cmInputMessage}
-                onChange={(e) => setCmInputMessage(e.target.value)}
-                placeholder="Pegá o escribí la consulta recibida..."
-                style={{ width: '100%', fontSize: '0.88rem', padding: '10px' }}
-              />
+              <button
+                type="button"
+                className="gestion-btn gestion-btn--primary"
+                onClick={handleRunCmAnalysis}
+              >
+                Analizar con Agente CM
+              </button>
             </div>
-
-            <button
-              className="btn--primary"
-              onClick={() => handleRunCmAnalysis()}
-              style={{ width: '100%', padding: '10px', fontSize: '0.92rem' }}
-            >
-              Analizar con Agentes IA (I-06 / W-03)
-            </button>
           </div>
 
-          {/* Columna Derecha: Respuesta Asistida & Inyección a CRM */}
-          <div className="card" style={{ padding: '24px', background: '#fafbfc' }}>
-            <h3 style={{ margin: '0 0 12px', fontSize: '1.15rem' }}>
-              Diagnóstico del Agente & Respuesta Asistida
-            </h3>
+          {/* Resultado del Análisis CM */}
+          <div style={{ background: '#FFFFFF', borderRadius: 8, border: '1px solid #E5E7EB', padding: 20 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px 0', color: '#111827' }}>
+              Respuesta Sugerida & Ficha para CRM
+            </h2>
 
             {!cmAnalysis ? (
-              <div style={{ textAlign: 'center', padding: '48px 12px', color: 'var(--ink-70)' }}>
-                <p>Hacé clic en "Analizar con Agentes IA" para procesar el mensaje.</p>
-              </div>
+              <p style={{ fontSize: 13, color: '#9CA3AF', margin: '40px 0', textAlign: 'center' }}>
+                Hacé click en "Analizar con Agente CM" para clasificar la consulta.
+              </p>
             ) : (
-              <div>
-                {/* Diagnóstico */}
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span
-                    className="g-badge"
                     style={{
-                      background:
-                        cmAnalysis.category === 'LEAD'
-                          ? 'rgba(34, 177, 94, 0.18)'
-                          : cmAnalysis.category === 'LEAD_UNDER_MIN'
-                          ? 'rgba(180, 83, 9, 0.18)'
-                          : 'rgba(26, 66, 149, 0.18)',
-                      color:
-                        cmAnalysis.category === 'LEAD'
-                          ? '#15803d'
-                          : cmAnalysis.category === 'LEAD_UNDER_MIN'
-                          ? '#b45309'
-                          : 'var(--blue)',
+                      fontSize: 11,
                       fontWeight: 700,
-                      fontSize: '0.85rem',
+                      padding: '3px 8px',
+                      borderRadius: 4,
+                      background: '#DBEAFE',
+                      color: '#1E40AF',
                     }}
                   >
                     {cmAnalysis.categoryLabel}
                   </span>
-                  <span className="g-badge g-badge-neutral" style={{ fontSize: '0.78rem' }}>
-                    Agente: {cmAnalysis.agentId}
-                  </span>
-                  <span className="g-badge g-badge-brand" style={{ fontSize: '0.78rem' }}>
-                    Confianza: {(cmAnalysis.confidence * 100).toFixed(0)}%
+                  <span style={{ fontSize: 12, color: '#6B7280' }}>
+                    Agente asignado: <b>{cmAnalysis.agentId}</b>
                   </span>
                 </div>
 
-                {/* Respuesta Sugerida Oficial */}
-                <div style={{ background: '#ffffff', border: '1px solid var(--line)', borderRadius: 'var(--r-s)', padding: '14px', marginBottom: 16 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ink-70)' }}>
-                      Respuesta asistida (Voz AIRO · Voseo Rioplatense):
-                    </span>
-                    <button
-                      className="btn--secondary"
-                      onClick={() => handleCopyText(cmAnalysis.proposedResponse, 'Respuesta')}
-                      style={{ fontSize: '0.75rem', padding: '3px 8px' }}
-                    >
-                      Copiar Respuesta
-                    </button>
-                  </div>
-                  <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--ink)', lineHeight: 1.45 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                    Respuesta Oficial Sugerida (Voseo Profesional)
+                  </label>
+                  <div
+                    style={{
+                      padding: 12,
+                      background: '#F9FAFB',
+                      borderRadius: 6,
+                      border: '1px solid #E5E7EB',
+                      fontSize: 13,
+                      lineHeight: 1.5,
+                      color: '#111827',
+                    }}
+                  >
                     {cmAnalysis.proposedResponse}
-                  </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="gestion-btn"
+                    style={{ marginTop: 6, fontSize: 11 }}
+                    onClick={() => copyToClipboard(cmAnalysis.proposedResponse, 'Respuesta')}
+                  >
+                    Copiar Respuesta
+                  </button>
                 </div>
 
-                {/* Extracción de Datos para CRM */}
-                <div style={{ background: '#ffffff', border: '1px solid var(--line)', borderRadius: 'var(--r-s)', padding: '14px', marginBottom: 16 }}>
-                  <h4 style={{ margin: '0 0 10px', fontSize: '0.85rem', color: 'var(--cyan-ink)', textTransform: 'uppercase' }}>
-                    Ficha de Prospecto Detectada (Lead Scoring: {cmAnalysis.extractedData.score}/100)
+                {/* Campos para Inyección en CRM */}
+                <div style={{ borderTop: '1px solid #F3F4F6', paddingTop: 12 }}>
+                  <h4 style={{ fontSize: 12, fontWeight: 700, color: '#374151', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
+                    Datos para el CRM
                   </h4>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                     <div>
-                      <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--ink-70)', display: 'block' }}>
-                        Empresa / Marca:
-                      </label>
+                      <label style={{ fontSize: 11, color: '#6B7280' }}>Empresa</label>
                       <input
                         type="text"
-                        className="g-input"
+                        className="gestion-input"
                         value={cmExtraCompany}
                         onChange={(e) => setCmExtraCompany(e.target.value)}
-                        placeholder="Nombre de la empresa"
-                        style={{ fontSize: '0.82rem', padding: '5px 8px', width: '100%' }}
+                        placeholder="Nombre empresa"
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--ink-70)', display: 'block' }}>
-                        Contacto:
-                      </label>
+                      <label style={{ fontSize: 11, color: '#6B7280' }}>Contacto</label>
                       <input
                         type="text"
-                        className="g-input"
+                        className="gestion-input"
                         value={cmExtraContact}
                         onChange={(e) => setCmExtraContact(e.target.value)}
-                        placeholder="Nombre de contacto"
-                        style={{ fontSize: '0.82rem', padding: '5px 8px', width: '100%' }}
+                        placeholder="Nombre persona"
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--ink-70)', display: 'block' }}>
-                        Teléfono / WhatsApp:
-                      </label>
+                      <label style={{ fontSize: 11, color: '#6B7280' }}>Teléfono / WhatsApp</label>
                       <input
                         type="text"
-                        className="g-input"
+                        className="gestion-input"
                         value={cmExtraPhone}
                         onChange={(e) => setCmExtraPhone(e.target.value)}
-                        placeholder="Ej: 11-6355-3443"
-                        style={{ fontSize: '0.82rem', padding: '5px 8px', width: '100%' }}
+                        placeholder="11-xxxx-xxxx"
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--ink-70)', display: 'block' }}>
-                        Email:
-                      </label>
+                      <label style={{ fontSize: 11, color: '#6B7280' }}>Email Corporativo</label>
                       <input
                         type="email"
-                        className="g-input"
+                        className="gestion-input"
                         value={cmExtraEmail}
                         onChange={(e) => setCmExtraEmail(e.target.value)}
                         placeholder="contacto@empresa.com"
-                        style={{ fontSize: '0.82rem', padding: '5px 8px', width: '100%' }}
                       />
                     </div>
                   </div>
 
-                  <div style={{ fontSize: '0.78rem', color: 'var(--ink-70)' }}>
-                    <strong>Interés:</strong> {cmAnalysis.extractedData.interest} · <strong>Cantidad:</strong>{' '}
-                    {cmAnalysis.extractedData.quantity ? `${cmAnalysis.extractedData.quantity} prendas` : 'A definir'}
-                  </div>
-                </div>
-
-                {/* Botón de Inyección a CRM */}
-                <button
-                  className="btn--primary"
-                  onClick={handleInjectToCrm}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    fontSize: '0.92rem',
-                    background: 'var(--blue)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                  }}
-                >
-                  Inyectar Directamente a Lead en CRM
-                </button>
-
-                {injectFeedback && (
-                  <div
-                    style={{
-                      marginTop: 12,
-                      padding: '10px 14px',
-                      borderRadius: 'var(--r-s)',
-                      fontSize: '0.82rem',
-                      background: injectFeedback.ok ? 'rgba(34, 177, 94, 0.15)' : 'rgba(192, 57, 43, 0.15)',
-                      color: injectFeedback.ok ? '#15803d' : '#c0392b',
-                      fontWeight: 500,
-                    }}
+                  <button
+                    type="button"
+                    className="gestion-btn gestion-btn--primary"
+                    style={{ width: '100%', marginTop: 12 }}
+                    onClick={handleInjectToCrm}
                   >
-                    {injectFeedback.message}
-                  </div>
-                )}
+                    Guardar / Derivar a CRM Unificado
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -959,258 +1515,381 @@ export default function MarketingModule({ onContentChanged }) {
       )}
 
       {/* ========================================================
-          SUB-PESTAÑA 4: DIRECTORIO DE AGENTES (26)
-         ======================================================== */}
+          SUBPESTAÑA 5: DIRECTORIO DE AGENTES DE IA
+          ======================================================== */}
       {activeSubTab === 'agents' && (
-        <div>
-          {/* Filtros de Módulo */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-            {['ALL', 'ORCHESTRATOR', 'INSTAGRAM', 'LINKEDIN', 'WHATSAPP', 'GMAIL', 'TRANSVERSAL'].map((mod) => (
-              <button
-                key={mod}
-                className={`btn--pill ${filterAgentModule === mod ? 'active' : ''}`}
-                onClick={() => setFilterAgentModule(mod)}
-                style={{
-                  fontSize: '0.8rem',
-                  padding: '6px 14px',
-                  borderRadius: 'var(--r-pill)',
-                  border: '1px solid var(--line)',
-                  background: filterAgentModule === mod ? 'var(--blue)' : 'var(--neutral)',
-                  color: filterAgentModule === mod ? '#ffffff' : 'var(--ink)',
-                  cursor: 'pointer',
-                  fontWeight: 500,
-                }}
-              >
-                {mod === 'ALL' && 'Todos los Agentes (26)'}
-                {mod === 'ORCHESTRATOR' && 'Orquestador (M-00)'}
-                {mod === 'INSTAGRAM' && 'Instagram (7)'}
-                {mod === 'LINKEDIN' && 'LinkedIn (7)'}
-                {mod === 'WHATSAPP' && 'WhatsApp (6)'}
-                {mod === 'GMAIL' && 'Gmail (6)'}
-                {mod === 'TRANSVERSAL' && 'Transversales (6)'}
-              </button>
-            ))}
-          </div>
+        <div style={{ marginTop: 20 }}>
+          <div style={{ background: '#FFFFFF', borderRadius: 8, border: '1px solid #E5E7EB', padding: 20 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 6px 0', color: '#111827' }}>
+              Registry de Agentes de IA Especializados ({agentsList.length})
+            </h2>
+            <p style={{ fontSize: 12, color: '#6B7280', margin: '0 0 16px 0' }}>
+              Catálogo formal de agentes que componen el sistema autónomo y asistido de marketing de AIRO Color Lab.
+            </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
-            {agentsList.map((ag) => (
-              <div
-                key={ag.id}
-                className="card"
-                style={{
-                  padding: '18px',
-                  borderRadius: 'var(--r-m)',
-                  border: '1px solid var(--line)',
-                  background: '#ffffff',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <span
-                    className="g-badge"
-                    style={{
-                      background: 'var(--neutral)',
-                      color: 'var(--blue)',
-                      fontWeight: 700,
-                      fontSize: '0.85rem',
-                    }}
-                  >
-                    {ag.id}
-                  </span>
-                  <span
-                    className="g-badge"
-                    style={{
-                      background:
-                        ag.hitl === 0
-                          ? 'rgba(34, 177, 94, 0.12)'
-                          : ag.hitl === 1
-                          ? 'rgba(14, 116, 144, 0.12)'
-                          : ag.hitl === 2
-                          ? 'rgba(180, 83, 9, 0.12)'
-                          : 'rgba(192, 57, 43, 0.12)',
-                      color:
-                        ag.hitl === 0
-                          ? '#15803d'
-                          : ag.hitl === 1
-                          ? 'var(--cyan-ink)'
-                          : ag.hitl === 2
-                          ? '#b45309'
-                          : '#c0392b',
-                      fontSize: '0.72rem',
-                    }}
-                  >
-                    HITL-{ag.hitl} típico
-                  </span>
-                </div>
-
-                <h4 style={{ margin: '0 0 2px', fontSize: '1rem', color: 'var(--ink)' }}>{ag.name}</h4>
-                <div style={{ fontSize: '0.78rem', color: 'var(--cyan-ink)', fontWeight: 600, marginBottom: 8 }}>
-                  {ag.role}
-                </div>
-
-                <p style={{ margin: '0 0 10px', fontSize: '0.82rem', color: 'var(--ink-70)', lineHeight: 1.4 }}>
-                  {ag.responsibility}
-                </p>
-
-                <div style={{ fontSize: '0.76rem', color: 'var(--ink-45)', borderTop: '1px solid var(--line)', paddingTop: 8 }}>
-                  <strong>Output:</strong> {ag.output}
-                </div>
-              </div>
-            ))}
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                <thead>
+                  <tr style={{ background: '#F9FAFB', borderBottom: '1px solid #E5E7EB', color: '#6B7280', textAlign: 'left' }}>
+                    <th style={{ padding: '10px 12px' }}>ID</th>
+                    <th style={{ padding: '10px 12px' }}>Canal / Módulo</th>
+                    <th style={{ padding: '10px 12px' }}>Nombre del Agente</th>
+                    <th style={{ padding: '10px 12px' }}>Rol Operativo</th>
+                    <th style={{ padding: '10px 12px' }}>Responsabilidad</th>
+                    <th style={{ padding: '10px 12px' }}>Nivel HITL</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {agentsList.map((ag) => (
+                    <tr key={ag.id} style={{ borderBottom: '1px solid #F3F4F6' }}>
+                      <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontWeight: 700, color: '#1A4295' }}>
+                        {ag.id}
+                      </td>
+                      <td style={{ padding: '10px 12px', fontWeight: 600 }}>{ag.module}</td>
+                      <td style={{ padding: '10px 12px', fontWeight: 600, color: '#111827' }}>{ag.name}</td>
+                      <td style={{ padding: '10px 12px', color: '#4B5563' }}>{ag.role}</td>
+                      <td style={{ padding: '10px 12px', color: '#374151', maxWidth: 360 }}>{ag.responsibility}</td>
+                      <td style={{ padding: '10px 12px' }}>
+                        <span
+                          style={{
+                            fontSize: 10,
+                            padding: '2px 6px',
+                            borderRadius: 4,
+                            fontWeight: 700,
+                            background: ag.hitl >= 2 ? '#FEF3C7' : '#F3F4F6',
+                            color: ag.hitl >= 2 ? '#92400E' : '#374151',
+                          }}
+                        >
+                          HITL-{ag.hitl}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
 
+      {/* ========================================================
+          MODALES
+          ======================================================== */}
       {/* Modal Decisión HITL */}
-      {modalDecision.open && modalDecision.approval && (
-        <div className="modal-overlay">
-          <div className="modal-dialog" style={{ maxWidth: '520px' }}>
-            <div className="modal-header">
-              <h3 style={{ margin: 0, fontSize: '1.2rem' }}>
-                {modalDecision.decision === 'APPROVED' ? 'Aprobar Paquete para Publicación' : 'Rechazar / Solicitar Ajustes'}
-              </h3>
-              <button
-                className="modal-close"
-                onClick={() => setModalDecision({ open: false, approval: null, decision: 'APPROVED', notes: '' })}
-              >
-                ✕
-              </button>
-            </div>
+      {modalDecision.open && modalDecision.prompt && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+          }}
+        >
+          <div
+            style={{
+              background: '#FFFFFF',
+              borderRadius: 8,
+              padding: 24,
+              maxWidth: 520,
+              width: '90%',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+            }}
+          >
+            <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 10px 0', color: '#111827' }}>
+              {modalDecision.decision === 'APPROVED' ? 'Aprobar Prompt para Producción' : 'Rechazar Prompt / Solicitar Ajustes'}
+            </h3>
+            <p style={{ fontSize: 13, color: '#4B5563', margin: '0 0 14px 0' }}>
+              Prompt: <b>{modalDecision.prompt.titulo}</b> ({modalDecision.prompt.tipo} / {modalDecision.prompt.canal})
+            </p>
 
-            <div className="modal-body" style={{ padding: '20px' }}>
-              <p style={{ fontSize: '0.88rem', margin: '0 0 12px' }}>
-                Estás por emitir una decisión humana sobre <strong>{modalDecision.approval.id}</strong> ({modalDecision.approval.titulo}).
-              </p>
-
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>
-                Observaciones o instrucciones de ejecución (opcional):
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                Observaciones o Justificación de la Decisión
               </label>
               <textarea
-                className="g-input"
-                rows="3"
+                className="gestion-input"
+                rows={3}
                 value={modalDecision.notes}
-                onChange={(e) => setModalDecision((prev) => ({ ...prev, notes: e.target.value }))}
-                placeholder="Ingresá detalles de aprobación o motivo de rechazo..."
-                style={{ width: '100%', fontSize: '0.85rem' }}
+                onChange={(e) => setModalDecision({ ...modalDecision, notes: e.target.value })}
+                placeholder="Ingresá los comentarios que se registrarán en la auditoría..."
               />
             </div>
 
-            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button
                 type="button"
-                className="btn--secondary"
-                onClick={() => setModalDecision({ open: false, approval: null, decision: 'APPROVED', notes: '' })}
+                className="gestion-btn"
+                onClick={() => setModalDecision({ open: false, prompt: null, decision: 'APPROVED', notes: '' })}
               >
                 Cancelar
               </button>
               <button
                 type="button"
-                className={modalDecision.decision === 'APPROVED' ? 'btn--primary' : 'btn--secondary'}
+                className={`gestion-btn ${modalDecision.decision === 'APPROVED' ? 'gestion-btn--primary' : ''}`}
+                style={modalDecision.decision === 'REJECTED' ? { background: '#EF4444', color: '#fff', borderColor: '#EF4444' } : {}}
                 onClick={handleConfirmDecision}
-                style={{
-                  background: modalDecision.decision === 'REJECTED' ? '#c0392b' : undefined,
-                  color: modalDecision.decision === 'REJECTED' ? '#ffffff' : undefined,
-                }}
               >
-                Confirmar {modalDecision.decision === 'APPROVED' ? 'Aprobación' : 'Rechazo'}
+                {modalDecision.decision === 'APPROVED' ? 'Confirmar Aprobación' : 'Confirmar Rechazo'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal Nueva Idea Calendario */}
-      {modalNewIdea.open && (
-        <div className="modal-overlay">
-          <div className="modal-dialog" style={{ maxWidth: '540px' }}>
-            <form onSubmit={handleSaveNewIdea}>
-              <div className="modal-header">
-                <h3 style={{ margin: 0, fontSize: '1.2rem' }}>Proponer Nueva Pieza de Contenido</h3>
-                <button
-                  type="button"
-                  className="modal-close"
-                  onClick={() => setModalNewIdea({ open: false, data: {} })}
-                >
-                  ✕
-                </button>
-              </div>
+      {/* Modal Campaña */}
+      {modalCamp.open && modalCamp.data && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+          }}
+        >
+          <div
+            style={{
+              background: '#FFFFFF',
+              borderRadius: 8,
+              padding: 24,
+              maxWidth: 580,
+              width: '90%',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+            }}
+          >
+            <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 14px 0', color: '#111827' }}>
+              {modalCamp.data.id ? 'Editar Campaña' : 'Nueva Campaña Multicanal'}
+            </h3>
 
-              <div className="modal-body" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <form onSubmit={handleSaveCampaign}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>Canal:</label>
-                  <select
-                    className="g-input"
-                    value={modalNewIdea.data.channel || 'INSTAGRAM'}
-                    onChange={(e) => setModalNewIdea((prev) => ({ ...prev, data: { ...prev.data, channel: e.target.value } }))}
-                    style={{ width: '100%' }}
-                  >
-                    <option value="INSTAGRAM">Instagram</option>
-                    <option value="LINKEDIN">LinkedIn</option>
-                    <option value="WHATSAPP_STATUS">WhatsApp Estados</option>
-                    <option value="EMAIL">Gmail B2B</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>Idea / Ángulo:</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                    Título de la Campaña *
+                  </label>
                   <input
                     type="text"
+                    className="gestion-input"
+                    value={modalCamp.data.titulo}
+                    onChange={(e) => setModalCamp({ ...modalCamp, data: { ...modalCamp.data, titulo: e.target.value } })}
+                    placeholder="ej: Colección Cápsula Eventos Corporativos Q4"
                     required
-                    className="g-input"
-                    value={modalNewIdea.data.idea || ''}
-                    onChange={(e) => setModalNewIdea((prev) => ({ ...prev, data: { ...prev.data, idea: e.target.value } }))}
-                    placeholder="Ej: DTF para tiradas cortas vs serigrafía"
-                    style={{ width: '100%' }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>Objetivo:</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                    Objetivo Principal
+                  </label>
                   <input
                     type="text"
-                    className="g-input"
-                    value={modalNewIdea.data.objective || ''}
-                    onChange={(e) => setModalNewIdea((prev) => ({ ...prev, data: { ...prev.data, objective: e.target.value } }))}
-                    placeholder="Ej: Educar y posicionar asesoramiento técnico"
-                    style={{ width: '100%' }}
+                    className="gestion-input"
+                    value={modalCamp.data.objetivo}
+                    onChange={(e) => setModalCamp({ ...modalCamp, data: { ...modalCamp.data, objetivo: e.target.value } })}
+                    placeholder="ej: Captar 35 cotizaciones de merchandising para fin de año"
                   />
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>Formato:</label>
-                    <input
-                      type="text"
-                      className="g-input"
-                      value={modalNewIdea.data.format || ''}
-                      onChange={(e) => setModalNewIdea((prev) => ({ ...prev, data: { ...prev.data, format: e.target.value } }))}
-                      placeholder="Carrusel 5 slides / Reel / Post"
-                      style={{ width: '100%' }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>Fecha propuesta:</label>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                      Fecha Inicio
+                    </label>
                     <input
                       type="date"
-                      className="g-input"
-                      value={modalNewIdea.data.proposed_date || ''}
-                      onChange={(e) => setModalNewIdea((prev) => ({ ...prev, data: { ...prev.data, proposed_date: e.target.value } }))}
-                      style={{ width: '100%' }}
+                      className="gestion-input"
+                      value={modalCamp.data.fecha_inicio}
+                      onChange={(e) => setModalCamp({ ...modalCamp, data: { ...modalCamp.data, fecha_inicio: e.target.value } })}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                      Fecha Fin
+                    </label>
+                    <input
+                      type="date"
+                      className="gestion-input"
+                      value={modalCamp.data.fecha_fin || ''}
+                      onChange={(e) => setModalCamp({ ...modalCamp, data: { ...modalCamp.data, fecha_fin: e.target.value } })}
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-                <button
-                  type="button"
-                  className="btn--secondary"
-                  onClick={() => setModalNewIdea({ open: false, data: {} })}
-                >
-                  Cancelar
-                </button>
-                <button type="submit" className="btn--primary">
-                  Guardar en Calendario
-                </button>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                      Estado
+                    </label>
+                    <select
+                      className="gestion-input"
+                      value={modalCamp.data.estado}
+                      onChange={(e) => setModalCamp({ ...modalCamp, data: { ...modalCamp.data, estado: e.target.value } })}
+                    >
+                      <option value="PLANIFICADA">Planificada</option>
+                      <option value="ACTIVA">Activa</option>
+                      <option value="COMPLETADA">Completada</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                      KPI Medible
+                    </label>
+                    <input
+                      type="text"
+                      className="gestion-input"
+                      value={modalCamp.data.kpi || ''}
+                      onChange={(e) => setModalCamp({ ...modalCamp, data: { ...modalCamp.data, kpi: e.target.value } })}
+                      placeholder="ej: 30 leads B2B"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                    Notas de Taller / Confección
+                  </label>
+                  <textarea
+                    className="gestion-input"
+                    rows={2}
+                    value={modalCamp.data.notas || ''}
+                    onChange={(e) => setModalCamp({ ...modalCamp, data: { ...modalCamp.data, notas: e.target.value } })}
+                    placeholder="Detalles sobre prendas foco, gramajes, técnicas..."
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 10 }}>
+                  <button type="button" className="gestion-btn" onClick={() => setModalCamp({ open: false, data: null })}>
+                    Cancelar
+                  </button>
+                  <button type="submit" className="gestion-btn gestion-btn--primary">
+                    Guardar Campaña
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Publicación de Campaña */}
+      {modalPub.open && modalPub.data && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+          }}
+        >
+          <div
+            style={{
+              background: '#FFFFFF',
+              borderRadius: 8,
+              padding: 24,
+              maxWidth: 500,
+              width: '90%',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+            }}
+          >
+            <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 14px 0', color: '#111827' }}>
+              {modalPub.data.id ? 'Editar Publicación' : 'Nueva Publicación para la Campaña'}
+            </h3>
+
+            <form onSubmit={handleSavePublicacion}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                    Canal Oficial
+                  </label>
+                  <select
+                    className="gestion-input"
+                    value={modalPub.data.canal}
+                    onChange={(e) => setModalPub({ ...modalPub, data: { ...modalPub.data, canal: e.target.value } })}
+                  >
+                    {MARKETING_CHANNELS.map((ch) => (
+                      <option key={ch.id} value={ch.id}>
+                        {ch.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                    Título / Concepto de la Pieza *
+                  </label>
+                  <input
+                    type="text"
+                    className="gestion-input"
+                    value={modalPub.data.titulo}
+                    onChange={(e) => setModalPub({ ...modalPub, data: { ...modalPub.data, titulo: e.target.value } })}
+                    placeholder="ej: Guía de Welcome Kits Textiles"
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                      Formato
+                    </label>
+                    <input
+                      type="text"
+                      className="gestion-input"
+                      value={modalPub.data.formato}
+                      onChange={(e) => setModalPub({ ...modalPub, data: { ...modalPub.data, formato: e.target.value } })}
+                      placeholder="Carrusel, Reel, Post..."
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                      Fecha Prevista
+                    </label>
+                    <input
+                      type="date"
+                      className="gestion-input"
+                      value={modalPub.data.fecha}
+                      onChange={(e) => setModalPub({ ...modalPub, data: { ...modalPub.data, fecha: e.target.value } })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                    Estado
+                  </label>
+                  <select
+                    className="gestion-input"
+                    value={modalPub.data.estado}
+                    onChange={(e) => setModalPub({ ...modalPub, data: { ...modalPub.data, estado: e.target.value } })}
+                  >
+                    <option value="BORRADOR">Borrador</option>
+                    <option value="PROGRAMADA">Programada</option>
+                    <option value="PUBLICADA">Publicada</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 10 }}>
+                  <button type="button" className="gestion-btn" onClick={() => setModalPub({ open: false, campId: null, data: null })}>
+                    Cancelar
+                  </button>
+                  <button type="submit" className="gestion-btn gestion-btn--primary">
+                    Guardar Publicación
+                  </button>
+                </div>
               </div>
             </form>
           </div>

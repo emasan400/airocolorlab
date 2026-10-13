@@ -38,7 +38,17 @@ export const KEYS = {
   LEADS: `${PREFIX}leads`,
   APPROVALS: `${PREFIX}approvals`,
   EDITORIAL_CALENDAR: `${PREFIX}editorial_calendar`,
+  CAMPAIGNS: `${PREFIX}campaigns`,
+  PROMPTS: `${PREFIX}prompts`,
 };
+
+export const MARKETING_CHANNELS = [
+  { id: 'INSTAGRAM', name: 'Instagram', color: '#E1306C', desc: 'Reels, Carruseles y Stories textiles' },
+  { id: 'WHATSAPP', name: 'WhatsApp', color: '#25D366', desc: 'Mensajería comercial B2B y cotizaciones' },
+  { id: 'LINKEDIN', name: 'LinkedIn', color: '#0A66C2', desc: 'Contenido corporativo y captación B2B' },
+  { id: 'GMAIL', name: 'Gmail', color: '#EA4335', desc: 'Campañas de email marketing B2B' },
+  { id: 'FACEBOOK', name: 'Facebook', color: '#1877F2', desc: 'Comunidad mayorista y catálogo' },
+];
 
 // Canal de sincronización en tiempo real para trabajo colaborativo multi-pestaña / local
 let syncChannel = null;
@@ -224,6 +234,12 @@ export function initializeStorageIfEmpty() {
   }
   if (!localStorage.getItem(KEYS.EDITORIAL_CALENDAR)) {
     setLocal(KEYS.EDITORIAL_CALENDAR, initialEditorialCalendar);
+  }
+  if (!localStorage.getItem(KEYS.CAMPAIGNS)) {
+    setLocal(KEYS.CAMPAIGNS, initialCampaigns);
+  }
+  if (!localStorage.getItem(KEYS.PROMPTS)) {
+    setLocal(KEYS.PROMPTS, initialPrompts);
   }
   if (!localStorage.getItem(KEYS.AUDIT)) {
     setLocal(KEYS.AUDIT, [
@@ -923,6 +939,7 @@ export const ROLES_DEFINICION = [
     badgeClass: 'pill--cat',
     permisos: [
       'productos_rw',
+      'catalogo_rw',
       'materiales_rw',
       'remitos_rw',
       'caja_rw',
@@ -933,7 +950,7 @@ export const ROLES_DEFINICION = [
       'usuarios_rw',
       'config_rw',
     ],
-    modulosPermitidos: ['productos', 'materiales', 'remitos', 'caja', 'kardex', 'contactos', 'crm', 'marketing', 'usuarios', 'configuracion'],
+    modulosPermitidos: ['productos', 'catalogo', 'materiales', 'remitos', 'caja', 'kardex', 'contactos', 'crm', 'marketing', 'usuarios', 'configuracion'],
   },
   {
     id: 'marketing_cm',
@@ -941,8 +958,8 @@ export const ROLES_DEFINICION = [
     descripcion: 'Operación del sistema multiagente, revisión y aprobación de contenidos en cola HITL, calendario editorial y clasificación de consultas para CRM.',
     color: '#00b4d8',
     badgeClass: 'g-badge-brand',
-    permisos: ['marketing_rw', 'crm_rw', 'contactos_r'],
-    modulosPermitidos: ['marketing', 'crm', 'contactos'],
+    permisos: ['marketing_rw', 'catalogo_r', 'crm_rw', 'contactos_r'],
+    modulosPermitidos: ['marketing', 'catalogo', 'crm', 'contactos'],
   },
   {
     id: 'taller_produccion',
@@ -977,8 +994,8 @@ export const ROLES_DEFINICION = [
     descripcion: 'Atención a clientes corporativos, gestión de leads y pipeline comercial CRM, existencias y precios para cotizaciones, y remitos.',
     color: '#7c3aed',
     badgeClass: 'g-badge-info',
-    permisos: ['crm_rw', 'productos_r', 'contactos_rw', 'remitos_r', 'marketing_r'],
-    modulosPermitidos: ['crm', 'productos', 'contactos', 'remitos', 'marketing'],
+    permisos: ['crm_rw', 'catalogo_r', 'productos_r', 'contactos_rw', 'remitos_r', 'marketing_r'],
+    modulosPermitidos: ['crm', 'catalogo', 'productos', 'contactos', 'remitos', 'marketing'],
   },
 ];
 
@@ -1900,6 +1917,169 @@ export const initialEditorialCalendar = [
   },
 ];
 
+export const initialCampaigns = [
+  {
+    id: 'CMP-202610-001',
+    titulo: 'Lanzamiento Línea Eventos & Welcome Kits Corporativos Q4',
+    objetivo: 'Captar directores de marketing y RRHH para pedidos de merchandising y bienvenida de fin de año',
+    canales: ['INSTAGRAM', 'LINKEDIN', 'WHATSAPP', 'GMAIL', 'FACEBOOK'],
+    fecha_inicio: '2026-10-15',
+    fecha_fin: '2026-11-30',
+    estado: 'ACTIVA',
+    kpi: '35 cotizaciones B2B calificadas',
+    notas: 'Priorizar hoodies frisados y remeras peinadas 24/1 con bordado y DTF textil. Mínimo 10 unidades.',
+    publicaciones: [
+      {
+        id: 'PUB-001',
+        canal: 'INSTAGRAM',
+        formato: 'Carrusel 5 slides',
+        fecha: '2026-10-18',
+        titulo: 'Guía de Welcome Kits Textiles que tu equipo realmente usa',
+        estado: 'PROGRAMADA',
+        prompt_ref: 'PRM-202610-001',
+      },
+      {
+        id: 'PUB-002',
+        canal: 'LINKEDIN',
+        formato: 'Post de Opinión / Caso B2B',
+        fecha: '2026-10-21',
+        titulo: 'Por qué la indumentaria corporativa barata termina en el fondo de un cajón',
+        estado: 'BORRADOR',
+        prompt_ref: 'PRM-202610-004',
+      },
+      {
+        id: 'PUB-003',
+        canal: 'WHATSAPP',
+        formato: 'Estado 2 pantallas',
+        fecha: '2026-10-23',
+        titulo: 'Producción activa en taller: tanda corporativa lista para despacho',
+        estado: 'BORRADOR',
+        prompt_ref: null,
+      },
+      {
+        id: 'PUB-004',
+        canal: 'GMAIL',
+        formato: 'Email B2B 1-to-1 a Agencias',
+        fecha: '2026-10-25',
+        titulo: 'Alianza de producción textil para agencias y productoras de eventos',
+        estado: 'BORRADOR',
+        prompt_ref: null,
+      },
+      {
+        id: 'PUB-005',
+        canal: 'FACEBOOK',
+        formato: 'Post Álbum Mayorista',
+        fecha: '2026-10-28',
+        titulo: 'Confección desde 10 unidades: acabados premium para marcas independientes',
+        estado: 'PROGRAMADA',
+        prompt_ref: null,
+      },
+    ],
+  },
+  {
+    id: 'CMP-202610-002',
+    titulo: 'Campaña Técnica DTF Textil vs Sublimación',
+    objetivo: 'Educación y posicionamiento de calidad técnica para reducir fricción en cotizaciones',
+    canales: ['INSTAGRAM', 'LINKEDIN', 'FACEBOOK'],
+    fecha_inicio: '2026-11-01',
+    fecha_fin: '2026-11-20',
+    estado: 'PLANIFICADA',
+    kpi: '20 consultas técnicas derivadas a WhatsApp comercial',
+    notas: 'Enfocado en durabilidad, fidelidad de color y versatilidad de sustratos oscuros.',
+    publicaciones: [],
+  },
+];
+
+export const initialPrompts = [
+  {
+    id: 'PRM-202610-001',
+    campaign_id: 'CMP-202610-001',
+    tipo: 'COPY',
+    canal: 'INSTAGRAM',
+    modelo_destino: 'ChatGPT / Claude / Gemini',
+    titulo: 'Carrusel Welcome Kits Corporativos Q4',
+    prompt_text: `Actuá como Copywriter B2B senior de AIRO Color Lab, estudio de diseño y producción textil en Buenos Aires.
+Escribí el texto para un carrusel de Instagram de 5 slides orientado a responsables de marketing y RRHH sobre "Welcome Kits textiles que tu equipo realmente va a querer usar".
+Reglas estrictas de marca:
+- Tono: español rioplatense profesional con voseo natural y cercano. Sin frases acartonadas.
+- Mensaje central: la indumentaria de calidad genera pertenencia genuina; el merchandising genérico termina olvidado.
+- Datos comerciales: confeccionamos a partir de 10 unidades por modelo (en múltiplos de 10). No des precios cerrados, indicá cotización personalizada según diseño y cantidades.
+- Estructura: Hook potente en slide 1, slides 2 a 4 con claves técnicas (algodón peinado 24/1, costuras reforzadas, DTF textil de alta definición), slide 5 con CTA.
+- CTA: Escribinos por WhatsApp al 11-6355-3443 o ingresá al enlace del perfil para armar tu muestra digital.
+- Incluir 5 hashtags estratégicos B2B locales.`,
+    prompt_negativo: '',
+    estado_aprobacion: 'APPROVED',
+    hitl_level: 2,
+    aprobado_por: 'admin@airocolorlab.com',
+    aprobado_en: '2026-10-13T18:00:00.000Z',
+    observaciones_rechazo: null,
+    creado_por: 'marketing_cm',
+    creado_en: '2026-10-13T16:30:00.000Z',
+    actualizado_en: '2026-10-13T18:00:00.000Z',
+  },
+  {
+    id: 'PRM-202610-002',
+    campaign_id: 'CMP-202610-001',
+    tipo: 'IMAGE',
+    canal: 'INSTAGRAM',
+    modelo_destino: 'Midjourney / Flux / DALL-E',
+    titulo: 'Foto de Estudio Editorial - Hoodie Corporativo Premium',
+    prompt_text: `Commercial editorial product photography of a premium heavyweight black hoodie made of combed cotton fleece, laying flat on a textured concrete and warm wooden studio background. Elegant textile embroidery detail on chest reading "AIRO". Soft natural studio side-lighting, 45 degree angle, shallow depth of field, hyperrealistic texture of textile fibers and clean ribbed cuffs, Hasselblad medium format camera aesthetic, 85mm lens, f/4, crisp focus on stitching and fabric grain, high-end lookbook catalog aesthetic, professional textile workshop atmosphere, balanced shadows, 8k resolution, color palette accents in Pantone deep navy #1A4295 and cyan #00B4D8 --ar 4:5 --style raw --v 6.1`,
+    prompt_negativo: `blurry, low resolution, cheap fabric, synthetic sheen, deformed cuffs, messy background, oversaturated colors, cartoon, 3d render, watermark, text glitches`,
+    estado_aprobacion: 'APPROVED',
+    hitl_level: 2,
+    aprobado_por: 'admin@airocolorlab.com',
+    aprobado_en: '2026-10-13T18:15:00.000Z',
+    observaciones_rechazo: null,
+    creado_por: 'marketing_cm',
+    creado_en: '2026-10-13T17:00:00.000Z',
+    actualizado_en: '2026-10-13T18:15:00.000Z',
+  },
+  {
+    id: 'PRM-202610-003',
+    campaign_id: 'CMP-202610-001',
+    tipo: 'VIDEO',
+    canal: 'INSTAGRAM',
+    modelo_destino: 'Runway / Sora / Kling',
+    titulo: 'Proceso de Estampado DTF Textil en Taller',
+    prompt_text: `Cinematic slow-motion 60fps macro video shot in a modern textile screen printing and DTF studio in Buenos Aires. A professional craftsman carefully peels a transparent DTF film reveal from a navy blue combed cotton t-shirt on a warm heat press platen. The colorful vector logo adheres flawlessly with crisp edges and realistic fabric weave texture. Soft ambient warm workshop light mixed with clean daylight, subtle steam rising, camera moves in a slow smooth dolly tracking left to right, high production value commercial reel aesthetic, 4k resolution, cinematic color grading with rich shadows.`,
+    prompt_negativo: `jerky motion, distorted hands, low quality, artifacting, flicker, blurry focus, amateur video`,
+    estado_aprobacion: 'PENDING',
+    hitl_level: 2,
+    aprobado_por: null,
+    aprobado_en: null,
+    observaciones_rechazo: null,
+    creado_por: 'marketing_cm',
+    creado_en: '2026-10-13T19:00:00.000Z',
+    actualizado_en: '2026-10-13T19:00:00.000Z',
+  },
+  {
+    id: 'PRM-202610-004',
+    campaign_id: 'CMP-202610-001',
+    tipo: 'COPY',
+    canal: 'LINKEDIN',
+    modelo_destino: 'ChatGPT / Claude / Gemini',
+    titulo: 'Post de Liderazgo B2B sobre Calidad Textil',
+    prompt_text: `Actuá como Director Comercial de AIRO Color Lab redactando un post para LinkedIn dirigido a líderes de operaciones, RRHH y directores de agencia.
+Tema: El verdadero costo de elegir merchandising textil de baja calidad para eventos corporativos.
+Tono: Profesional, reflexivo, asertivo, sin tecnicismos excesivos, usando español rioplatense sobrio.
+Puntos clave a incluir:
+1. Las prendas que encogen o pierden color al primer lavado dañan la percepción de la marca empleadora.
+2. La importancia de la trazabilidad textil: corte propio, hilado de primera calidad y asesoramiento directo con taller.
+3. Modelo de trabajo de AIRO: mínimo 10 unidades, escalabilidad a producciones mayores, cotización a medida y tiempos confiables.
+Llamado a la acción: Dejanos un comentario o escribinos por mensaje directo / WhatsApp (wa.me/5491163553443) para solicitar el muestrario físico de tejidos y terminaciones para tu próxima acción de marca.`,
+    prompt_negativo: '',
+    estado_aprobacion: 'PENDING',
+    hitl_level: 2,
+    aprobado_por: null,
+    aprobado_en: null,
+    observaciones_rechazo: null,
+    creado_por: 'marketing_cm',
+    creado_en: '2026-10-13T19:20:00.000Z',
+    actualizado_en: '2026-10-13T19:20:00.000Z',
+  },
+];
+
 export const AGENT_REGISTRY = [
   { id: 'ORC', module: 'ORCHESTRATOR', name: 'AIRO Marketing Orchestrator', role: 'Orquestador General', responsibility: 'Decidir qué hacer, qué agente lo hace, inputs, validaciones, nivel HITL, autorización, registro, medición y aprendizaje.', output: 'Plan de acción + delegación', hitl: 0 },
   { id: 'I-01', module: 'INSTAGRAM', name: 'Content Planner', role: 'Planificador de Contenido', responsibility: 'Planificar contenido: idea, objetivo, audiencia, formato, producto, CTA, KPI, fecha.', output: 'Plan editorial semanal', hitl: 0 },
@@ -1928,6 +2108,9 @@ export const AGENT_REGISTRY = [
   { id: 'G-04', module: 'GMAIL', name: 'Follow-Up Agent', role: 'Seguimiento Respetuoso', responsibility: 'Un único follow-up cordial si no hubo respuesta a una cotización previa.', output: 'Borrador de seguimiento', hitl: 2 },
   { id: 'G-05', module: 'GMAIL', name: 'CRM Agent', role: 'Clasificador de Respuestas', responsibility: 'Clasificar respuestas entrantes (INTERESTED, WON, NOT_NOW) y actualizar CRM.', output: 'Actualización en CRM', hitl: 1 },
   { id: 'G-06', module: 'GMAIL', name: 'Deliverability Guardian', role: 'Guardián de Entregabilidad', responsibility: 'Control de reputación, formato antispam y cumplimiento normativo.', output: 'Veredicto de entrega', hitl: 0 },
+  { id: 'F-01', module: 'FACEBOOK', name: 'Community Post Planner', role: 'Planificador de Publicaciones Mayoristas', responsibility: 'Planificar publicaciones orientadas a comunidades textiles, emprendedores y marcas que buscan producción.', output: 'Plan de publicaciones Facebook', hitl: 0 },
+  { id: 'F-02', module: 'FACEBOOK', name: 'Catalog & Promo Creator', role: 'Creador de Contenido y Catálogo', responsibility: 'Armar copys y piezas visuales destacando catálogo, terminaciones y pedidos mayoristas.', output: 'Borrador de publicación Facebook', hitl: 2 },
+  { id: 'F-03', module: 'FACEBOOK', name: 'Inquiry Responder', role: 'Gestor de Consultas Facebook', responsibility: 'Responder consultas en publicaciones y Messenger derivando a WhatsApp comercial.', output: 'Respuesta asistida Facebook', hitl: 2 },
   { id: 'X-01', module: 'TRANSVERSAL', name: 'Central CRM Agent', role: 'Guardián del CRM Central', responsibility: 'Consolidar canales, aplicar CRM-MATCH-EXPLICIT-IDENTITY y evitar duplicados.', output: 'CRM unificado', hitl: 1 },
   { id: 'X-02', module: 'TRANSVERSAL', name: 'Analytics Agent', role: 'Analista de Rendimiento', responsibility: 'Informes de cotizaciones, conversión de leads y métricas de contenido.', output: 'Reportes periódicos', hitl: 0 },
   { id: 'X-03', module: 'TRANSVERSAL', name: 'Content QA Agent', role: 'Control de Calidad de Contenido', responsibility: 'Validar tono voseo, regla de mínimo 10, ortografía, ausencia de precios inventados.', output: 'PASS / FAIL con feedback', hitl: 0 },
@@ -2071,6 +2254,268 @@ export function resetEditorialCalendar() {
   return initialEditorialCalendar;
 }
 
+// ============================================================
+// ORGANIZADOR DE CAMPAÑAS MULTICANAL (5 CANALES OFICIALES)
+// ============================================================
+export function getCampaigns(filtroEstado = 'ALL') {
+  const list = getLocal(KEYS.CAMPAIGNS, initialCampaigns);
+  if (filtroEstado === 'ALL') return list;
+  return list.filter((c) => c.estado === filtroEstado);
+}
+
+export function getCampaignById(id) {
+  const list = getCampaigns();
+  return list.find((c) => c.id === id) || null;
+}
+
+export function saveCampaign(campData, actor = null) {
+  const operador = actor || getOperadorActual();
+  const list = getCampaigns();
+  const nowIso = new Date().toISOString();
+  let saved = null;
+  const isNew = !campData.id;
+
+  if (isNew) {
+    saved = {
+      ...campData,
+      id: `CMP-${Date.now()}`,
+      estado: campData.estado || 'PLANIFICADA',
+      canales: Array.isArray(campData.canales) && campData.canales.length > 0 ? campData.canales : ['INSTAGRAM', 'WHATSAPP', 'LINKEDIN', 'GMAIL', 'FACEBOOK'],
+      publicaciones: Array.isArray(campData.publicaciones) ? campData.publicaciones : [],
+      creado_por: operador,
+      creado_en: nowIso,
+      actualizado_en: nowIso,
+    };
+    list.unshift(saved);
+  } else {
+    const idx = list.findIndex((c) => c.id === campData.id);
+    if (idx === -1) throw new Error('Campaña no encontrada');
+    saved = {
+      ...list[idx],
+      ...campData,
+      actualizado_en: nowIso,
+    };
+    list[idx] = saved;
+  }
+
+  setLocal(KEYS.CAMPAIGNS, list);
+  broadcastUpdate('CAMPAIGNS_UPDATED', list);
+
+  logAudit(
+    operador,
+    isNew ? 'CAMPAIGN_CREATED' : 'CAMPAIGN_UPDATED',
+    'MARKETING_CAMPAIGNS',
+    `Campaña ${isNew ? 'creada' : 'actualizada'}: "${saved.titulo}" (${saved.estado})`,
+    'SUCCESS'
+  );
+
+  return saved;
+}
+
+export function deleteCampaign(id, actor = null) {
+  const operador = actor || getOperadorActual();
+  const list = getCampaigns();
+  const target = list.find((c) => c.id === id);
+  if (!target) throw new Error('Campaña no encontrada');
+
+  const filtered = list.filter((c) => c.id !== id);
+  setLocal(KEYS.CAMPAIGNS, filtered);
+  broadcastUpdate('CAMPAIGNS_UPDATED', filtered);
+
+  logAudit(
+    operador,
+    'CAMPAIGN_DELETED',
+    'MARKETING_CAMPAIGNS',
+    `Campaña eliminada: "${target.titulo}" (${target.id})`,
+    'SUCCESS'
+  );
+
+  return true;
+}
+
+// ============================================================
+// GENERADOR & APROBACIÓN HITL DE PROMPTS PARA IAS PARALELAS
+// (La aprobación afecta exclusivamente a la creación/modificación de prompts)
+// ============================================================
+export function getPrompts(filtroEstado = 'ALL', filtroTipo = 'ALL', filtroCanal = 'ALL') {
+  let list = getLocal(KEYS.PROMPTS, initialPrompts);
+  if (filtroEstado !== 'ALL') {
+    list = list.filter((p) => p.estado_aprobacion === filtroEstado);
+  }
+  if (filtroTipo !== 'ALL') {
+    list = list.filter((p) => p.tipo === filtroTipo);
+  }
+  if (filtroCanal !== 'ALL') {
+    list = list.filter((p) => p.canal === filtroCanal);
+  }
+  return list;
+}
+
+export function getPromptById(id) {
+  const list = getPrompts();
+  return list.find((p) => p.id === id) || null;
+}
+
+export function savePrompt(promptData, actor = null) {
+  const operador = actor || getOperadorActual();
+  const list = getPrompts();
+  const nowIso = new Date().toISOString();
+  let saved = null;
+  const isNew = !promptData.id;
+
+  if (isNew) {
+    saved = {
+      ...promptData,
+      id: `PRM-${Date.now()}`,
+      tipo: promptData.tipo || 'COPY',
+      canal: promptData.canal || 'INSTAGRAM',
+      modelo_destino: promptData.modelo_destino || (promptData.tipo === 'IMAGE' ? 'Midjourney / Flux / DALL-E' : promptData.tipo === 'VIDEO' ? 'Runway / Sora / Kling' : 'ChatGPT / Claude / Gemini'),
+      estado_aprobacion: 'PENDING', // REGLA: Toda creación nace en PENDING para HITL
+      hitl_level: 2,
+      creado_por: operador,
+      creado_en: nowIso,
+      actualizado_en: nowIso,
+      aprobado_por: null,
+      aprobado_en: null,
+      observaciones_rechazo: null,
+    };
+    list.unshift(saved);
+  } else {
+    const idx = list.findIndex((p) => p.id === promptData.id);
+    if (idx === -1) throw new Error('Prompt no encontrado');
+    // REGLA: Toda modificación revoca la aprobación y pasa a PENDING para HITL
+    saved = {
+      ...list[idx],
+      ...promptData,
+      estado_aprobacion: 'PENDING',
+      actualizado_en: nowIso,
+      aprobado_por: null,
+      aprobado_en: null,
+      observaciones_rechazo: null,
+    };
+    list[idx] = saved;
+  }
+
+  setLocal(KEYS.PROMPTS, list);
+  broadcastUpdate('PROMPTS_UPDATED', list);
+
+  logAudit(
+    operador,
+    isNew ? 'PROMPT_CREATED' : 'PROMPT_MODIFIED',
+    'MARKETING_PROMPTS',
+    `Prompt ${isNew ? 'creado' : 'modificado'} en estado PENDING para revisión humana: "${saved.titulo}" (${saved.tipo} / ${saved.canal})`,
+    'SUCCESS'
+  );
+
+  return saved;
+}
+
+export function deletePrompt(id, actor = null) {
+  const operador = actor || getOperadorActual();
+  const list = getPrompts();
+  const target = list.find((p) => p.id === id);
+  if (!target) throw new Error('Prompt no encontrado');
+
+  const filtered = list.filter((p) => p.id !== id);
+  setLocal(KEYS.PROMPTS, filtered);
+  broadcastUpdate('PROMPTS_UPDATED', filtered);
+
+  logAudit(
+    operador,
+    'PROMPT_DELETED',
+    'MARKETING_PROMPTS',
+    `Prompt eliminado: "${target.titulo}" (${target.id})`,
+    'SUCCESS'
+  );
+
+  return true;
+}
+
+export function decidePromptApproval(promptId, decision, comments = '', actor = null) {
+  const operador = actor || getOperadorActual();
+  const list = getPrompts();
+  const idx = list.findIndex((p) => p.id === promptId);
+  if (idx === -1) throw new Error('Prompt no encontrado');
+
+  const nowIso = new Date().toISOString();
+  const isApproved = decision === 'APPROVED';
+
+  list[idx].estado_aprobacion = isApproved ? 'APPROVED' : 'REJECTED';
+  list[idx].aprobado_por = operador;
+  list[idx].aprobado_en = nowIso;
+  list[idx].observaciones_rechazo = isApproved ? null : (comments || 'Ajustes requeridos antes de producción');
+  list[idx].actualizado_en = nowIso;
+
+  setLocal(KEYS.PROMPTS, list);
+  broadcastUpdate('PROMPTS_UPDATED', list);
+
+  logAudit(
+    operador,
+    isApproved ? 'PROMPT_APPROVED' : 'PROMPT_REJECTED',
+    'MARKETING_PROMPTS',
+    `Prompt ${isApproved ? 'aprobado' : 'rechazado'} por ${operador}: "${list[idx].titulo}" (${list[idx].tipo}). ${comments ? `Obs: ${comments}` : ''}`,
+    'SUCCESS'
+  );
+
+  return list[idx];
+}
+
+export function generateAiPrompt({ tipo, canal, objetivo, producto, audience, detalleExtra, modeloDestino }) {
+  const t = tipo || 'COPY';
+  const c = canal || 'INSTAGRAM';
+  const prod = producto || 'Indumentaria textil personalizada (remeras, buzos, tote bags)';
+  const obj = objetivo || 'Generar consultas comerciales B2B y posicionar calidad de taller';
+  const aud = audience || 'Empresas, productoras de eventos, agencias de marketing y marcas de indumentaria';
+  const extra = detalleExtra ? detalleExtra.trim() : '';
+
+  if (t === 'COPY') {
+    const channelFormatDesc = {
+      INSTAGRAM: 'Carrusel de 5 slides o post con hook visual impactante, desarrollo técnico en bullets y llamada a la acción clara.',
+      WHATSAPP: 'Guión para Estado de 2 pantallas verticales o mensaje comercial conciso y directo.',
+      LINKEDIN: 'Publicación B2B reflexiva sobre cultura de empresa, durabilidad de prendas corporativas y retorno de inversión.',
+      GMAIL: 'Asunto atractivo de alta apertura y cuerpo de correo 1-to-1 cordial, profesional y personalizado.',
+      FACEBOOK: 'Posteo para comunidad de marcas y empresas destacando opciones de catálogo, técnicas y cotizaciones.',
+    }[c] || 'Posteo optimizado para canal B2B.';
+
+    return {
+      titulo: `Copy ${c}: ${prod.slice(0, 30)}`,
+      prompt_text: `Actuá como Copywriter B2B senior para AIRO Color Lab (estudio textil y de personalización en Buenos Aires).
+Generá una propuesta de copy de alta conversión para ${c} con las siguientes especificaciones:
+- Objetivo de la pieza: ${obj}
+- Producto / Servicio: ${prod}
+- Audiencia target: ${aud}
+${extra ? `- Contexto / Requerimiento adicional: ${extra}\n` : ''}- Formato del canal: ${channelFormatDesc}
+
+Reglas innegociables de marca AIRO:
+1. Voz y tono: español rioplatense profesional con voseo natural y cercano (usá "tenés", "podés", "escribinos", "consultanos").
+2. No inventar precios ni promociones ficticias. Toda cotización se elabora a medida según volumen y técnica.
+3. Condiciones comerciales: confección mínima de 10 unidades por modelo (en múltiplos de 10). Plazo de respuesta menor a 24 horas hábiles.
+4. CTA prioritario: WhatsApp oficial al 11-6355-3443 (wa.me/5491163553443).
+5. Incluir 3 a 5 hashtags pertinentes del sector B2B textil argentino.`,
+      prompt_negativo: '',
+      modelo_destino: modeloDestino || 'ChatGPT / Claude / Gemini',
+    };
+  }
+
+  if (t === 'IMAGE') {
+    const ratio = c === 'INSTAGRAM' ? '4:5' : c === 'LINKEDIN' ? '16:9' : '1:1';
+    return {
+      titulo: `Foto Editorial: ${prod.slice(0, 30)} - Estudio AIRO`,
+      prompt_text: `Commercial editorial product photography of ${prod}, impeccably finished with high-precision textile craftsmanship (clean DTF print transfer or dense embroidery), presented in a minimalist Buenos Aires textile design studio setting. Warm polished concrete and textured natural oak wood surface, soft diffused studio window light from the side, subtle realistic fabric texture showing combed cotton weave and reinforced seams. Subtle color accents in Pantone deep navy #1A4295 and vivid cyan #00B4D8, high-end lookbook catalog aesthetic, shot on Hasselblad 50C, 90mm lens, f/4, crisp focus on garment craftsmanship, neutral background, balanced atmospheric shadows, 8k resolution, raw photography --ar ${ratio} --style raw --v 6.1 ${extra ? `// context: ${extra}` : ''}`,
+      prompt_negativo: `blurry, cheap fabric, synthetic shiny polyester, deformed stitching, distorted logos, cartoon, 3d CGI render, oversaturated, messy workshop, low quality, artifacting, watermarks, generic stock photo`,
+      modelo_destino: modeloDestino || 'Midjourney / Flux / DALL-E',
+    };
+  }
+
+  // VIDEO
+  return {
+    titulo: `Toma Cinemática Taller: ${prod.slice(0, 30)}`,
+    prompt_text: `Cinematic 4k commercial video b-roll shot in a modern textile laboratory and apparel workshop. Close-up macro tracking shot of ${prod} being crafted: showing the precise application of heat-transfer DTF or precision embroidery machine needle creating intricate stitch patterns. Warm studio ambient lighting combined with crisp clean fill light. Slow smooth camera movement from right to left, realistic fabric texture, natural tactile feel, shallow depth of field with soft bokeh background. Cinematic color grading, 60fps slow-motion feel, high production value lookbook aesthetic ${extra ? `// context: ${extra}` : ''}`,
+    prompt_negativo: `fast jerky motion, distorted hands, amateur phone camera, low bitrate, artifacts, unrealistic CGI, muddy colors, bad lighting`,
+    modelo_destino: modeloDestino || 'Runway / Sora / Kling',
+  };
+}
+
 export function getAgentRegistry() {
   return AGENT_REGISTRY;
 }
@@ -2158,7 +2603,11 @@ export function classifyAndGenerateCmResponse(messageText, channel = 'WHATSAPP')
     proposedResponse = `¡Hola! Qué bueno que nos contactes. Producimos ${detectedProduct.toLowerCase()} con estampas de alta durabilidad (DTF, sublimación y bordado) a partir de 10 unidades. Para pasarte un presupuesto exacto y plazos de entrega, escribinos directamente por WhatsApp: wa.me/5491163553443 contándonos si ya tenés el diseño listo, y te respondemos en menos de 24 h hábiles.`;
   }
 
-  const agentId = channel === 'INSTAGRAM' ? 'I-06' : channel === 'LINKEDIN' ? 'L-06' : 'W-03';
+  const agentId = channel === 'INSTAGRAM' ? 'I-06'
+    : channel === 'LINKEDIN' ? 'L-06'
+    : channel === 'FACEBOOK' ? 'F-03'
+    : channel === 'GMAIL' ? 'G-05'
+    : 'W-03';
 
   return {
     category,

@@ -89,9 +89,9 @@ function LiveAdmin() {
               <a
                 href="#/gestion"
                 className="admin-btn"
-                style={{ background: '#00b4d8', borderColor: '#00b4d8', color: '#fff', fontWeight: 'bold' }}
+                style={{ background: '#1A4295', borderColor: '#1A4295', color: '#fff', fontWeight: 'bold' }}
               >
-                ⚡ Inventario, Remitos & Caja
+                Panel de Gestión & Catálogo
               </a>
             </div>
             <a href="#/" className="admin-btn">← Ver sitio</a>

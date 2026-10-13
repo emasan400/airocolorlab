@@ -492,4 +492,107 @@ test('Marketing B2B — Sistema Multiagente, HITL Approvals, Calendario y Asiste
   assert.equal(leadResMerge.lead.lead_id, leadRes.lead.lead_id);
 });
 
+test('Marketing B2B — 5 Canales Oficiales, Campañas Multicanal y Generador de Prompts con HITL Exclusivo', () => {
+  // 1. Canales Oficiales
+  const channels = storage.MARKETING_CHANNELS;
+  assert.equal(channels.length, 5, 'Deben ser exactamente 5 canales oficiales');
+  const channelIds = channels.map((c) => c.id);
+  assert.ok(channelIds.includes('INSTAGRAM'));
+  assert.ok(channelIds.includes('WHATSAPP'));
+  assert.ok(channelIds.includes('LINKEDIN'));
+  assert.ok(channelIds.includes('GMAIL'));
+  assert.ok(channelIds.includes('FACEBOOK'));
+
+  // 2. Agentes de Facebook en el Registry
+  const agents = storage.getAgentRegistry();
+  const f01 = agents.find((a) => a.id === 'F-01');
+  const f02 = agents.find((a) => a.id === 'F-02');
+  const f03 = agents.find((a) => a.id === 'F-03');
+  assert.ok(f01, 'Debe existir el agente F-01');
+  assert.ok(f02, 'Debe existir el agente F-02');
+  assert.ok(f03, 'Debe existir el agente F-03');
+  assert.equal(f01.module, 'FACEBOOK');
+
+  // 3. Organizador de Campañas: Creación, lectura y edición
+  const initialCamps = storage.getCampaigns();
+  assert.ok(initialCamps.length >= 2, 'Debe haber campañas iniciales');
+
+  const newCamp = storage.saveCampaign({
+    titulo: 'Campaña Corporativa Fin de Año 2026',
+    objetivo: 'Captar pedidos de welcome kits para empresas',
+    canales: ['INSTAGRAM', 'LINKEDIN', 'WHATSAPP', 'GMAIL', 'FACEBOOK'],
+    fecha_inicio: '2026-11-01',
+    fecha_fin: '2026-12-15',
+    estado: 'PLANIFICADA',
+    kpi: '40 cotizaciones B2B',
+  });
+  assert.ok(newCamp.id.startsWith('CMP-'));
+  assert.equal(newCamp.titulo, 'Campaña Corporativa Fin de Año 2026');
+
+  // 4. Generador de Prompts para IAs Paralelas
+  const promptCopy = storage.generateAiPrompt({
+    tipo: 'COPY',
+    canal: 'INSTAGRAM',
+    producto: 'Buzos friza con estampa DTF',
+    objetivo: 'Lanzamiento de temporada',
+    audience: 'Marcas y productoras',
+  });
+  assert.ok(promptCopy.prompt_text.includes('voseo'));
+  assert.ok(promptCopy.prompt_text.includes('10 unidades'));
+  assert.ok(promptCopy.prompt_text.includes('WhatsApp'));
+  assert.ok(promptCopy.prompt_text.includes('11-6355-3443'));
+
+  const promptImg = storage.generateAiPrompt({
+    tipo: 'IMAGE',
+    canal: 'INSTAGRAM',
+    producto: 'Hoodie negro peinado con bordado',
+  });
+  assert.ok(promptImg.prompt_text.includes('Hasselblad'));
+  assert.ok(promptImg.prompt_text.includes('#1A4295'));
+  assert.ok(promptImg.prompt_negativo.includes('blurry'));
+
+  const promptVid = storage.generateAiPrompt({
+    tipo: 'VIDEO',
+    canal: 'INSTAGRAM',
+    producto: 'Remeras técnicas',
+  });
+  assert.ok(promptVid.prompt_text.includes('Cinematic 4k'));
+
+  // 5. Flujo de Aprobación HITL Exclusivo para Prompts
+  // A: Crear nuevo prompt -> debe entrar SIEMPRE en PENDING
+  const createdPrompt = storage.savePrompt({
+    campaign_id: newCamp.id,
+    tipo: 'COPY',
+    canal: 'LINKEDIN',
+    titulo: 'Post Liderazgo Calidad Textil',
+    prompt_text: promptCopy.prompt_text,
+  });
+  assert.ok(createdPrompt.id.startsWith('PRM-'));
+  assert.equal(createdPrompt.estado_aprobacion, 'PENDING', 'Todo prompt nuevo debe nacer en PENDING para HITL');
+  assert.equal(createdPrompt.hitl_level, 2);
+
+  // B: Decisión HITL -> Aprobar prompt
+  const approvedPrompt = storage.decidePromptApproval(createdPrompt.id, 'APPROVED', 'Revisado y validado');
+  assert.equal(approvedPrompt.estado_aprobacion, 'APPROVED');
+  assert.equal(approvedPrompt.aprobado_por, storage.getOperadorActual());
+
+  // C: Modificación de prompt aprobado -> vuelve automáticamente a PENDING
+  const modifiedPrompt = storage.savePrompt({
+    ...approvedPrompt,
+    titulo: 'Post Liderazgo Calidad Textil (Revisión v2)',
+    prompt_text: promptCopy.prompt_text + '\nExtra: agregar mención a hilado 24/1.',
+  });
+  assert.equal(modifiedPrompt.estado_aprobacion, 'PENDING', 'La modificación de un prompt revoca su aprobación y exige re-validación HITL');
+
+  // D: Rechazo HITL
+  const rejectedPrompt = storage.decidePromptApproval(modifiedPrompt.id, 'REJECTED', 'Ajustar llamada a la acción');
+  assert.equal(rejectedPrompt.estado_aprobacion, 'REJECTED');
+  assert.equal(rejectedPrompt.observaciones_rechazo, 'Ajustar llamada a la acción');
+
+  // 6. Eliminar campaña y verificar integridad
+  const delRes = storage.deleteCampaign(newCamp.id);
+  assert.equal(delRes, true);
+});
+
+
 

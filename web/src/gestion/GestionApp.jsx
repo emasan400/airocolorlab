@@ -31,10 +31,12 @@ import {
   IconSettings,
   IconKey,
   IconLogout,
+  IconStore,
 } from './components/Icons';
 
 import GestionAuthGuard from './components/GestionAuthGuard';
 import InventarioProductos from './components/InventarioProductos';
+import CatalogoWebModule from './components/CatalogoWebModule';
 import InventarioMateriales from './components/InventarioMateriales';
 import RemitosModule from './components/RemitosModule';
 import FlujoCajaModule from './components/FlujoCajaModule';
@@ -110,7 +112,7 @@ function GestionAppInner({ session, onSignOut }) {
   // Protección de navegación RBAC: redirigir si no tiene permiso
   useEffect(() => {
     if (activeTab !== 'perfil' && !isModuloPermitido(currentRol, activeTab)) {
-      const modulos = ['productos', 'materiales', 'remitos', 'caja', 'kardex', 'contactos', 'crm', 'marketing'];
+      const modulos = ['productos', 'catalogo', 'materiales', 'remitos', 'caja', 'kardex', 'contactos', 'crm', 'marketing'];
       const primerPermitido = modulos.find((k) => isModuloPermitido(currentRol, k)) || 'perfil';
       setActiveTab(primerPermitido);
     }
@@ -191,6 +193,21 @@ function GestionAppInner({ session, onSignOut }) {
               </div>
               <span className="gestion-tab-badge">
                 {prods.length} {prodsAlert > 0 ? `(${prodsAlert} alertas)` : ''}
+              </span>
+            </button>
+          )}
+
+          {(isAdmin || isModuloPermitido(currentRol, 'catalogo')) && (
+            <button
+              className={`gestion-sidebar-item ${activeTab === 'catalogo' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('catalogo'); setSidebarOpen(false); }}
+            >
+              <div className="gestion-sidebar-item-left">
+                <div className="gestion-sidebar-item-icon"><IconStore /></div>
+                <span>Catálogo Tienda Online</span>
+              </div>
+              <span className="gestion-tab-badge" style={{ background: 'rgba(0, 180, 216, 0.16)', color: '#007799' }}>
+                Web
               </span>
             </button>
           )}
@@ -433,14 +450,16 @@ function GestionAppInner({ session, onSignOut }) {
                       <IconKey size={16} />
                       <span>Configurar Contraseña & 2FA</span>
                     </button>
-                    <a
-                      href="#/admin"
+                    <button
                       className="gestion-user-dropdown-link"
-                      onClick={() => setUserDropdownOpen(false)}
+                      onClick={() => {
+                        setActiveTab('catalogo');
+                        setUserDropdownOpen(false);
+                      }}
                     >
-                      <IconFile size={16} />
-                      <span>Administrador de Catálogo</span>
-                    </a>
+                      <IconStore size={16} />
+                      <span>Catálogo Tienda Online</span>
+                    </button>
                   </div>
 
                   <button
@@ -464,6 +483,10 @@ function GestionAppInner({ session, onSignOut }) {
       <main className="gestion-main">
         {activeTab === 'productos' && (
           <InventarioProductos onStockChange={triggerRefresh} />
+        )}
+
+        {activeTab === 'catalogo' && (
+          <CatalogoWebModule onContentChanged={triggerRefresh} />
         )}
 
         {activeTab === 'materiales' && (
