@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase, supabaseEnabled } from '../../lib/supabase.js';
-import { setOperadorActual } from '../services/storageService.js';
+import { setOperadorActual, getUsuarios } from '../services/storageService.js';
 
 // Inactividad máxima permitida antes de auto-cerrar sesión (30 minutos)
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
@@ -181,18 +181,39 @@ function SecureAdminLogin({ onSuccess, idleLockedMessage }) {
         setFailedAttempts(0);
         onSuccess(data.session);
       } else {
-        // Modo local sin Supabase: autenticación con clave maestra de taller
-        // Clave por defecto para entorno offline controlado
-        if (password === 'AiroTaller2026!' || password.length >= 8) {
+        // Modo local sin Supabase: autenticación contra la tabla de usuarios registrados
+        const usuarios = getUsuarios();
+        const userMatch = usuarios.find(
+          (u) => u.email.toLowerCase() === cleanEmail && u.activo
+        );
+
+        let passwordOk = false;
+        if (userMatch) {
+          passwordOk = userMatch.password ? userMatch.password === password : password.length >= 8;
+        } else {
+          // Si no está registrado aún pero ingresa con la clave maestra de taller
+          passwordOk = password === 'AiroTaller2026!' || (cleanEmail.includes('admin') && password.length >= 8);
+        }
+
+        if (passwordOk) {
+          const userObj = userMatch || {
+            email: cleanEmail || 'admin@airocolorlab.com',
+            nombre: cleanEmail.split('@')[0],
+            rol: 'admin',
+          };
           const mockSession = {
-            user: { email: cleanEmail || 'admin@airocolorlab.com', role: 'authenticated' },
+            user: {
+              email: userObj.email,
+              role: 'authenticated',
+              user_metadata: { rol: userObj.rol, nombre: userObj.nombre },
+            },
             token: 'local-session-token-' + Date.now(),
           };
           sessionStorage.setItem('airo_auth_session', JSON.stringify(mockSession));
           sessionStorage.removeItem('airo_login_fails');
           onSuccess(mockSession);
         } else {
-          handleAuthFailure('Contraseña no autorizada para el entorno local.');
+          handleAuthFailure('Contraseña incorrecta o usuario no habilitado.');
         }
       }
     } catch (err) {

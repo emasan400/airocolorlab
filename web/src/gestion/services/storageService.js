@@ -34,6 +34,7 @@ const KEYS = {
   MOVIMIENTOS: `${PREFIX}movimientos`,
   AUDIT: `${PREFIX}audit_log`,
   OPERADOR: `${PREFIX}operador_actual`,
+  USUARIOS: `${PREFIX}usuarios`,
 };
 
 // Canal de sincronización en tiempo real para trabajo colaborativo multi-pestaña / local
@@ -101,6 +102,20 @@ export function initializeStorageIfEmpty() {
   }
   if (!localStorage.getItem(KEYS.OPERADOR)) {
     setLocal(KEYS.OPERADOR, 'Admin AIRO (Taller Central)');
+  }
+  if (!localStorage.getItem(KEYS.USUARIOS)) {
+    setLocal(KEYS.USUARIOS, [
+      {
+        id: 'usr-admin-01',
+        email: 'admin@airocolorlab.com',
+        nombre: 'Administrador Principal AIRO',
+        rol: 'admin',
+        activo: true,
+        fecha_creacion: new Date().toISOString(),
+        ultimo_ingreso: new Date().toISOString(),
+        password: 'AiroTaller2026!',
+      },
+    ]);
   }
   if (!localStorage.getItem(KEYS.AUDIT)) {
     setLocal(KEYS.AUDIT, [
@@ -730,7 +745,7 @@ export function deleteProveedor(id) {
 // ============================================================
 export function exportarBackupCompleto() {
   const data = {
-    version: '1.0',
+    version: '1.1',
     export_date: new Date().toISOString(),
     empresa: 'AIRO COLOR LAB.',
     productos: getProductos(),
@@ -740,6 +755,7 @@ export function exportarBackupCompleto() {
     remitos: getRemitos(),
     flujo_caja: getFlujoCaja(),
     movimientos: getMovimientos(),
+    usuarios: getUsuarios().map((u) => ({ ...u, password: '***' })),
     audit_log: getAuditLogs(),
   };
   return JSON.stringify(data, null, 2);
@@ -758,15 +774,276 @@ export function importarBackupCompleto(jsonString) {
     if (Array.isArray(data.remitos)) setLocal(KEYS.REMITOS, data.remitos);
     if (Array.isArray(data.flujo_caja)) setLocal(KEYS.FLUJO_CAJA, data.flujo_caja);
     if (Array.isArray(data.movimientos)) setLocal(KEYS.MOVIMIENTOS, data.movimientos);
+    if (Array.isArray(data.usuarios)) {
+      // Preservar passwords existentes si el backup viene sanitizado con '***'
+      const actuales = getUsuarios();
+      const restaurados = data.usuarios.map((nu) => {
+        const coincidente = actuales.find((a) => a.id === nu.id || a.email === nu.email);
+        return {
+          ...nu,
+          password: nu.password === '***' && coincidente ? coincidente.password : nu.password,
+        };
+      });
+      setLocal(KEYS.USUARIOS, restaurados);
+    }
+    if (Array.isArray(data.audit_log)) setLocal(KEYS.AUDIT, data.audit_log);
 
-    const operador = getOperadorActual();
-    logAudit(operador, 'IMPORTAR_BACKUP', 'SISTEMA', `Restaurado respaldo completo del ${data.export_date || 'archivo'}`);
-    broadcastUpdate('BACKUP_RESTORED', null);
+    logAudit(getOperadorActual(), 'IMPORTAR_BACKUP', 'CONFIGURACION', 'Restauración completa de base de datos desde archivo JSON');
+    broadcastUpdate('FULL_DATA_RELOADED', null);
     return true;
-  } catch (e) {
-    console.error('Error importando backup:', e);
-    throw e;
+  } catch (err) {
+    throw new Error('Error al importar JSON: ' + err.message);
   }
+}
+
+// ============================================================
+// 8. MATRIZ DE ROLES Y CONTROL DE USUARIOS (RBAC)
+// ============================================================
+
+export const ROLES_DEFINICION = [
+  {
+    id: 'admin',
+    nombre: 'Administrador General',
+    descripcion: 'Control total de la plataforma: inventario, remitos, caja, auditoría, configuración y gestión de usuarios.',
+    color: '#1a4295',
+    badgeClass: 'pill--cat',
+    permisos: [
+      'productos_rw',
+      'materiales_rw',
+      'remitos_rw',
+      'caja_rw',
+      'kardex_r',
+      'contactos_rw',
+      'usuarios_rw',
+      'config_rw',
+    ],
+    modulosPermitidos: ['productos', 'materiales', 'remitos', 'caja', 'kardex', 'contactos', 'usuarios', 'configuracion'],
+  },
+  {
+    id: 'taller_produccion',
+    nombre: 'Operador de Taller & Producción',
+    descripcion: 'Control y ajustes físicos de stock de prendas, insumos textiles, bobinas, films DTF, tintas y kardex de taller.',
+    color: '#15803d',
+    badgeClass: 'g-badge-success',
+    permisos: ['productos_rw', 'materiales_rw', 'kardex_r'],
+    modulosPermitidos: ['productos', 'materiales', 'kardex'],
+  },
+  {
+    id: 'logistica_despacho',
+    nombre: 'Encargado de Logística & Envíos',
+    descripcion: 'Confección de remitos oficiales tipo R, asignación de bultos, impresión, despacho y recepción de firmas de entrega.',
+    color: '#0e7490',
+    badgeClass: 'g-badge-brand',
+    permisos: ['remitos_rw', 'productos_r', 'contactos_r', 'kardex_r'],
+    modulosPermitidos: ['remitos', 'productos', 'contactos', 'kardex'],
+  },
+  {
+    id: 'finanzas_caja',
+    nombre: 'Tesorería, Caja & Facturación',
+    descripcion: 'Controlador de flujo de caja, registro de cobros, pagos a talleres/proveedores, balances y consulta de remitos emitidos.',
+    color: '#b45309',
+    badgeClass: 'g-badge-warning',
+    permisos: ['caja_rw', 'remitos_r', 'contactos_rw'],
+    modulosPermitidos: ['caja', 'remitos', 'contactos'],
+  },
+  {
+    id: 'comercial_ventas',
+    nombre: 'Asesor Comercial B2B',
+    descripcion: 'Atención a clientes corporativos, consulta de existencias y precios para cotizaciones, y seguimiento de remitos.',
+    color: '#7c3aed',
+    badgeClass: 'g-badge-info',
+    permisos: ['productos_r', 'contactos_rw', 'remitos_r'],
+    modulosPermitidos: ['productos', 'contactos', 'remitos'],
+  },
+];
+
+export function getUsuarios() {
+  const users = getLocal(KEYS.USUARIOS, []);
+  if (!users || users.length === 0) {
+    const adminDefault = [
+      {
+        id: 'usr-admin-01',
+        email: 'admin@airocolorlab.com',
+        nombre: 'Administrador Principal AIRO',
+        rol: 'admin',
+        activo: true,
+        fecha_creacion: new Date().toISOString(),
+        ultimo_ingreso: new Date().toISOString(),
+        password: 'AiroTaller2026!',
+      },
+    ];
+    setLocal(KEYS.USUARIOS, adminDefault);
+    return adminDefault;
+  }
+  return users;
+}
+
+export function getUsuarioPorEmail(email) {
+  if (!email) return null;
+  const list = getUsuarios();
+  const found = list.find((u) => u.email.toLowerCase() === email.toLowerCase());
+  if (found) return found;
+
+  // Si no está registrado pero es admin de sistema por email
+  if (email.toLowerCase().includes('admin') || list.length === 0) {
+    return {
+      id: 'usr-temp-admin',
+      email,
+      nombre: email.split('@')[0],
+      rol: 'admin',
+      activo: true,
+    };
+  }
+
+  // Operador estándar fallback
+  return {
+    id: 'usr-temp-fallback',
+    email,
+    nombre: email.split('@')[0],
+    rol: 'taller_produccion',
+    activo: true,
+  };
+}
+
+export function saveUsuario(usuarioData) {
+  const list = getUsuarios();
+  const operador = getOperadorActual();
+  const cleanEmail = (usuarioData.email || '').trim().toLowerCase();
+
+  if (!cleanEmail) throw new Error('El correo electrónico es requerido');
+  if (!usuarioData.nombre?.trim()) throw new Error('El nombre de colaborador es requerido');
+
+  let saved;
+  if (usuarioData.id) {
+    const idx = list.findIndex((u) => u.id === usuarioData.id);
+    if (idx === -1) throw new Error('Usuario no encontrado');
+
+    // Validar duplicado de email
+    const duplicate = list.find((u) => u.id !== usuarioData.id && u.email.toLowerCase() === cleanEmail);
+    if (duplicate) throw new Error('Ya existe otro usuario registrado con ese correo electrónico.');
+
+    saved = {
+      ...list[idx],
+      ...usuarioData,
+      email: cleanEmail,
+      nombre: usuarioData.nombre.trim(),
+      rol: usuarioData.rol || list[idx].rol || 'taller_produccion',
+      activo: usuarioData.activo !== undefined ? !!usuarioData.activo : list[idx].activo,
+      fecha_actualizacion: new Date().toISOString(),
+    };
+    if (usuarioData.password && usuarioData.password.trim().length >= 8) {
+      saved.password = usuarioData.password.trim();
+    }
+    list[idx] = saved;
+    logAudit(operador, 'EDITAR_USUARIO', 'SEGURIDAD', `Editado usuario ${saved.email} (Rol: ${saved.rol})`);
+  } else {
+    // Alta
+    const duplicate = list.find((u) => u.email.toLowerCase() === cleanEmail);
+    if (duplicate) throw new Error('Ya existe un usuario con ese correo electrónico.');
+
+    if (!usuarioData.password || usuarioData.password.trim().length < 8) {
+      throw new Error('La contraseña debe tener al menos 8 caracteres.');
+    }
+
+    saved = {
+      id: `usr-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      email: cleanEmail,
+      nombre: usuarioData.nombre.trim(),
+      rol: usuarioData.rol || 'taller_produccion',
+      activo: true,
+      password: usuarioData.password.trim(),
+      fecha_creacion: new Date().toISOString(),
+      ultimo_ingreso: null,
+    };
+    list.push(saved);
+    logAudit(operador, 'CREAR_USUARIO', 'SEGURIDAD', `Alta de colaborador ${saved.email} con rol ${saved.rol}`);
+  }
+
+  setLocal(KEYS.USUARIOS, list);
+  broadcastUpdate('USUARIOS_UPDATED', list);
+  return saved;
+}
+
+export function deleteUsuario(id) {
+  const list = getUsuarios();
+  const operador = getOperadorActual();
+  const target = list.find((u) => u.id === id);
+  if (!target) return false;
+
+  // Proteger: nunca eliminar el último administrador del sistema
+  const admins = list.filter((u) => u.rol === 'admin' && u.activo);
+  if (target.rol === 'admin' && admins.length <= 1) {
+    throw new Error('No se puede eliminar el único Administrador General activo del sistema.');
+  }
+
+  const filtered = list.filter((u) => u.id !== id);
+  setLocal(KEYS.USUARIOS, filtered);
+  logAudit(operador, 'ELIMINAR_USUARIO', 'SEGURIDAD', `Eliminado colaborador ${target.email}`);
+  broadcastUpdate('USUARIOS_UPDATED', filtered);
+  return true;
+}
+
+export async function cambiarPasswordUsuario(userIdOrEmail, passwordActual, passwordNueva) {
+  const list = getUsuarios();
+  const cleanId = String(userIdOrEmail || '').trim().toLowerCase();
+
+  const userIdx = list.findIndex(
+    (u) => u.id === userIdOrEmail || u.email.toLowerCase() === cleanId
+  );
+  if (userIdx === -1) {
+    throw new Error('Usuario no encontrado en la base de cuentas.');
+  }
+
+  const target = list[userIdx];
+
+  // Si se solicita verificar la actual (self-service)
+  if (passwordActual !== null && passwordActual !== undefined) {
+    if (target.password && target.password !== passwordActual) {
+      throw new Error('La contraseña actual ingresada es incorrecta.');
+    }
+  }
+
+  if (!passwordNueva || passwordNueva.trim().length < 8) {
+    throw new Error('La nueva contraseña debe tener al menos 8 caracteres.');
+  }
+
+  // Si Supabase está disponible y el usuario coincide con la sesión
+  if (supabase) {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session?.user?.email?.toLowerCase() === target.email.toLowerCase()) {
+        await supabase.auth.updateUser({ password: passwordNueva.trim() });
+      }
+    } catch {
+      // Continuar con actualización local si Supabase auth falla o no está sincronizado
+    }
+  }
+
+  target.password = passwordNueva.trim();
+  target.fecha_cambio_password = new Date().toISOString();
+  list[userIdx] = target;
+
+  setLocal(KEYS.USUARIOS, list);
+  logAudit(
+    target.email,
+    'CAMBIO_PASSWORD',
+    'SEGURIDAD',
+    `Contraseña actualizada para la cuenta ${target.email}`
+  );
+  broadcastUpdate('USUARIOS_UPDATED', list);
+
+  return { ok: true, message: 'Contraseña actualizada con éxito.' };
+}
+
+export function adminResetPassword(userId, nuevaPassword) {
+  return cambiarPasswordUsuario(userId, null, nuevaPassword);
+}
+
+export function isModuloPermitido(rolId, moduloId) {
+  if (!rolId || rolId === 'admin') return true;
+  const def = ROLES_DEFINICION.find((r) => r.id === rolId);
+  if (!def) return false;
+  return def.modulosPermitidos.includes(moduloId);
 }
 
 export function restablecerDatosIniciales() {

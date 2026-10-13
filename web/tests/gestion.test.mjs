@@ -202,3 +202,81 @@ test('Auditoría de Seguridad: No exposición pública y blindaje RLS', async ()
   assert.ok(sqlContent.includes('api_keys_integraciones'), 'Debe existir tabla para interfaces de sistemas externos');
 });
 
+test('Matriz de Roles y Gestión de Usuarios (RBAC)', () => {
+  const users = storage.getUsuarios();
+  assert.ok(users.length >= 1, 'Debe existir al menos el usuario admin inicial');
+  assert.equal(users[0].rol, 'admin', 'El usuario inicial debe ser admin');
+
+  // Crear colaborador de taller
+  const operarioTaller = storage.saveUsuario({
+    nombre: 'Martín Taller Textil',
+    email: 'taller.dtf@airocolorlab.com',
+    rol: 'taller_produccion',
+    password: 'PasswordTaller123!',
+  });
+  assert.ok(operarioTaller.id);
+  assert.equal(operarioTaller.rol, 'taller_produccion');
+
+  // Validar permisos según matriz
+  assert.equal(storage.isModuloPermitido(operarioTaller.rol, 'materiales'), true, 'Taller debe acceder a insumos');
+  assert.equal(storage.isModuloPermitido(operarioTaller.rol, 'caja'), false, 'Taller NO debe acceder a caja');
+
+  // Crear colaboradora de finanzas
+  const tesorera = storage.saveUsuario({
+    nombre: 'Carolina Tesorería',
+    email: 'caja@airocolorlab.com',
+    rol: 'finanzas_caja',
+    password: 'PasswordCaja456!',
+  });
+  assert.equal(storage.isModuloPermitido(tesorera.rol, 'caja'), true, 'Finanzas debe acceder a caja');
+  assert.equal(storage.isModuloPermitido(tesorera.rol, 'materiales'), false, 'Finanzas NO debe acceder a materiales');
+
+  // Intentar eliminar el único admin -> debe arrojar error
+  const adminUser = users.find((u) => u.rol === 'admin');
+  assert.throws(
+    () => storage.deleteUsuario(adminUser.id),
+    /No se puede eliminar el único Administrador General/,
+    'Debe proteger la existencia de al menos un administrador'
+  );
+
+  // Eliminar usuario no-admin
+  const eliminado = storage.deleteUsuario(operarioTaller.id);
+  assert.equal(eliminado, true);
+});
+
+test('Cambio y Reseteo Seguro de Contraseña', async () => {
+  // Crear usuario de prueba
+  const testUser = storage.saveUsuario({
+    nombre: 'Usuario Prueba Password',
+    email: 'test.pwd@airocolorlab.com',
+    rol: 'logistica_despacho',
+    password: 'PasswordInicial123!',
+  });
+
+  // 1. Cambio con contraseña actual errónea -> debe fallar
+  await assert.rejects(
+    async () => storage.cambiarPasswordUsuario(testUser.id, 'ClaveIncorrecta', 'NuevaClaveSegura2026!'),
+    /incorrecta/,
+    'Debe validar la contraseña actual'
+  );
+
+  // 2. Cambio con contraseña menor a 8 caracteres -> debe fallar
+  await assert.rejects(
+    async () => storage.cambiarPasswordUsuario(testUser.id, 'PasswordInicial123!', 'corta'),
+    /al menos 8 caracteres/,
+    'Debe exigir mínimo 8 caracteres'
+  );
+
+  // 3. Cambio correcto self-service
+  const res = await storage.cambiarPasswordUsuario(testUser.id, 'PasswordInicial123!', 'NuevaClaveSegura2026!');
+  assert.ok(res.ok);
+
+  const actualizado = storage.getUsuarioPorEmail('test.pwd@airocolorlab.com');
+  assert.equal(actualizado.password, 'NuevaClaveSegura2026!');
+
+  // 4. Reseteo administrativo (sin requerir la anterior)
+  await storage.adminResetPassword(testUser.id, 'ResetPorAdmin888!');
+  const reseteado = storage.getUsuarioPorEmail('test.pwd@airocolorlab.com');
+  assert.equal(reseteado.password, 'ResetPorAdmin888!');
+});
+
