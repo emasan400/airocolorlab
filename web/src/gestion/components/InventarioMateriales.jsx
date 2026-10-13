@@ -155,6 +155,16 @@ export default function InventarioMateriales({ onStockChange }) {
 
   return (
     <div>
+      <div className="gestion-module-header">
+        <div className="section-eyebrow">
+          <span className="num">02</span> Materias Primas & Taller
+        </div>
+        <h2 className="display section-title">Insumos y materiales.</h2>
+        <p className="section-sub">
+          Control de telas, hilados, films DTF, tintas y avíos consumibles para producción textil.
+        </p>
+      </div>
+
       {/* KPIs Insumos */}
       <div className="gestion-kpis">
         <div className="gestion-kpi-card">

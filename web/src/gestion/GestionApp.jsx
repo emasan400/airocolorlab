@@ -83,9 +83,11 @@ function GestionAppInner({ session, onSignOut }) {
               </svg>
             </div>
             <div className="gestion-brand-text">
-              <h1>AIRO COLOR LAB.</h1>
+              <h1>
+                AIRO COLOR LAB.<span className="dot" />
+              </h1>
               <div className="gestion-brand-tagline">
-                Sistema Operativo de Gestión B2B · Inventario, Remitos & Caja
+                Estudio Textil · Sistema de Gestión B2B
               </div>
             </div>
           </a>
@@ -99,82 +101,104 @@ function GestionAppInner({ session, onSignOut }) {
               Catálogo / Leads
             </a>
             <a href="#/" className="gestion-btn-header-back" title="Ver sitio público">
-              Sitio Web
+              ← Ver sitio
             </a>
             <button
               className="gestion-btn-header-logout"
               onClick={() => onSignOut()}
               title="Cerrar sesión segura de administrador"
             >
-              🔒 Salir
+              Salir
             </button>
           </div>
         </div>
       </header>
 
-      {/* Tabs de Navegación Principal */}
+      {/* Tabs de Navegación Principal con formato de filtros del Catálogo */}
       <nav className="gestion-nav-tabs" aria-label="Secciones de gestión">
         <div className="gestion-nav-tabs-inner">
-          <button
-            className={`gestion-tab-btn ${activeTab === 'productos' ? 'active' : ''}`}
-            onClick={() => setActiveTab('productos')}
-          >
-            📦 Productos en Stock
-            <span className="gestion-tab-badge">
-              {prods.length} {prodsAlert > 0 ? `(${prodsAlert} ⚠️)` : ''}
-            </span>
-          </button>
+          <div className="gestion-tabs-pill-container" role="tablist">
+            <button
+              role="tab"
+              aria-selected={activeTab === 'productos'}
+              className={`gestion-tab-btn ${activeTab === 'productos' ? 'active' : ''}`}
+              onClick={() => setActiveTab('productos')}
+            >
+              📦 Productos en Stock
+              <span className="gestion-tab-badge">
+                {prods.length} {prodsAlert > 0 ? `(${prodsAlert} ⚠️)` : ''}
+              </span>
+            </button>
 
-          <button
-            className={`gestion-tab-btn ${activeTab === 'materiales' ? 'active' : ''}`}
-            onClick={() => setActiveTab('materiales')}
-          >
-            🧵 Insumos & Materiales
-            <span className="gestion-tab-badge">
-              {mats.length} {matsAlert > 0 ? `(${matsAlert} ⚠️)` : ''}
-            </span>
-          </button>
+            <button
+              role="tab"
+              aria-selected={activeTab === 'materiales'}
+              className={`gestion-tab-btn ${activeTab === 'materiales' ? 'active' : ''}`}
+              onClick={() => setActiveTab('materiales')}
+            >
+              🧵 Insumos & Materiales
+              <span className="gestion-tab-badge">
+                {mats.length} {matsAlert > 0 ? `(${matsAlert} ⚠️)` : ''}
+              </span>
+            </button>
 
-          <button
-            className={`gestion-tab-btn ${activeTab === 'remitos' ? 'active' : ''}`}
-            onClick={() => setActiveTab('remitos')}
-          >
-            📄 Confección de Remitos
-            <span className="gestion-tab-badge">
-              {rems.length} {remsPendientes > 0 ? `(${remsPendientes} despachados)` : ''}
-            </span>
-          </button>
+            <button
+              role="tab"
+              aria-selected={activeTab === 'remitos'}
+              className={`gestion-tab-btn ${activeTab === 'remitos' ? 'active' : ''}`}
+              onClick={() => setActiveTab('remitos')}
+            >
+              📄 Confección de Remitos
+              <span className="gestion-tab-badge">
+                {rems.length} {remsPendientes > 0 ? `(${remsPendientes} desp.)` : ''}
+              </span>
+            </button>
 
-          <button
-            className={`gestion-tab-btn ${activeTab === 'caja' ? 'active' : ''}`}
-            onClick={() => setActiveTab('caja')}
-          >
-            💰 Flujo de Caja
-            <span className="gestion-tab-badge" style={{ background: balanceCaja >= 0 ? '#10b981' : '#ef4444', color: '#fff' }}>
-              ${balanceCaja.toLocaleString('es-AR')}
-            </span>
-          </button>
+            <button
+              role="tab"
+              aria-selected={activeTab === 'caja'}
+              className={`gestion-tab-btn ${activeTab === 'caja' ? 'active' : ''}`}
+              onClick={() => setActiveTab('caja')}
+            >
+              💰 Flujo de Caja
+              <span
+                className="gestion-tab-badge"
+                style={{
+                  background: balanceCaja >= 0 ? 'rgba(34, 177, 94, 0.16)' : 'rgba(192, 57, 43, 0.16)',
+                  color: balanceCaja >= 0 ? '#178a48' : '#c0392b',
+                }}
+              >
+                ${balanceCaja.toLocaleString('es-AR')}
+              </span>
+            </button>
 
-          <button
-            className={`gestion-tab-btn ${activeTab === 'kardex' ? 'active' : ''}`}
-            onClick={() => setActiveTab('kardex')}
-          >
-            📊 Movimientos (Kardex)
-          </button>
+            <button
+              role="tab"
+              aria-selected={activeTab === 'kardex'}
+              className={`gestion-tab-btn ${activeTab === 'kardex' ? 'active' : ''}`}
+              onClick={() => setActiveTab('kardex')}
+            >
+              📊 Kardex
+            </button>
 
-          <button
-            className={`gestion-tab-btn ${activeTab === 'contactos' ? 'active' : ''}`}
-            onClick={() => setActiveTab('contactos')}
-          >
-            👥 Clientes & Proveedores
-          </button>
+            <button
+              role="tab"
+              aria-selected={activeTab === 'contactos'}
+              className={`gestion-tab-btn ${activeTab === 'contactos' ? 'active' : ''}`}
+              onClick={() => setActiveTab('contactos')}
+            >
+              👥 Contactos B2B
+            </button>
 
-          <button
-            className={`gestion-tab-btn ${activeTab === 'configuracion' ? 'active' : ''}`}
-            onClick={() => setActiveTab('configuracion')}
-          >
-            ⚙️ Equipo & Sincronización
-          </button>
+            <button
+              role="tab"
+              aria-selected={activeTab === 'configuracion'}
+              className={`gestion-tab-btn ${activeTab === 'configuracion' ? 'active' : ''}`}
+              onClick={() => setActiveTab('configuracion')}
+            >
+              ⚙️ Sincronización
+            </button>
+          </div>
         </div>
       </nav>
 

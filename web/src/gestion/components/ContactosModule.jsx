@@ -88,6 +88,16 @@ export default function ContactosModule() {
 
   return (
     <div>
+      <div className="gestion-module-header">
+        <div className="section-eyebrow">
+          <span className="num">06</span> Relaciones Comerciales
+        </div>
+        <h2 className="display section-title">Clientes y proveedores.</h2>
+        <p className="section-sub">
+          Base unificada de cuentas B2B, datos fiscales y contacto directo para remitos y compras.
+        </p>
+      </div>
+
       <div className="gestion-control-bar">
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button

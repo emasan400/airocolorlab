@@ -18,6 +18,16 @@ export default function MovimientosKardex() {
 
   return (
     <div>
+      <div className="gestion-module-header">
+        <div className="section-eyebrow">
+          <span className="num">05</span> Trazabilidad & Auditoría
+        </div>
+        <h2 className="display section-title">Kardex de movimientos.</h2>
+        <p className="section-sub">
+          Registro inmutable y cronológico de todas las entradas, salidas y ajustes de stock.
+        </p>
+      </div>
+
       <div className="gestion-control-bar">
         <div className="gestion-search-box">
           <input

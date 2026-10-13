@@ -148,6 +148,16 @@ export default function InventarioProductos({ onStockChange }) {
 
   return (
     <div>
+      <div className="gestion-module-header">
+        <div className="section-eyebrow">
+          <span className="num">01</span> Inventario & Catálogo
+        </div>
+        <h2 className="display section-title">Productos en stock.</h2>
+        <p className="section-sub">
+          Control de existencias físicas, reservas por pedido y valorización de inventario terminado.
+        </p>
+      </div>
+
       {/* KPIs */}
       <div className="gestion-kpis">
         <div className="gestion-kpi-card">

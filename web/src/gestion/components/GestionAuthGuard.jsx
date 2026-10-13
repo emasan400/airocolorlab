@@ -235,8 +235,10 @@ function SecureAdminLogin({ onSuccess, idleLockedMessage }) {
               <circle cx="50" cy="50" r="10" fill="#00b4d8" />
             </svg>
           </div>
-          <h2>AIRO COLOR LAB.</h2>
-          <p className="auth-subtitle">Acceso Protegido · Sistema de Gestión B2B</p>
+          <h2 className="display" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+            AIRO COLOR LAB.<span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--cyan)', display: 'inline-block' }} />
+          </h2>
+          <p className="auth-subtitle">Estudio Textil · Acceso al Sistema de Gestión B2B</p>
           <div className="auth-security-badge">🔒 Conexión Cifrada SSL & Auth Seguro</div>
         </div>
 

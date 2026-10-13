@@ -81,6 +81,16 @@ export default function ConfiguracionModule({ onDataReload }) {
 
   return (
     <div>
+      <div className="gestion-module-header">
+        <div className="section-eyebrow">
+          <span className="num">07</span> Sistema & Respaldo
+        </div>
+        <h2 className="display section-title">Equipo y sincronización.</h2>
+        <p className="section-sub">
+          Operador en turno, backups JSON inmutables, base de datos en la nube y auditoría.
+        </p>
+      </div>
+
       <div className="gestion-kpis">
         <div className="gestion-kpi-card">
           <div className="gestion-kpi-label">Operador en Turno</div>

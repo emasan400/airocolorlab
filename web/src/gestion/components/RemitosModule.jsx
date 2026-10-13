@@ -238,6 +238,16 @@ export default function RemitosModule({ onRemitoEmitted }) {
 
   return (
     <div>
+      <div className="gestion-module-header">
+        <div className="section-eyebrow">
+          <span className="num">03</span> Logística & Despachos
+        </div>
+        <h2 className="display section-title">Confección de remitos.</h2>
+        <p className="section-sub">
+          Emisión de remitos oficiales correlativos tipo R con trazabilidad y descuento de inventario.
+        </p>
+      </div>
+
       {/* KPIs Remitos */}
       <div className="gestion-kpis">
         <div className="gestion-kpi-card">

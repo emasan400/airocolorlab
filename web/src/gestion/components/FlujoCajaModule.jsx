@@ -185,6 +185,16 @@ export default function FlujoCajaModule({ onCajaUpdated }) {
 
   return (
     <div>
+      <div className="gestion-module-header">
+        <div className="section-eyebrow">
+          <span className="num">04</span> Tesorería & Finanzas
+        </div>
+        <h2 className="display section-title">Controlador de flujo de caja.</h2>
+        <p className="section-sub">
+          Seguimiento de cobros de clientes, pagos a proveedores y balance de caja en tiempo real.
+        </p>
+      </div>
+
       {/* KPIs Financieros */}
       <div className="gestion-kpis">
         <div className={`gestion-kpi-card ${balanceNetoCaja >= 0 ? 'kpi-success' : 'kpi-danger'}`}>
