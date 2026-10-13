@@ -13,6 +13,7 @@ import {
   getOperadorActual,
 } from '../services/storageService';
 import { fetchLeadsDb } from '../../lib/db';
+import { IconSearch, IconEdit, IconTrash, IconRefresh } from './Icons';
 
 export default function CrmModule({ onLeadChanged }) {
   const [leads, setLeads] = useState([]);
@@ -71,13 +72,13 @@ export default function CrmModule({ onLeadChanged }) {
 
   // Columnas Kanban
   const kanbanColumns = [
-    { id: 'NEW', title: '📥 Nuevos', statuses: ['NEW'] },
-    { id: 'QUALIFIED', title: '🎯 Calificados', statuses: ['QUALIFIED'] },
-    { id: 'IN_CONVERSATION', title: '💬 En Contacto', statuses: ['CONTACTED', 'ENGAGED'] },
-    { id: 'QUOTATION', title: '📋 En Cotización', statuses: ['QUOTATION'] },
-    { id: 'NEGOTIATION', title: '🤝 Negociación', statuses: ['NEGOTIATION'] },
-    { id: 'WON', title: '✅ Ganados', statuses: ['WON'] },
-    { id: 'CLOSED_OTHER', title: '⏸️ Nutrición / Perdidos', statuses: ['NURTURE', 'LOST', 'REACTIVATION'] },
+    { id: 'NEW', title: 'Nuevos', statuses: ['NEW'] },
+    { id: 'QUALIFIED', title: 'Calificados', statuses: ['QUALIFIED'] },
+    { id: 'IN_CONVERSATION', title: 'En Contacto', statuses: ['CONTACTED', 'ENGAGED'] },
+    { id: 'QUOTATION', title: 'En Cotización', statuses: ['QUOTATION'] },
+    { id: 'NEGOTIATION', title: 'Negociación', statuses: ['NEGOTIATION'] },
+    { id: 'WON', title: 'Ganados', statuses: ['WON'] },
+    { id: 'CLOSED_OTHER', title: 'Nutrición / Perdidos', statuses: ['NURTURE', 'LOST', 'REACTIVATION'] },
   ];
 
   // Detectar posible duplicado en el formulario
@@ -237,14 +238,14 @@ export default function CrmModule({ onLeadChanged }) {
               onClick={() => setViewMode('kanban')}
               style={{ fontSize: '0.85rem', padding: '6px 14px' }}
             >
-              📊 Tablero Pipeline
+              Tablero Pipeline
             </button>
             <button
               className={`gestion-btn ${viewMode === 'table' ? 'gestion-btn-primary' : 'gestion-btn-outline'}`}
               onClick={() => setViewMode('table')}
               style={{ fontSize: '0.85rem', padding: '6px 14px' }}
             >
-              📋 Vista Lista
+              Vista Lista
             </button>
           </div>
 
@@ -253,8 +254,10 @@ export default function CrmModule({ onLeadChanged }) {
             onClick={handleSincronizarCotizaciones}
             disabled={isSyncing}
             title="Importar cotizaciones entrantes del catálogo web"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            {isSyncing ? '⏳ Sincronizando...' : '📥 Sincronizar Cotizaciones Web'}
+            <IconRefresh size={14} />
+            {isSyncing ? 'Sincronizando...' : 'Sincronizar Cotizaciones Web'}
           </button>
 
           <button className="gestion-btn gestion-btn-primary" onClick={handleOpenNuevo}>
@@ -331,10 +334,10 @@ export default function CrmModule({ onLeadChanged }) {
             <label className="g-form-label" style={{ marginBottom: '4px', display: 'block' }}>Calificación de Scoring</label>
             <select className="gestion-select" value={filterScore} onChange={(e) => setFilterScore(e.target.value)}>
               <option value="ALL">Todos los scores</option>
-              <option value="HOT">🔥 Hot (80 - 100)</option>
-              <option value="QUALIFIED">🎯 Calificado (60 - 79)</option>
-              <option value="NURTURE">🌱 Nutrición (30 - 59)</option>
-              <option value="LOW">❄️ Frío (0 - 29)</option>
+              <option value="HOT">Hot (80 - 100)</option>
+              <option value="QUALIFIED">Calificado (60 - 79)</option>
+              <option value="NURTURE">Nutrición (30 - 59)</option>
+              <option value="LOW">Frío (0 - 29)</option>
             </select>
           </div>
         </div>
@@ -359,7 +362,7 @@ export default function CrmModule({ onLeadChanged }) {
                     colLeads.map((lead) => {
                       const scoreNum = Number(lead.score) || 0;
                       const scoreBadge =
-                        scoreNum >= 80 ? '🔥 Hot' : scoreNum >= 60 ? '🎯 Calificado' : scoreNum >= 30 ? '🌱 Nurture' : '❄️ Frío';
+                        scoreNum >= 80 ? 'Hot' : scoreNum >= 60 ? 'Calificado' : scoreNum >= 30 ? 'Nutrición' : 'Frío';
                       const scoreClass =
                         scoreNum >= 80 ? 'g-badge-danger' : scoreNum >= 60 ? 'g-badge-info' : 'g-badge-neutral';
 
@@ -378,7 +381,7 @@ export default function CrmModule({ onLeadChanged }) {
 
                           {lead.company && lead.contact && lead.company !== lead.contact && (
                             <div style={{ fontSize: '0.8rem', color: 'var(--ink-45)', marginBottom: '6px' }}>
-                              👤 {lead.contact}
+                              {lead.contact}
                             </div>
                           )}
 
@@ -398,7 +401,7 @@ export default function CrmModule({ onLeadChanged }) {
                                 className="g-badge g-badge-success"
                                 style={{ fontSize: '0.72rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                               >
-                                💬 WA: {lead.phone}
+                                WA: {lead.phone}
                               </a>
                             )}
                             {lead.channel && (
@@ -410,7 +413,7 @@ export default function CrmModule({ onLeadChanged }) {
 
                           {lead.next_action && (
                             <div style={{ fontSize: '0.78rem', color: '#b45309', background: 'rgba(217, 119, 6, 0.08)', padding: '4px 8px', borderRadius: '6px', marginBottom: '10px' }}>
-                              ⏳ {lead.next_action}
+                              Próx. paso: {lead.next_action}
                             </div>
                           )}
 
@@ -421,15 +424,17 @@ export default function CrmModule({ onLeadChanged }) {
                                 className="gestion-btn-table-action"
                                 onClick={() => setModalDetail({ open: true, lead })}
                                 title="Ver ficha e historial"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
                               >
-                                🔍 Ficha
+                                <IconSearch size={13} /> Ficha
                               </button>
                               <button
                                 className="gestion-btn-table-action"
                                 onClick={() => handleOpenEditar(lead)}
                                 title="Editar datos"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
                               >
-                                ✏️
+                                <IconEdit size={13} /> Editar
                               </button>
                             </div>
 
@@ -499,7 +504,7 @@ export default function CrmModule({ onLeadChanged }) {
                           {lead.phone && (
                             <div>
                               <a href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" style={{ color: '#15803d', textDecoration: 'none' }}>
-                                💬 {lead.phone}
+                                {lead.phone}
                               </a>
                             </div>
                           )}
@@ -529,14 +534,14 @@ export default function CrmModule({ onLeadChanged }) {
                             onClick={() => setModalDetail({ open: true, lead })}
                             title="Ver ficha completa"
                           >
-                            🔍
+                            <IconSearch size={14} />
                           </button>
                           <button
                             className="gestion-btn-table-action"
                             onClick={() => handleOpenEditar(lead)}
                             title="Modificar lead"
                           >
-                            ✏️
+                            <IconEdit size={14} />
                           </button>
                           <button
                             className="gestion-btn-table-action"
@@ -544,7 +549,7 @@ export default function CrmModule({ onLeadChanged }) {
                             onClick={() => handleEliminarLead(lead)}
                             title="Eliminar lead"
                           >
-                            🗑️
+                            <IconTrash size={14} />
                           </button>
                         </td>
                       </tr>
@@ -572,7 +577,7 @@ export default function CrmModule({ onLeadChanged }) {
               <div className="gestion-modal-body">
                 {duplicateWarning && (
                   <div style={{ marginBottom: '16px', padding: '12px 16px', borderRadius: 'var(--r-m)', background: 'rgba(217, 119, 6, 0.1)', color: '#b45309', border: '1px solid rgba(217, 119, 6, 0.3)', fontSize: '0.85rem' }}>
-                    ⚠️ {duplicateWarning}
+                    <strong>Aviso:</strong> {duplicateWarning}
                   </div>
                 )}
 
@@ -744,7 +749,7 @@ export default function CrmModule({ onLeadChanged }) {
                   <span style={{ fontSize: '0.75rem', color: 'var(--ink-45)', display: 'block' }}>WhatsApp</span>
                   {modalDetail.lead.phone ? (
                     <a href={`https://wa.me/${modalDetail.lead.phone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" style={{ color: '#15803d', fontWeight: 600 }}>
-                      💬 {modalDetail.lead.phone}
+                      {modalDetail.lead.phone}
                     </a>
                   ) : '—'}
                 </div>
@@ -766,7 +771,7 @@ export default function CrmModule({ onLeadChanged }) {
               {modalDetail.lead.carrito && (
                 <div style={{ marginBottom: '20px', padding: '14px', borderRadius: 'var(--r-m)', background: 'rgba(26, 66, 149, 0.05)', border: '1px solid rgba(26, 66, 149, 0.15)' }}>
                   <strong style={{ fontSize: '0.85rem', color: 'var(--blue)', display: 'block', marginBottom: '6px' }}>
-                    🛒 Solicitud de Cotización recibida del Catálogo Web:
+                    Solicitud de Cotización recibida del Catálogo Web:
                   </strong>
                   <pre style={{ margin: 0, fontSize: '0.8rem', whiteSpace: 'pre-wrap', fontFamily: 'inherit', color: 'var(--ink)' }}>
                     {modalDetail.lead.carrito}

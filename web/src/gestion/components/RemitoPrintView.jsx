@@ -1,3 +1,5 @@
+import { IconPrinter } from './Icons';
+
 export default function RemitoPrintView({ remito, onVolver }) {
   if (!remito) return null;
 
@@ -8,8 +10,8 @@ export default function RemitoPrintView({ remito, onVolver }) {
           ← Volver a la lista de Remitos
         </button>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button className="g-btn g-btn-primary" onClick={() => window.print()}>
-            🖨️ Imprimir / Guardar PDF
+          <button className="g-btn g-btn-primary" onClick={() => window.print()} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <IconPrinter size={15} /> Imprimir / Guardar PDF
           </button>
         </div>
       </div>

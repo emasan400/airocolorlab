@@ -1704,7 +1704,7 @@ export const initialApprovals = [
         idea: 'Pedidos desde 10 unidades, sin mínimos de fábrica',
         slides: [
           'Pantalla 1: ¿Sabías que podés personalizar indumentaria con tu marca desde solo 10 unidades? Sin mínimos de fábrica. Sin vueltas.',
-          'Pantalla 2: Contanos qué necesitás → te cotizamos en menos de 24 h hábiles. Escribinos por acá mismo 👉 wa.me/5491163553443',
+          'Pantalla 2: Contanos qué necesitás → te cotizamos en menos de 24 h hábiles. Escribinos por acá mismo: wa.me/5491163553443',
         ],
         caption: 'Estados para WhatsApp B2B',
         cta: 'wa.me/5491163553443',
@@ -1746,7 +1746,7 @@ export const initialApprovals = [
         idea: 'Indumentaria desde 10 unidades',
         slides: [
           'Pantalla 1: ¿Sabías que podés personalizar indumentaria con tu marca desde solo 10 unidades? Sin mínimos de fábrica. Sin vueltas.',
-          'Pantalla 2: Contanos qué necesitás → te cotizamos en menos de 24 h hábiles. Escribinos por acá mismo 👉 wa.me/5491163553443',
+          'Pantalla 2: Contanos qué necesitás → te cotizamos en menos de 24 h hábiles. Escribinos por acá mismo: wa.me/5491163553443',
         ],
         caption: 'Prompt visual (Gemini/Express): abstract textile texture background, woven fabric threads in deep blue #1A4295 with cyan #00B4D8 accents, macro photography, minimal negative space.',
         cta: 'wa.me/5491163553443',
@@ -2111,7 +2111,7 @@ export function classifyAndGenerateCmResponse(messageText, channel = 'WHATSAPP')
     categoryLabel = 'Consulta Bajo Mínimo (<10 unidades)';
     confidence = 0.94;
     score = 40;
-    proposedResponse = `¡Hola! Gracias por escribirnos. Te comento que en AIRO trabajamos exclusivamente con producciones personalizadas desde un mínimo de 10 unidades por modelo (en múltiplos de 10). Si te sirve armar una tanda a partir de esa cantidad para tu marca o equipo, escribinos a nuestro WhatsApp oficial 👉 wa.me/5491163553443 y te preparamos una cotización en menos de 24 h hábiles.`;
+    proposedResponse = `¡Hola! Gracias por escribirnos. Te comento que en AIRO trabajamos exclusivamente con producciones personalizadas desde un mínimo de 10 unidades por modelo (en múltiplos de 10). Si te sirve armar una tanda a partir de esa cantidad para tu marca o equipo, escribinos a nuestro WhatsApp oficial: wa.me/5491163553443 y te preparamos una cotización en menos de 24 h hábiles.`;
   } else if (isConsultaTecnica && !hasCotizarIntent) {
     category = 'QUESTION';
     categoryLabel = 'Consulta Técnica / Catálogo';
@@ -2123,7 +2123,7 @@ export function classifyAndGenerateCmResponse(messageText, channel = 'WHATSAPP')
     categoryLabel = 'Cotización / Lead B2B';
     confidence = 0.93;
     score = detectedQuantity && detectedQuantity >= 50 ? 90 : 75;
-    proposedResponse = `¡Hola! Qué bueno que nos contactes. Producimos ${detectedProduct.toLowerCase()} con estampas de alta durabilidad (DTF, sublimación y bordado) a partir de 10 unidades. Para pasarte un presupuesto exacto y plazos de entrega, escribinos directamente por WhatsApp 👉 wa.me/5491163553443 contándonos si ya tenés el diseño listo, y te respondemos en menos de 24 h hábiles.`;
+    proposedResponse = `¡Hola! Qué bueno que nos contactes. Producimos ${detectedProduct.toLowerCase()} con estampas de alta durabilidad (DTF, sublimación y bordado) a partir de 10 unidades. Para pasarte un presupuesto exacto y plazos de entrega, escribinos directamente por WhatsApp: wa.me/5491163553443 contándonos si ya tenés el diseño listo, y te respondemos en menos de 24 h hábiles.`;
   }
 
   const agentId = channel === 'INSTAGRAM' ? 'I-06' : channel === 'LINKEDIN' ? 'L-06' : 'W-03';

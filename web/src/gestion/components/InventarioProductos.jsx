@@ -5,6 +5,7 @@ import {
   deleteProducto,
   adjustStockProducto,
 } from '../services/storageService';
+import { IconBox, IconDownload, IconEdit, IconTrash } from './Icons';
 
 const CATEGORIAS = [
   { id: 'todos', label: 'Todas las Categorías' },
@@ -212,11 +213,11 @@ export default function InventarioProductos({ onStockChange }) {
           >
             <option value="todos">Todos los Estados</option>
             <option value="disponible">Stock Disponible</option>
-            <option value="bajo_stock">⚠️ Stock Bajo</option>
-            <option value="sin_stock">⛔ Sin Stock</option>
+            <option value="bajo_stock">Stock Bajo</option>
+            <option value="sin_stock">Sin Stock</option>
           </select>
-          <button className="g-btn g-btn-outline" onClick={exportarCsv} title="Descargar planilla CSV">
-            📥 CSV
+          <button className="g-btn g-btn-outline" onClick={exportarCsv} title="Descargar planilla CSV" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <IconDownload size={14} /> CSV
           </button>
           <button className="g-btn g-btn-primary" onClick={handleOpenNuevo}>
             + Nuevo Producto
@@ -249,7 +250,7 @@ export default function InventarioProductos({ onStockChange }) {
                 <tr>
                   <td colSpan={12}>
                     <div className="gestion-empty-state">
-                      <div className="gestion-empty-icon">📦</div>
+                      <div className="gestion-empty-icon"><IconBox size={36} /></div>
                       <h4>Tu inventario de productos está listo</h4>
                       <p>
                         Aún no diste de alta productos terminados. Cargá las prendas o artículos que disponés en stock para comenzar a gestionar existencias y despachos.
@@ -346,14 +347,14 @@ export default function InventarioProductos({ onStockChange }) {
                           onClick={() => handleOpenEditar(p)}
                           title="Editar producto"
                         >
-                          ✏️
+                          <IconEdit size={14} />
                         </button>
                         <button
                           className="g-btn g-btn-danger g-btn-sm"
                           onClick={() => handleEliminar(p.id, p.nombre)}
                           title="Eliminar producto"
                         >
-                          🗑️
+                          <IconTrash size={14} />
                         </button>
                       </td>
                     </tr>

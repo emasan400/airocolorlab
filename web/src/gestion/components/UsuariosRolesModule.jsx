@@ -12,6 +12,7 @@ import {
   ROLES_DEFINICION,
   getOperadorActual,
 } from '../services/storageService.js';
+import { IconUsers, IconShield, IconKey, IconEdit, IconTrash, IconWarning } from './Icons';
 
 export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated }) {
   const [activeSubTab, setActiveSubTab] = useState('usuarios'); // 'usuarios' | 'matriz' | 'password'
@@ -264,24 +265,27 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
             aria-selected={activeSubTab === 'usuarios'}
             className={`gestion-tab-btn ${activeSubTab === 'usuarios' ? 'active' : ''}`}
             onClick={() => setActiveSubTab('usuarios')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            👥 Colaboradores & Cuentas ({usuarios.length})
+            <IconUsers size={16} /> Colaboradores & Cuentas ({usuarios.length})
           </button>
           <button
             role="tab"
             aria-selected={activeSubTab === 'matriz'}
             className={`gestion-tab-btn ${activeSubTab === 'matriz' ? 'active' : ''}`}
             onClick={() => setActiveSubTab('matriz')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            🛡️ Matriz de Roles & Permisos
+            <IconShield size={16} /> Matriz de Roles & Permisos
           </button>
           <button
             role="tab"
             aria-selected={activeSubTab === 'password'}
             className={`gestion-tab-btn ${activeSubTab === 'password' ? 'active' : ''}`}
             onClick={() => setActiveSubTab('password')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            🔑 Mi Contraseña
+            <IconKey size={16} /> Mi Contraseña
           </button>
         </div>
       </div>
@@ -339,7 +343,7 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                     <tr>
                       <td colSpan={7}>
                         <div className="gestion-empty-state">
-                          <div className="gestion-empty-icon">👥</div>
+                          <div className="gestion-empty-icon"><IconUsers size={36} /></div>
                           <h4>No se encontraron colaboradores</h4>
                           <p>Ajustá los filtros de búsqueda o creá un nuevo usuario para tu equipo de trabajo.</p>
                           <button className="g-btn g-btn-primary" onClick={handleOpenNuevo}>
@@ -403,22 +407,23 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                                 className="g-btn g-btn-outline g-btn-sm"
                                 onClick={() => handleOpenReset(u)}
                                 title="Resetear contraseña de este usuario"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
                               >
-                                🔑 Clave
+                                <IconKey size={13} /> Clave
                               </button>
                               <button
                                 className="g-btn g-btn-outline g-btn-sm"
                                 onClick={() => handleOpenEditar(u)}
                                 title="Editar nombre, email o rol"
                               >
-                                ✏️
+                                <IconEdit size={14} />
                               </button>
                               <button
                                 className="g-btn g-btn-danger g-btn-sm"
                                 onClick={() => handleEliminarUsuario(u)}
                                 title="Eliminar usuario"
                               >
-                                🗑️
+                                <IconTrash size={14} />
                               </button>
                             </div>
                           </td>
@@ -490,7 +495,7 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                 </thead>
                 <tbody>
                   <tr>
-                    <td><strong>📦 Productos en Stock</strong></td>
+                    <td><strong>Productos en Stock</strong></td>
                     <td><span className="g-badge g-badge-success">Lectura y Escritura</span></td>
                     <td><span className="g-badge g-badge-success">Lectura y Ajuste</span></td>
                     <td><span className="g-badge g-badge-neutral">Solo Lectura</span></td>
@@ -498,7 +503,7 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                     <td><span className="g-badge g-badge-neutral">Solo Lectura</span></td>
                   </tr>
                   <tr>
-                    <td><strong>🧵 Insumos & Materiales</strong></td>
+                    <td><strong>Insumos & Materiales</strong></td>
                     <td><span className="g-badge g-badge-success">Lectura y Escritura</span></td>
                     <td><span className="g-badge g-badge-success">Consumo y Stock</span></td>
                     <td><span className="g-badge g-badge-danger">Sin Acceso</span></td>
@@ -506,7 +511,7 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                     <td><span className="g-badge g-badge-danger">Sin Acceso</span></td>
                   </tr>
                   <tr>
-                    <td><strong>📄 Confección de Remitos</strong></td>
+                    <td><strong>Confección de Remitos</strong></td>
                     <td><span className="g-badge g-badge-success">Lectura y Escritura</span></td>
                     <td><span className="g-badge g-badge-danger">Sin Acceso</span></td>
                     <td><span className="g-badge g-badge-success">Emisión y Despacho</span></td>
@@ -514,7 +519,7 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                     <td><span className="g-badge g-badge-neutral">Solo Lectura</span></td>
                   </tr>
                   <tr>
-                    <td><strong>💰 Flujo de Caja & Finanzas</strong></td>
+                    <td><strong>Flujo de Caja & Finanzas</strong></td>
                     <td><span className="g-badge g-badge-success">Lectura y Escritura</span></td>
                     <td><span className="g-badge g-badge-danger">Sin Acceso</span></td>
                     <td><span className="g-badge g-badge-danger">Sin Acceso</span></td>
@@ -522,7 +527,7 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                     <td><span className="g-badge g-badge-danger">Sin Acceso</span></td>
                   </tr>
                   <tr>
-                    <td><strong>📊 Kardex de Movimientos</strong></td>
+                    <td><strong>Kardex de Movimientos</strong></td>
                     <td><span className="g-badge g-badge-neutral">Auditoría Total</span></td>
                     <td><span className="g-badge g-badge-neutral">Trazabilidad Taller</span></td>
                     <td><span className="g-badge g-badge-neutral">Trazabilidad Envíos</span></td>
@@ -530,7 +535,7 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                     <td><span className="g-badge g-badge-danger">Sin Acceso</span></td>
                   </tr>
                   <tr>
-                    <td><strong>👥 Contactos (Clientes/Proveed.)</strong></td>
+                    <td><strong>Contactos (Clientes/Proveed.)</strong></td>
                     <td><span className="g-badge g-badge-success">Lectura y Escritura</span></td>
                     <td><span className="g-badge g-badge-danger">Sin Acceso</span></td>
                     <td><span className="g-badge g-badge-neutral">Consulta de Envíos</span></td>
@@ -538,7 +543,7 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                     <td><span className="g-badge g-badge-success">Alta de Clientes</span></td>
                   </tr>
                   <tr>
-                    <td><strong>⚙️ Usuarios, Roles & Sistema</strong></td>
+                    <td><strong>Usuarios, Roles & Sistema</strong></td>
                     <td><span className="g-badge g-badge-success">Control Exclusivo</span></td>
                     <td><span className="g-badge g-badge-danger">Sin Acceso</span></td>
                     <td><span className="g-badge g-badge-danger">Sin Acceso</span></td>
@@ -564,8 +569,8 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
             </p>
 
             {selfPassword.error && (
-              <div className="auth-alert-error" style={{ marginBottom: '18px' }}>
-                <span>⚠️</span>
+              <div className="auth-alert-error" style={{ marginBottom: '18px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <IconWarning size={16} />
                 <div>{selfPassword.error}</div>
               </div>
             )}
@@ -654,7 +659,7 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                 Verificación en Dos Pasos (MFA / 2FA)
               </h3>
               <span className={`g-badge ${usuarios.find((u) => u.email.toLowerCase() === (currentUserEmail || getOperadorActual()).toLowerCase())?.mfa_enabled ? 'g-badge-success' : 'g-badge-neutral'}`}>
-                {usuarios.find((u) => u.email.toLowerCase() === (currentUserEmail || getOperadorActual()).toLowerCase())?.mfa_enabled ? '🛡️ Activado y Seguro' : '⚠️ Desactivado'}
+                {usuarios.find((u) => u.email.toLowerCase() === (currentUserEmail || getOperadorActual()).toLowerCase())?.mfa_enabled ? 'Activado (Protegido)' : 'Desactivado'}
               </span>
             </div>
 
@@ -665,7 +670,7 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
             {usuarios.find((u) => u.email.toLowerCase() === (currentUserEmail || getOperadorActual()).toLowerCase())?.mfa_enabled ? (
               <div style={{ background: 'rgba(34, 177, 94, 0.08)', padding: '16px', borderRadius: 'var(--r-m)', border: '1px solid rgba(34, 177, 94, 0.2)' }}>
                 <p style={{ fontSize: '0.85rem', color: '#15803d', margin: '0 0 12px 0' }}>
-                  ✓ El doble factor está habilitado. Al iniciar sesión, el sistema te solicitará el código de 6 dígitos generado en tu aplicación autenticadora.
+                  El doble factor está habilitado. Al iniciar sesión, el sistema te solicitará el código de 6 dígitos generado en tu aplicación autenticadora.
                 </p>
                 <button
                   type="button"
@@ -686,7 +691,7 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                   className="g-btn g-btn-primary"
                   onClick={handleOpenSetupMfa}
                 >
-                  📲 Configurar 2FA con App Autenticadora
+                  Configurar 2FA con App Autenticadora
                 </button>
               </div>
             )}
@@ -750,8 +755,8 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                 </div>
 
                 {modalMfa.error && (
-                  <div className="auth-alert-error" style={{ marginTop: '12px' }}>
-                    <span>⚠️</span>
+                  <div className="auth-alert-error" style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <IconWarning size={16} />
                     <div>{modalMfa.error}</div>
                   </div>
                 )}
@@ -912,8 +917,8 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                 </p>
 
                 {modalReset.error && (
-                  <div className="auth-alert-error" style={{ marginBottom: '14px' }}>
-                    <span>⚠️</span>
+                  <div className="auth-alert-error" style={{ marginBottom: '14px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <IconWarning size={16} />
                     <div>{modalReset.error}</div>
                   </div>
                 )}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getMovimientos } from '../services/storageService';
+import { IconChart } from './Icons';
 
 export default function MovimientosKardex() {
   const [movimientos] = useState(getMovimientos());
@@ -72,7 +73,7 @@ export default function MovimientosKardex() {
                 <tr>
                   <td colSpan={8}>
                     <div className="gestion-empty-state">
-                      <div className="gestion-empty-icon">📊</div>
+                      <div className="gestion-empty-icon"><IconChart size={36} /></div>
                       <h3 className="gestion-empty-title">Sin movimientos registrados aún</h3>
                       <p className="gestion-empty-text">
                         Cada ajuste manual de stock, alta de productos o materiales, y despacho de remitos generará automáticamente una traza inmutable en este Kardex.

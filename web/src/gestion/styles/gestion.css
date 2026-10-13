@@ -282,6 +282,330 @@
 }
 
 /* ============================================================
+   BOTÓN HAMBURGER & SIDEBAR DESPLEGABLE IZQUIERDO
+   ============================================================ */
+.gestion-btn-hamburger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-strong);
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+  transition: var(--g-transition);
+  padding: 0;
+}
+
+.gestion-btn-hamburger:hover {
+  background: var(--neutral);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.gestion-sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 17, 17, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.24s var(--ease);
+}
+
+.gestion-sidebar-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.gestion-sidebar-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 320px;
+  max-width: 86vw;
+  background: var(--paper);
+  box-shadow: var(--shadow-3);
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform 0.28s var(--ease);
+  border-right: 1px solid var(--line);
+}
+
+.gestion-sidebar-drawer.open {
+  transform: translateX(0);
+}
+
+.gestion-sidebar-header {
+  padding: 20px 20px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+}
+
+.gestion-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.gestion-sidebar-brand h3 {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.015em;
+}
+
+.gestion-sidebar-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--neutral);
+  color: var(--ink);
+  cursor: pointer;
+  transition: var(--g-transition);
+}
+
+.gestion-sidebar-close:hover {
+  background: var(--paper);
+  border-color: var(--ink);
+}
+
+.gestion-sidebar-nav {
+  padding: 16px 12px;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gestion-sidebar-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  border-radius: var(--r-s);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-70);
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: var(--g-transition);
+}
+
+.gestion-sidebar-item:hover {
+  background: var(--neutral);
+  color: var(--ink);
+}
+
+.gestion-sidebar-item.active {
+  background: rgba(26, 66, 149, 0.08);
+  color: var(--blue);
+  font-weight: 600;
+  border-color: rgba(26, 66, 149, 0.18);
+}
+
+.gestion-sidebar-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gestion-sidebar-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-70);
+}
+
+.gestion-sidebar-item.active .gestion-sidebar-item-icon {
+  color: var(--blue);
+}
+
+.gestion-sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--line);
+  background: var(--neutral);
+  font-size: 11.5px;
+  color: var(--ink-45);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* ============================================================
+   BOTÓN PERSONA (USUARIO) & DROPDOWN SUPERIOR DERECHO
+   ============================================================ */
+.gestion-user-wrapper {
+  position: relative;
+}
+
+.gestion-user-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  padding: 5px 14px 5px 7px;
+  cursor: pointer;
+  transition: var(--g-transition);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+.gestion-user-btn:hover,
+.gestion-user-btn.active {
+  background: var(--neutral);
+  border-color: var(--blue);
+}
+
+.gestion-user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(26, 66, 149, 0.1);
+  color: var(--blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gestion-user-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 320px;
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-m);
+  box-shadow: var(--shadow-2);
+  z-index: 1050;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: userFadeIn 0.18s var(--ease);
+}
+
+@keyframes userFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gestion-user-dropdown-header {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 12px;
+}
+
+.gestion-user-dropdown-email {
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--ink);
+  word-break: break-all;
+}
+
+.gestion-user-dropdown-role {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--blue);
+}
+
+.gestion-user-dropdown-version {
+  background: var(--neutral);
+  border: 1px solid var(--line);
+  border-radius: var(--r-s);
+  padding: 10px 12px;
+  font-size: 11.5px;
+  color: var(--ink-70);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.gestion-user-dropdown-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gestion-user-dropdown-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--r-s);
+  font-size: 13px;
+  color: var(--ink);
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  transition: var(--g-transition);
+  font-family: var(--font-body);
+}
+
+.gestion-user-dropdown-link:hover {
+  background: var(--neutral);
+  color: var(--blue);
+}
+
+.gestion-user-dropdown-logout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: var(--r-pill);
+  font-size: 13px;
+  font-weight: 600;
+  color: #c0392b;
+  background: rgba(192, 57, 43, 0.08);
+  border: 1px solid rgba(192, 57, 43, 0.2);
+  width: 100%;
+  cursor: pointer;
+  justify-content: center;
+  transition: var(--g-transition);
+  font-family: var(--font-body);
+}
+
+.gestion-user-dropdown-logout:hover {
+  background: #fdf1ef;
+  border-color: #c0392b;
+}
+
+/* ============================================================
    TABS DE NAVEGACIÓN (FORMATO FILTROS DE CATÁLOGO)
    ============================================================ */
 .gestion-nav-tabs {

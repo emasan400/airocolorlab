@@ -9,6 +9,7 @@ import {
   getProductos,
 } from '../services/storageService';
 import RemitoPrintView from './RemitoPrintView';
+import { IconFile, IconPrinter, IconEdit, IconRefresh, IconTrash, IconWarning } from './Icons';
 
 const MODALIDADES_ENVIO = [
   'Retiro en Taller (AIRO)',
@@ -329,7 +330,7 @@ export default function RemitosModule({ onRemitoEmitted }) {
             ))}
           </select>
           <button className="g-btn g-btn-primary" onClick={handleOpenNuevo}>
-            📄 Confeccionar Nuevo Remito
+            + Confeccionar Nuevo Remito
           </button>
         </div>
       </div>
@@ -356,13 +357,13 @@ export default function RemitosModule({ onRemitoEmitted }) {
                 <tr>
                   <td colSpan={9}>
                     <div className="gestion-empty-state">
-                      <div className="gestion-empty-icon">📄</div>
+                      <div className="gestion-empty-icon"><IconFile size={36} /></div>
                       <h4>Emití remitos oficiales de entrega B2B</h4>
                       <p>
                         Aún no emitiste ningún remito. Confeccioná tu primer documento oficial con membrete AIRO Color Lab, asignación de bultos y descuento automático de inventario.
                       </p>
                       <button className="g-btn g-btn-primary" onClick={handleOpenNuevo}>
-                        📄 Confeccionar Mi Primer Remito
+                        + Confeccionar Mi Primer Remito
                       </button>
                     </div>
                   </td>
@@ -415,34 +416,34 @@ export default function RemitosModule({ onRemitoEmitted }) {
                       <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                         <button
                           className="g-btn g-btn-primary g-btn-sm"
-                          style={{ marginRight: '6px' }}
+                          style={{ marginRight: '6px', display: 'inline-flex', alignItems: 'center', gap: 4 }}
                           onClick={() => setSelectedRemitoPrint(r)}
                           title="Ver remito e imprimir en PDF"
                         >
-                          🖨️ Imprimir
+                          <IconPrinter size={13} /> Imprimir
                         </button>
                         <button
                           className="g-btn g-btn-outline g-btn-sm"
-                          style={{ marginRight: '6px' }}
+                          style={{ marginRight: '6px', display: 'inline-flex', alignItems: 'center', gap: 4 }}
                           onClick={() => handleOpenEditar(r)}
                           title="Modificar datos del remito, transportista o ítems"
                         >
-                          ✏️ Modificar
+                          <IconEdit size={13} /> Modificar
                         </button>
                         <button
                           className="g-btn g-btn-outline g-btn-sm"
-                          style={{ marginRight: '6px' }}
+                          style={{ marginRight: '6px', display: 'inline-flex', alignItems: 'center', gap: 4 }}
                           onClick={() => handleOpenCambiarEstado(r)}
                           title="Cambiar estado o asentar recepción"
                         >
-                          🔄 Estado
+                          <IconRefresh size={13} /> Estado
                         </button>
                         <button
                           className="g-btn g-btn-danger g-btn-sm"
                           onClick={() => handleEliminarRemito(r)}
                           title="Eliminar remito"
                         >
-                          🗑️
+                          <IconTrash size={14} />
                         </button>
                       </td>
                     </tr>
@@ -708,8 +709,8 @@ export default function RemitosModule({ onRemitoEmitted }) {
                     </tbody>
                   </table>
                 ) : (
-                  <p style={{ color: '#ef4444', fontSize: '0.85rem', marginBottom: '1rem' }}>
-                    ⚠️ Todavía no agregaste ningún ítem al remito.
+                  <p style={{ color: '#ef4444', fontSize: '0.85rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <IconWarning size={15} /> Todavía no agregaste ningún ítem al remito.
                   </p>
                 )}
 

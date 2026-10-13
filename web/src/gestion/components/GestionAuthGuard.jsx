@@ -7,6 +7,13 @@ import {
   verifyTotpCode,
   DEFAULT_ADMIN_HASH,
 } from '../services/storageService.js';
+import {
+  IconLock,
+  IconShield,
+  IconWarning,
+  IconEye,
+  IconEyeOff,
+} from './Icons.jsx';
 
 // Inactividad máxima permitida antes de auto-cerrar sesión (30 minutos)
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
@@ -306,30 +313,43 @@ function SecureAdminLogin({ onSuccess, idleLockedMessage }) {
             AIRO COLOR LAB.<span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--cyan)', display: 'inline-block' }} />
           </h2>
           <p className="auth-subtitle">Estudio Textil · Acceso al Sistema de Gestión B2B</p>
-          <div className="auth-security-badge">🔒 Conexión Cifrada SSL & Auth Seguro</div>
+          <div className="auth-security-badge">
+            <IconLock size={13} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 6 }} />
+            Conexión Cifrada SSL · Hashing Criptográfico SHA-256 + MFA
+          </div>
         </div>
 
         {mfaChallenge ? (
           <form onSubmit={handleMfaSubmit} className="auth-form" noValidate>
             {errorMsg && (
               <div className="auth-alert-error" role="alert">
-                <span>⚠️</span>
+                <span className="auth-alert-icon"><IconWarning size={16} /></span>
                 <div>{errorMsg}</div>
               </div>
             )}
 
-            <div style={{ textAlign: 'center', marginBottom: '18px' }}>
-              <div style={{ fontSize: '2.2rem', marginBottom: '8px' }}>📲</div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 6px 0', color: 'var(--blue)' }}>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{ display: 'inline-flex', padding: '12px', borderRadius: '50%', background: 'rgba(26, 66, 149, 0.08)', color: 'var(--blue)', marginBottom: '10px' }}>
+                <IconShield size={32} />
+              </div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--cyan-ink)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>
+                Paso 2 de 2 · Verificación de Identidad
+              </div>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 6px 0', color: 'var(--blue)' }}>
                 Doble Factor de Autenticación (MFA)
               </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--ink-70)', margin: 0 }}>
+              <p style={{ fontSize: '0.85rem', color: 'var(--ink-70)', margin: '0 0 8px 0', lineHeight: 1.4 }}>
                 Ingresá el código de 6 dígitos generado por tu app autenticadora para <strong>{mfaChallenge.userObj.email}</strong>.
               </p>
+              <div style={{ fontSize: '0.76rem', color: 'var(--ink-45)', background: 'var(--neutral)', padding: '6px 12px', borderRadius: '6px', display: 'inline-block' }}>
+                Estándar RFC 6238 (TOTP) · Rota cada 30 segundos
+              </div>
             </div>
 
             <div className="auth-form-group">
-              <label htmlFor="auth-mfa-code" style={{ textAlign: 'center' }}>Código de Verificación (TOTP)</label>
+              <label htmlFor="auth-mfa-code" style={{ textAlign: 'center', fontWeight: 600 }}>
+                Código Numérico Temporal (6 dígitos)
+              </label>
               <input
                 id="auth-mfa-code"
                 type="text"
@@ -339,11 +359,17 @@ function SecureAdminLogin({ onSuccess, idleLockedMessage }) {
                 required
                 autoFocus
                 autoComplete="one-time-code"
-                placeholder="123456"
+                placeholder="000000"
                 value={mfaCode}
                 onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
                 disabled={busy}
-                style={{ textAlign: 'center', fontSize: '1.5rem', letterSpacing: '6px', fontWeight: 700 }}
+                style={{
+                  textAlign: 'center',
+                  fontSize: '1.6rem',
+                  letterSpacing: '8px',
+                  fontWeight: 700,
+                  fontFamily: 'monospace',
+                }}
               />
             </div>
 
@@ -352,7 +378,7 @@ function SecureAdminLogin({ onSuccess, idleLockedMessage }) {
               className="auth-btn-submit"
               disabled={busy || mfaCode.length !== 6}
             >
-              {busy ? 'Verificando código…' : 'Verificar e Ingresar'}
+              {busy ? 'Verificando código…' : 'Validar e Iniciar Sesión'}
             </button>
 
             <button
@@ -361,14 +387,14 @@ function SecureAdminLogin({ onSuccess, idleLockedMessage }) {
               onClick={() => { setMfaChallenge(null); setMfaCode(''); setErrorMsg(''); }}
               style={{ background: 'none', border: 'none', cursor: 'pointer', marginTop: '14px', width: '100%', textAlign: 'center' }}
             >
-              ← Cancelar y volver al login
+              ← Cancelar y volver al inicio de sesión
             </button>
           </form>
         ) : (
           <form onSubmit={handleSubmit} className="auth-form" noValidate>
             {errorMsg && (
               <div className="auth-alert-error" role="alert">
-                <span>⚠️</span>
+                <span className="auth-alert-icon"><IconWarning size={16} /></span>
                 <div>{errorMsg}</div>
               </div>
             )}
@@ -407,8 +433,9 @@ function SecureAdminLogin({ onSuccess, idleLockedMessage }) {
                   onClick={() => setShowPassword((v) => !v)}
                   tabIndex={-1}
                   aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
-                  {showPassword ? '👁️' : '👁️‍🗨️'}
+                  {showPassword ? <IconEyeOff size={16} /> : <IconEye size={16} />}
                 </button>
               </div>
             </div>

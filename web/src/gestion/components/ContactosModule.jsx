@@ -7,6 +7,7 @@ import {
   saveProveedor,
   deleteProveedor,
 } from '../services/storageService';
+import { IconUsers, IconBriefcase, IconEdit, IconTrash } from './Icons';
 
 export default function ContactosModule() {
   const [tab, setTab] = useState('clientes');
@@ -154,7 +155,7 @@ export default function ContactosModule() {
                   <tr>
                     <td colSpan={8}>
                       <div className="gestion-empty-state">
-                        <div className="gestion-empty-icon">👥</div>
+                        <div className="gestion-empty-icon"><IconUsers size={36} /></div>
                         <h4>Tu agenda de clientes B2B</h4>
                         <p>
                           Aún no cargaste clientes. Agregá empresas, marcas y agencias para autocompletar remitos y cobros en un segundo.
@@ -184,8 +185,8 @@ export default function ContactosModule() {
                       <td style={{ fontSize: '0.8rem' }}>{c.direccion || '—'}</td>
                       <td><span className="g-badge g-badge-neutral">{c.rubro || 'General'}</span></td>
                       <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        <button className="g-btn g-btn-outline g-btn-sm" style={{ marginRight: '6px' }} onClick={() => handleOpenEditarCli(c)}>✏️</button>
-                        <button className="g-btn g-btn-danger g-btn-sm" onClick={() => handleEliminarCli(c.id, c.razon_social)}>🗑️</button>
+                        <button className="g-btn g-btn-outline g-btn-sm" style={{ marginRight: '6px' }} onClick={() => handleOpenEditarCli(c)} title="Editar"><IconEdit size={14} /></button>
+                        <button className="g-btn g-btn-danger g-btn-sm" onClick={() => handleEliminarCli(c.id, c.razon_social)} title="Eliminar"><IconTrash size={14} /></button>
                       </td>
                     </tr>
                   ))
@@ -214,7 +215,7 @@ export default function ContactosModule() {
                   <tr>
                     <td colSpan={7}>
                       <div className="gestion-empty-state">
-                        <div className="gestion-empty-icon">🏭</div>
+                        <div className="gestion-empty-icon"><IconBriefcase size={36} /></div>
                         <h4>Directorio de talleres y proveedores</h4>
                         <p>
                           Aún no cargaste proveedores. Registrá tus hilanderías, importadores de DTF, talleres de costura y packaging.
@@ -243,8 +244,8 @@ export default function ContactosModule() {
                       <td style={{ fontSize: '0.8rem' }}>{p.email || '—'}</td>
                       <td style={{ fontSize: '0.8rem', fontFamily: 'monospace' }}>{p.cbu_alias || '—'}</td>
                       <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        <button className="g-btn g-btn-outline g-btn-sm" style={{ marginRight: '6px' }} onClick={() => handleOpenEditarProv(p)}>✏️</button>
-                        <button className="g-btn g-btn-danger g-btn-sm" onClick={() => handleEliminarProv(p.id, p.nombre)}>🗑️</button>
+                        <button className="g-btn g-btn-outline g-btn-sm" style={{ marginRight: '6px' }} onClick={() => handleOpenEditarProv(p)} title="Editar"><IconEdit size={14} /></button>
+                        <button className="g-btn g-btn-danger g-btn-sm" onClick={() => handleEliminarProv(p.id, p.nombre)} title="Eliminar"><IconTrash size={14} /></button>
                       </td>
                     </tr>
                   ))

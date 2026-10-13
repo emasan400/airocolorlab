@@ -116,7 +116,7 @@ export default function ConfiguracionModule({ onDataReload }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
         {/* Panel 1: Colaboración & Operador */}
         <div style={{ background: '#fff', border: '1px solid var(--g-border)', borderRadius: '8px', padding: '1.5rem', boxShadow: 'var(--g-shadow-sm)' }}>
-          <h4 style={{ margin: '0 0 0.75rem', color: 'var(--g-blue)' }}>👥 Identidad del Operador de Equipo</h4>
+          <h4 style={{ margin: '0 0 0.75rem', color: 'var(--g-blue)' }}>Identidad del Operador de Equipo</h4>
           <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1rem' }}>
             Seleccioná quién está operando el sistema actualmente para que cada movimiento de stock, remito o registro contable quede debidamente identificado en el historial.
           </p>
@@ -134,7 +134,7 @@ export default function ConfiguracionModule({ onDataReload }) {
 
         {/* Panel 2: Sincronización Supabase Cloud */}
         <div style={{ background: '#fff', border: '1px solid var(--g-border)', borderRadius: '8px', padding: '1.5rem', boxShadow: 'var(--g-shadow-sm)' }}>
-          <h4 style={{ margin: '0 0 0.75rem', color: 'var(--g-blue)' }}>☁️ Conexión con Supabase PostgreSQL</h4>
+          <h4 style={{ margin: '0 0 0.75rem', color: 'var(--g-blue)' }}>Conexión con Supabase PostgreSQL</h4>
           <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1rem' }}>
             El sistema se conecta a la instancia de Supabase de AIRO Color Lab para persistencia compartida en tiempo real en la web.
           </p>
@@ -143,7 +143,7 @@ export default function ConfiguracionModule({ onDataReload }) {
               Verificar Conexión a Base de Datos
             </button>
             <button className="g-btn g-btn-primary" onClick={handleCopySql}>
-              {sqlCopied ? '✓ SQL Copiado' : '📋 Copiar Script SQL de Tablas'}
+              {sqlCopied ? 'SQL Copiado' : 'Copiar Script SQL de Tablas'}
             </button>
           </div>
           {syncStatus && (
@@ -155,7 +155,7 @@ export default function ConfiguracionModule({ onDataReload }) {
 
         {/* Panel 3: Interfaces Seguras con Otros Sistemas */}
         <div style={{ background: '#fff', border: '1px solid var(--g-border)', borderRadius: '8px', padding: '1.5rem', boxShadow: 'var(--g-shadow-sm)', gridColumn: '1 / -1' }}>
-          <h4 style={{ margin: '0 0 0.75rem', color: 'var(--g-blue)' }}>🛡️ Protocolo de Seguridad & Interfaces con Sistemas Externos</h4>
+          <h4 style={{ margin: '0 0 0.75rem', color: 'var(--g-blue)' }}>Protocolo de Seguridad & Interfaces con Sistemas Externos</h4>
           <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.85rem' }}>
             Para garantizar la máxima seguridad en la conexión con otros sistemas (ERP contable, bots de WhatsApp, pasarelas de pago o logística externa):
           </p>
@@ -184,16 +184,16 @@ export default function ConfiguracionModule({ onDataReload }) {
 
       {/* Panel 3: Copias de Seguridad & Migración */}
       <div style={{ background: '#fff', border: '1px solid var(--g-border)', borderRadius: '8px', padding: '1.5rem', marginBottom: '2rem', boxShadow: 'var(--g-shadow-sm)' }}>
-        <h4 style={{ margin: '0 0 0.75rem', color: 'var(--g-blue)' }}>💾 Copia de Seguridad & Portabilidad de Datos</h4>
+        <h4 style={{ margin: '0 0 0.75rem', color: 'var(--g-blue)' }}>Copia de Seguridad & Portabilidad de Datos</h4>
         <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1rem' }}>
           Podés descargar un archivo JSON completo con todo el stock de productos, insumos, clientes, proveedores, remitos y flujo de caja para resguardo o para migrar de dispositivo.
         </p>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
           <button className="g-btn g-btn-primary" onClick={handleExportBackup}>
-            📥 Descargar Backup Completo (JSON)
+            Descargar Backup Completo (JSON)
           </button>
           <button className="g-btn g-btn-outline" onClick={handleResetDemo}>
-            ↺ Cargar Datos Demostrativos AIRO
+            Cargar Datos Demostrativos AIRO
           </button>
         </div>
 
@@ -215,7 +215,7 @@ export default function ConfiguracionModule({ onDataReload }) {
 
       {/* Panel 4: Registro de Auditoría (Append-only) */}
       <div style={{ background: '#fff', border: '1px solid var(--g-border)', borderRadius: '8px', padding: '1.5rem', boxShadow: 'var(--g-shadow-sm)' }}>
-        <h4 style={{ margin: '0 0 0.75rem', color: 'var(--g-blue)' }}>📜 Registro de Auditoría Inmutable (Audit Log)</h4>
+        <h4 style={{ margin: '0 0 0.75rem', color: 'var(--g-blue)' }}>Registro de Auditoría Inmutable (Audit Log)</h4>
         <div className="gestion-table-scroll" style={{ maxHeight: '320px', overflowY: 'auto' }}>
           <table className="gestion-table">
             <thead>

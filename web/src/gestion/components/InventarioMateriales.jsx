@@ -6,6 +6,7 @@ import {
   adjustStockMaterial,
   getProveedores,
 } from '../services/storageService';
+import { IconFabric, IconDownload, IconEdit, IconTrash } from './Icons';
 
 const CATEGORIAS_MAT = [
   { id: 'todos', label: 'Todas las Categorías' },
@@ -214,11 +215,11 @@ export default function InventarioMateriales({ onStockChange }) {
           >
             <option value="todos">Todos los Estados</option>
             <option value="disponible">Stock Disponible</option>
-            <option value="bajo_stock">⚠️ Reponer Urgente</option>
-            <option value="sin_stock">⛔ Sin Existencias</option>
+            <option value="bajo_stock">Reponer Urgente</option>
+            <option value="sin_stock">Sin Existencias</option>
           </select>
-          <button className="g-btn g-btn-outline" onClick={exportarCsv} title="Descargar planilla CSV">
-            📥 CSV
+          <button className="g-btn g-btn-outline" onClick={exportarCsv} title="Descargar planilla CSV" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <IconDownload size={14} /> CSV
           </button>
           <button className="g-btn g-btn-primary" onClick={handleOpenNuevo}>
             + Nuevo Material / Insumo
@@ -250,7 +251,7 @@ export default function InventarioMateriales({ onStockChange }) {
                 <tr>
                   <td colSpan={11}>
                     <div className="gestion-empty-state">
-                      <div className="gestion-empty-icon">🧵</div>
+                      <div className="gestion-empty-icon"><IconFabric size={36} /></div>
                       <h4>Controlá tu materia prima e insumos</h4>
                       <p>
                         Aún no diste de alta materiales. Registrá tus rollos de tela, tintas DTF, films, hilos o packaging para controlar los costos y no quedarte sin existencias en producción.
@@ -343,14 +344,14 @@ export default function InventarioMateriales({ onStockChange }) {
                           onClick={() => handleOpenEditar(m)}
                           title="Editar material"
                         >
-                          ✏️
+                          <IconEdit size={14} />
                         </button>
                         <button
                           className="g-btn g-btn-danger g-btn-sm"
                           onClick={() => handleEliminar(m.id, m.nombre)}
                           title="Eliminar material"
                         >
-                          🗑️
+                          <IconTrash size={14} />
                         </button>
                       </td>
                     </tr>

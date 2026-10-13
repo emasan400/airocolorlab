@@ -189,7 +189,7 @@ export default function MarketingModule({ onContentChanged }) {
             title="Recargar piezas iniciales de AIRO"
             style={{ fontSize: '0.82rem', padding: '8px 14px' }}
           >
-            🔄 Recargar Datos Oficiales
+            Recargar Datos Oficiales
           </button>
         </div>
       </div>
@@ -225,14 +225,14 @@ export default function MarketingModule({ onContentChanged }) {
         </div>
       </div>
 
-      {/* Sub-navegación por Pestañas */}
+      {/* Sub-navegación por Pestañas (Sin Emojis) */}
       <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid var(--line)', paddingBottom: 12, marginBottom: 24 }}>
         <button
           className={`gestion-tab-btn ${activeSubTab === 'approvals' ? 'active' : ''}`}
           onClick={() => setActiveSubTab('approvals')}
           style={{ fontSize: '0.88rem' }}
         >
-          📋 Cola de Aprobaciones HITL
+          Cola de Aprobaciones HITL
           {pendingApprovalsCount > 0 && (
             <span className="gestion-tab-badge" style={{ background: 'rgba(180, 83, 9, 0.15)', color: '#b45309' }}>
               {pendingApprovalsCount} pend.
@@ -245,7 +245,7 @@ export default function MarketingModule({ onContentChanged }) {
           onClick={() => setActiveSubTab('calendar')}
           style={{ fontSize: '0.88rem' }}
         >
-          📅 Calendario Editorial ({totalCalendarEntries})
+          Calendario Editorial ({totalCalendarEntries})
         </button>
 
         <button
@@ -253,7 +253,7 @@ export default function MarketingModule({ onContentChanged }) {
           onClick={() => setActiveSubTab('cm')}
           style={{ fontSize: '0.88rem' }}
         >
-          💬 Asistente Community Manager & CRM
+          Asistente Community Manager & CRM
         </button>
 
         <button
@@ -261,7 +261,7 @@ export default function MarketingModule({ onContentChanged }) {
           onClick={() => setActiveSubTab('agents')}
           style={{ fontSize: '0.88rem' }}
         >
-          🤖 Directorio de Agentes (26)
+          Directorio de Agentes (26)
         </button>
       </div>
 
@@ -290,9 +290,9 @@ export default function MarketingModule({ onContentChanged }) {
                   }}
                 >
                   {st === 'ALL' && 'Todas'}
-                  {st === 'PENDING' && `⏳ Pendientes (${approvals.filter((a) => a.estado === 'PENDING').length})`}
-                  {st === 'APPROVED' && `✅ Aprobadas (${approvals.filter((a) => a.estado === 'APPROVED').length})`}
-                  {st === 'REJECTED' && `❌ Rechazadas (${approvals.filter((a) => a.estado === 'REJECTED').length})`}
+                  {st === 'PENDING' && `Pendientes (${approvals.filter((a) => a.estado === 'PENDING').length})`}
+                  {st === 'APPROVED' && `Aprobadas (${approvals.filter((a) => a.estado === 'APPROVED').length})`}
+                  {st === 'REJECTED' && `Rechazadas (${approvals.filter((a) => a.estado === 'REJECTED').length})`}
                 </button>
               ))}
             </div>
@@ -358,14 +358,14 @@ export default function MarketingModule({ onContentChanged }) {
                             onClick={() => setModalDecision({ open: true, approval: appr, decision: 'REJECTED', notes: '' })}
                             style={{ fontSize: '0.82rem', padding: '6px 14px', color: '#c0392b' }}
                           >
-                            ❌ Rechazar
+                            Rechazar
                           </button>
                           <button
                             className="btn--primary"
                             onClick={() => setModalDecision({ open: true, approval: appr, decision: 'APPROVED', notes: '' })}
                             style={{ fontSize: '0.82rem', padding: '6px 16px' }}
                           >
-                            ✅ Aprobar para Publicación
+                            Aprobar para Publicación
                           </button>
                         </>
                       ) : (
@@ -379,7 +379,7 @@ export default function MarketingModule({ onContentChanged }) {
                             fontWeight: 600,
                           }}
                         >
-                          {appr.estado === 'APPROVED' ? '✅ Aprobado' : '❌ Rechazado'} por {appr.decision_by || 'Admin'}
+                          {appr.estado === 'APPROVED' ? 'Aprobado' : 'Rechazado'} por {appr.decision_by || 'Admin'}
                           {appr.decision_at && ` (${appr.decision_at.slice(0, 10)})`}
                         </div>
                       )}
@@ -423,7 +423,7 @@ export default function MarketingModule({ onContentChanged }) {
                                 onClick={() => handleCopyText(pz.caption, `Copy ${pz.canal}`)}
                                 style={{ fontSize: '0.78rem', padding: '4px 10px' }}
                               >
-                                📋 Copiar Copy
+                                Copiar Copy
                               </button>
                             )}
                           </div>
@@ -532,7 +532,7 @@ export default function MarketingModule({ onContentChanged }) {
               onClick={() => setModalNewIdea({ open: true, data: { channel: 'INSTAGRAM', format: 'Post carrusel', status: 'IDEA' } })}
               style={{ fontSize: '0.85rem', padding: '8px 16px' }}
             >
-              ➕ Proponer Nueva Pieza
+              Proponer Nueva Pieza
             </button>
           </div>
 
@@ -634,7 +634,7 @@ export default function MarketingModule({ onContentChanged }) {
                             title="Marcar como publicado en redes"
                             style={{ fontSize: '0.75rem', padding: '4px 8px' }}
                           >
-                            🚀 Publicado
+                            Marcar Publicado
                           </button>
                         )}
                         {item.status === 'IDEA' && (
@@ -646,11 +646,11 @@ export default function MarketingModule({ onContentChanged }) {
                             }}
                             style={{ fontSize: '0.75rem', padding: '4px 8px' }}
                           >
-                            ✏️ Borrador
+                            Borrador
                           </button>
                         )}
                         {item.status === 'PUBLISHED' && (
-                          <span style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: 600 }}>✓ Listo</span>
+                          <span style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: 600 }}>Publicado</span>
                         )}
                       </td>
                     </tr>
@@ -701,9 +701,9 @@ export default function MarketingModule({ onContentChanged }) {
                       fontWeight: 600,
                     }}
                   >
-                    {ch === 'WHATSAPP' && '💬 WhatsApp'}
-                    {ch === 'INSTAGRAM' && '📸 Instagram DM'}
-                    {ch === 'LINKEDIN' && '💼 LinkedIn'}
+                    {ch === 'WHATSAPP' && 'WhatsApp'}
+                    {ch === 'INSTAGRAM' && 'Instagram DM'}
+                    {ch === 'LINKEDIN' && 'LinkedIn'}
                   </button>
                 ))}
               </div>
@@ -725,7 +725,7 @@ export default function MarketingModule({ onContentChanged }) {
                   }}
                   style={{ fontSize: '0.72rem', padding: '4px 8px' }}
                 >
-                  🎯 25 Buzos DTF (Lead)
+                  25 Buzos DTF
                 </button>
                 <button
                   type="button"
@@ -737,7 +737,7 @@ export default function MarketingModule({ onContentChanged }) {
                   }}
                   style={{ fontSize: '0.72rem', padding: '4px 8px' }}
                 >
-                  🏢 80 Remeras Evento (B2B)
+                  80 Remeras Evento
                 </button>
                 <button
                   type="button"
@@ -749,7 +749,7 @@ export default function MarketingModule({ onContentChanged }) {
                   }}
                   style={{ fontSize: '0.72rem', padding: '4px 8px' }}
                 >
-                  ⚠️ 1 Remera (Bajo Mínimo)
+                  1 Remera (Bajo Mínimo)
                 </button>
                 <button
                   type="button"
@@ -761,7 +761,7 @@ export default function MarketingModule({ onContentChanged }) {
                   }}
                   style={{ fontSize: '0.72rem', padding: '4px 8px' }}
                 >
-                  📦 Seguimiento de Pedido
+                  Seguimiento de Producción
                 </button>
               </div>
             </div>
@@ -786,7 +786,7 @@ export default function MarketingModule({ onContentChanged }) {
               onClick={() => handleRunCmAnalysis()}
               style={{ width: '100%', padding: '10px', fontSize: '0.92rem' }}
             >
-              ⚡ Analizar con Agentes IA (I-06 / W-03)
+              Analizar con Agentes IA (I-06 / W-03)
             </button>
           </div>
 
@@ -844,7 +844,7 @@ export default function MarketingModule({ onContentChanged }) {
                       onClick={() => handleCopyText(cmAnalysis.proposedResponse, 'Respuesta')}
                       style={{ fontSize: '0.75rem', padding: '3px 8px' }}
                     >
-                      📋 Copiar Respuesta
+                      Copiar Respuesta
                     </button>
                   </div>
                   <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--ink)', lineHeight: 1.45 }}>
@@ -934,7 +934,7 @@ export default function MarketingModule({ onContentChanged }) {
                     gap: 8,
                   }}
                 >
-                  💼 Inyectar Directamente a Lead en CRM
+                  Inyectar Directamente a Lead en CRM
                 </button>
 
                 {injectFeedback && (
@@ -982,12 +982,12 @@ export default function MarketingModule({ onContentChanged }) {
                 }}
               >
                 {mod === 'ALL' && 'Todos los Agentes (26)'}
-                {mod === 'ORCHESTRATOR' && '🎯 Orquestador'}
-                {mod === 'INSTAGRAM' && '📸 Instagram (7)'}
-                {mod === 'LINKEDIN' && '💼 LinkedIn (7)'}
-                {mod === 'WHATSAPP' && '💬 WhatsApp (6)'}
-                {mod === 'GMAIL' && '✉️ Gmail (6)'}
-                {mod === 'TRANSVERSAL' && '🛡️ Transversales (6)'}
+                {mod === 'ORCHESTRATOR' && 'Orquestador (M-00)'}
+                {mod === 'INSTAGRAM' && 'Instagram (7)'}
+                {mod === 'LINKEDIN' && 'LinkedIn (7)'}
+                {mod === 'WHATSAPP' && 'WhatsApp (6)'}
+                {mod === 'GMAIL' && 'Gmail (6)'}
+                {mod === 'TRANSVERSAL' && 'Transversales (6)'}
               </button>
             ))}
           </div>

@@ -6,6 +6,7 @@ import {
   getClientes,
   getProveedores,
 } from '../services/storageService';
+import { IconWallet, IconDownload, IconEdit, IconTrash } from './Icons';
 
 const CATEGORIAS_INGRESO = [
   'Cobro Cliente (Seña 50%)',
@@ -201,7 +202,7 @@ export default function FlujoCajaModule({ onCajaUpdated }) {
           <div className="gestion-kpi-label">Flujo de Caja Neto (Balance)</div>
           <div className="gestion-kpi-val">${balanceNetoCaja.toLocaleString('es-AR')}</div>
           <div className="gestion-kpi-sub">
-            {balanceNetoCaja >= 0 ? '✓ Superávit operativo acumulado' : '⚠️ Déficit temporal en caja'}
+            {balanceNetoCaja >= 0 ? 'Superávit operativo acumulado' : 'Déficit temporal en caja'}
           </div>
         </div>
         <div className="gestion-kpi-card kpi-accent">
@@ -259,8 +260,8 @@ export default function FlujoCajaModule({ onCajaUpdated }) {
             <option value="efectivo">Cobrado / Pagado</option>
             <option value="pendiente">Pendientes de Cobro / Pago</option>
           </select>
-          <button className="g-btn g-btn-outline" onClick={exportarCsv} title="Descargar planilla CSV">
-            📥 CSV
+          <button className="g-btn g-btn-outline" onClick={exportarCsv} title="Descargar planilla CSV" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <IconDownload size={14} /> CSV
           </button>
           <button className="g-btn g-btn-accent" onClick={() => handleOpenNuevo('ingreso')}>
             + Cargar Cobro (Ingreso)
@@ -293,7 +294,7 @@ export default function FlujoCajaModule({ onCajaUpdated }) {
                 <tr>
                   <td colSpan={9}>
                     <div className="gestion-empty-state">
-                      <div className="gestion-empty-icon">💰</div>
+                      <div className="gestion-empty-icon"><IconWallet size={36} /></div>
                       <h4>Controlá los ingresos y egresos de tu taller</h4>
                       <p>
                         Aún no registraste movimientos de caja. Cargá los cobros de señas de clientes o pagos de telas y confección para visualizar tu balance financiero en tiempo real.
@@ -370,14 +371,14 @@ export default function FlujoCajaModule({ onCajaUpdated }) {
                           onClick={() => handleOpenEditar(t)}
                           title="Editar transacción"
                         >
-                          ✏️
+                          <IconEdit size={14} />
                         </button>
                         <button
                           className="g-btn g-btn-danger g-btn-sm"
                           onClick={() => handleEliminar(t.id, t.concepto)}
                           title="Eliminar transacción"
                         >
-                          🗑️
+                          <IconTrash size={14} />
                         </button>
                       </td>
                     </tr>
