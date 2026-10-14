@@ -5,7 +5,6 @@ import {
   getUsuarios,
   verifyPasswordSync,
   verifyTotpCode,
-  DEFAULT_ADMIN_HASH,
   hashPasswordSync,
   setLocal,
   KEYS,
@@ -207,9 +206,13 @@ function SecureAdminLogin({ onSuccess, idleLockedMessage }) {
 
       let localAuthSuccess = false;
       if (userMatch) {
-        const passwordOk = userMatch.password
-          ? verifyPasswordSync(password, userMatch.password)
-          : (password.length >= 8);
+        if (!userMatch.password) {
+          handleAuthFailure('Usuario sin credenciales configuradas. Contactá al administrador.');
+          setBusy(false);
+          return;
+        }
+
+        const passwordOk = verifyPasswordSync(password, userMatch.password);
 
         if (passwordOk) {
           localAuthSuccess = true;
@@ -271,30 +274,8 @@ function SecureAdminLogin({ onSuccess, idleLockedMessage }) {
             return;
           }
         } catch {
-          // Continuar a fallback de contingencia
+          // Error en llamada Supabase
         }
-      }
-
-      // 3. Fallback de contingencia: Clave maestra de taller o administrador predeterminado
-      const isMasterAdmin =
-        verifyPasswordSync(password, DEFAULT_ADMIN_HASH) ||
-        (cleanEmail.includes('admin') && password === 'Airo2026!');
-
-      if (isMasterAdmin) {
-        const fallbackSession = {
-          user: {
-            email: cleanEmail || 'admin@airocolorlab.com',
-            role: 'authenticated',
-            user_metadata: { rol: 'admin', nombre: 'Administrador Taller AIRO' },
-          },
-          token: 'airo-master-token-' + Date.now(),
-        };
-
-        sessionStorage.setItem('airo_auth_session', JSON.stringify(fallbackSession));
-        sessionStorage.removeItem('airo_login_fails');
-        setFailedAttempts(0);
-        onSuccess(fallbackSession);
-        return;
       }
 
       // Si no coincidió ninguna de las opciones anteriores:

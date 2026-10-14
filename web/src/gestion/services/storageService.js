@@ -153,8 +153,7 @@ export function hashPasswordSync(plainText, salt = null) {
 export function verifyPasswordSync(plainText, storedHashOrPlain) {
   if (!storedHashOrPlain || !plainText) return false;
   if (!storedHashOrPlain.startsWith('sha256:')) {
-    // Si viene en formato plano legacy (pre-migración), admitir coincidencia directa
-    return storedHashOrPlain === plainText;
+    return false;
   }
   const parts = storedHashOrPlain.split(':');
   if (parts.length !== 3) return false;
@@ -164,7 +163,10 @@ export function verifyPasswordSync(plainText, storedHashOrPlain) {
   return calculated === expectedHash;
 }
 
-export const DEFAULT_ADMIN_HASH = 'sha256:airo_master_salt:52e17c88b0a019764fe2c140dfd4a1b78d6db4c978aa6baa783b11995153d3cd';
+export function generateInitialAdminHash() {
+  const dynamicEntropy = generateSalt() + generateSalt();
+  return hashPasswordSync(dynamicEntropy, generateSalt());
+}
 
 // Helpers locales
 export function getLocal(key, defaultVal) {
@@ -222,7 +224,7 @@ export function initializeStorageIfEmpty() {
         activo: true,
         fecha_creacion: new Date().toISOString(),
         ultimo_ingreso: new Date().toISOString(),
-        password: DEFAULT_ADMIN_HASH,
+        password: generateInitialAdminHash(),
       },
     ]);
   }
@@ -1011,7 +1013,7 @@ export function getUsuarios() {
         activo: true,
         fecha_creacion: new Date().toISOString(),
         ultimo_ingreso: new Date().toISOString(),
-        password: DEFAULT_ADMIN_HASH,
+        password: generateInitialAdminHash(),
       },
     ];
     setLocal(KEYS.USUARIOS, adminDefault);
@@ -1033,6 +1035,22 @@ export function getUsuarios() {
   }
 
   return usuariosSeguros;
+}
+
+// Retorna usuarios sanitizados para UI sin exponer hashes ni secretos TOTP (OWASP / Anti-scraping)
+export function getUsuariosSanitizados() {
+  const users = getUsuarios();
+  return users.map((u) => ({
+    id: u.id,
+    email: u.email,
+    nombre: u.nombre,
+    rol: u.rol,
+    activo: u.activo,
+    fecha_creacion: u.fecha_creacion,
+    ultimo_ingreso: u.ultimo_ingreso,
+    mfa_enabled: !!u.mfa_enabled,
+    has_password: !!u.password,
+  }));
 }
 
 export function getUsuarioPorEmail(email) {
@@ -1163,7 +1181,7 @@ export async function cambiarPasswordUsuario(userIdOrEmail, passwordActual, pass
       nombre: defaultNombre,
       rol: 'admin',
       activo: true,
-      password: DEFAULT_ADMIN_HASH,
+      password: generateInitialAdminHash(),
       fecha_creacion: new Date().toISOString(),
     };
     list.push(newUser);
@@ -1174,19 +1192,10 @@ export async function cambiarPasswordUsuario(userIdOrEmail, passwordActual, pass
 
   // Si se solicita verificar la actual (self-service)
   if (passwordActual !== null && passwordActual !== undefined) {
-    let passwordOk = false;
-    if (target.password) {
-      passwordOk = verifyPasswordSync(passwordActual, target.password);
+    if (!target.password) {
+      throw new Error('La cuenta no posee una contraseña previa registrada.');
     }
-    // Fallback maestro: admitir también si coincide con DEFAULT_ADMIN_HASH o contraseña inicial de taller
-    if (!passwordOk && verifyPasswordSync(passwordActual, DEFAULT_ADMIN_HASH)) {
-      passwordOk = true;
-    }
-    // Si no tenía contraseña previa guardada y la actual tiene >= 8 caracteres
-    if (!passwordOk && !target.password && passwordActual.length >= 8) {
-      passwordOk = true;
-    }
-
+    const passwordOk = verifyPasswordSync(passwordActual, target.password);
     if (!passwordOk) {
       throw new Error('La contraseña actual ingresada es incorrecta.');
     }

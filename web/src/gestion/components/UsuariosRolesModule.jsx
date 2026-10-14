@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   getUsuarios,
+  getUsuariosSanitizados,
   saveUsuario,
   deleteUsuario,
   cambiarPasswordUsuario,
@@ -16,7 +17,7 @@ import { IconUsers, IconShield, IconKey, IconEdit, IconTrash, IconWarning } from
 
 export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated, initialSubTab = 'usuarios' }) {
   const [activeSubTab, setActiveSubTab] = useState(initialSubTab); // 'usuarios' | 'matriz' | 'password'
-  const [usuarios, setUsuarios] = useState(getUsuarios());
+  const [usuarios, setUsuarios] = useState(getUsuariosSanitizados());
   const [busqueda, setBusqueda] = useState('');
   const [filtroRol, setFiltroRol] = useState('todos');
 
@@ -73,7 +74,7 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
   });
 
   const reloadUsuarios = () => {
-    const list = getUsuarios();
+    const list = getUsuariosSanitizados();
     setUsuarios(list);
     if (onProfileUpdated) onProfileUpdated();
   };
