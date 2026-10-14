@@ -27,6 +27,8 @@ import {
   IconPlus,
   IconEdit,
   IconTrash,
+  IconClose,
+  IconSparkles,
 } from './Icons.jsx';
 
 export default function MarketingModule({ onContentChanged }) {
@@ -384,61 +386,72 @@ export default function MarketingModule({ onContentChanged }) {
     }
   };
 
+  const activeCampaignsCount = useMemo(() => campaigns.filter((c) => c.estado === 'ACTIVA').length, [campaigns]);
+
   return (
     <div className="gestion-module-container">
-      {/* Encabezado */}
-      <div className="gestion-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ display: 'flex', color: 'var(--c-brand-blue, #1A4295)' }}>
-              <IconPrompt />
-            </span>
-            <h1 className="gestion-title" style={{ margin: 0 }}>Agentes, Marketing & Prompts</h1>
-            {pendingCount > 0 && (
-              <span
-                style={{
-                  fontSize: 12,
-                  padding: '3px 8px',
-                  borderRadius: 12,
-                  background: '#FEF3C7',
-                  color: '#92400E',
-                  fontWeight: 700,
-                  border: '1px solid #FCD34D',
-                }}
-              >
-                {pendingCount} prompt{pendingCount > 1 ? 's' : ''} pendiente{pendingCount > 1 ? 's' : ''} de aprobación
-              </span>
-            )}
-          </div>
-          <p className="gestion-subtitle" style={{ margin: '4px 0 0 0' }}>
-            Planificación multicanal para <b>Instagram, WhatsApp, LinkedIn, Gmail y Facebook</b>, generador de prompts para IAs paralelas y flujo de validación humana (HITL).
-          </p>
+      {/* Encabezado del Módulo Canónico AIRO */}
+      <div className="gestion-module-header">
+        <div className="section-eyebrow">
+          <span className="num">08</span> Marketing Multicanal & IAs Paralelas
         </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <h2 className="display section-title">Marketing multicanal y agentes IA.</h2>
+            <p className="section-sub">
+              Planificación multicanal para <b>Instagram, WhatsApp, LinkedIn, Gmail y Facebook</b>, generador de prompts para IAs paralelas y flujo de validación humana (HITL).
+            </p>
+          </div>
 
-        {/* Canales Oficiales Badge */}
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center', background: '#F9FAFB', padding: '6px 12px', borderRadius: 8, border: '1px solid #E5E7EB' }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: '#4B5563', marginRight: 4 }}>Canales Oficiales:</span>
-          {MARKETING_CHANNELS.map((ch) => (
-            <span
-              key={ch.id}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                fontSize: 11,
-                padding: '2px 8px',
-                borderRadius: 4,
-                background: '#FFFFFF',
-                border: '1px solid #E5E7EB',
-                color: ch.color,
-                fontWeight: 600,
-              }}
-              title={ch.desc}
-            >
-              {renderChannelIcon(ch.id)}
-              {ch.name}
-            </span>
-          ))}
+          {/* Canales Oficiales Badge */}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: 'var(--neutral)', padding: '8px 16px', borderRadius: 'var(--r-pill)', border: '1px solid var(--line-strong)' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-45)', marginRight: 4 }}>Canales Oficiales:</span>
+            {MARKETING_CHANNELS.map((ch) => (
+              <span
+                key={ch.id}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  fontSize: 11.5,
+                  padding: '3px 10px',
+                  borderRadius: 'var(--r-pill)',
+                  background: 'var(--paper)',
+                  border: '1px solid var(--line)',
+                  color: ch.color,
+                  fontWeight: 600,
+                }}
+                title={ch.desc}
+              >
+                {renderChannelIcon(ch.id)}
+                {ch.name}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* KPIs Editoriales AIRO */}
+      <div className="gestion-kpis">
+        <div className="gestion-kpi-card">
+          <div className="gestion-kpi-label">Campañas Activas</div>
+          <div className="gestion-kpi-val">{activeCampaignsCount}</div>
+          <div className="gestion-kpi-sub">De {campaigns.length} campañas creadas</div>
+        </div>
+        <div className="gestion-kpi-card kpi-accent">
+          <div className="gestion-kpi-label">Prompts en Biblioteca</div>
+          <div className="gestion-kpi-val">{prompts.length}</div>
+          <div className="gestion-kpi-sub">Fórmulas creadas para IAs paralelas</div>
+        </div>
+        <div className={`gestion-kpi-card ${pendingCount > 0 ? 'kpi-warning' : 'kpi-success'}`}>
+          <div className="gestion-kpi-label">Aprobación HITL</div>
+          <div className="gestion-kpi-val">{pendingCount}</div>
+          <div className="gestion-kpi-sub">{pendingCount > 0 ? 'Prompts pendientes de revisión' : 'Todo revisado y aprobado'}</div>
+        </div>
+        <div className="gestion-kpi-card">
+          <div className="gestion-kpi-label">Canales Conectados</div>
+          <div className="gestion-kpi-val" style={{ fontSize: '1.25rem' }}>5 Canales</div>
+          <div className="gestion-kpi-sub">Instagram, WhatsApp, LinkedIn, Gmail, Facebook</div>
         </div>
       </div>
 
@@ -446,9 +459,9 @@ export default function MarketingModule({ onContentChanged }) {
       {statusNotice && (
         <div
           style={{
-            marginTop: 16,
+            marginBottom: 16,
             padding: '12px 16px',
-            borderRadius: 6,
+            borderRadius: 'var(--r-s, 8px)',
             fontSize: 13,
             background: statusNotice.type === 'info' ? 'rgba(0, 180, 216, 0.1)' : 'rgba(16, 185, 129, 0.1)',
             color: statusNotice.type === 'info' ? '#0369a1' : '#065f46',
@@ -465,13 +478,13 @@ export default function MarketingModule({ onContentChanged }) {
             position: 'fixed',
             bottom: 24,
             right: 24,
-            background: '#111827',
-            color: '#FFFFFF',
+            background: 'var(--ink)',
+            color: 'var(--paper)',
             padding: '10px 18px',
-            borderRadius: 6,
+            borderRadius: 'var(--r-pill)',
             fontSize: 13,
             fontWeight: 600,
-            boxShadow: '0 4px 14px rgba(0,0,0,0.2)',
+            boxShadow: 'var(--shadow-3)',
             zIndex: 9999,
           }}
         >
@@ -480,23 +493,25 @@ export default function MarketingModule({ onContentChanged }) {
       )}
 
       {/* Subpestañas del Módulo */}
-      <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid #E5E7EB', marginTop: 20, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid var(--line)', marginTop: 10, paddingBottom: 12, flexWrap: 'wrap' }}>
         <button
-          className={`gestion-btn ${activeSubTab === 'campaigns' ? 'gestion-btn--primary' : ''}`}
+          className={`g-btn ${activeSubTab === 'campaigns' ? 'g-btn-primary' : 'g-btn-outline'}`}
+          style={{ fontSize: 13, padding: '8px 18px' }}
           onClick={() => setActiveSubTab('campaigns')}
         >
           Organizador de Campañas
         </button>
         <button
-          className={`gestion-btn ${activeSubTab === 'prompts' ? 'gestion-btn--primary' : ''}`}
+          className={`g-btn ${activeSubTab === 'prompts' ? 'g-btn-primary' : 'g-btn-outline'}`}
+          style={{ fontSize: 13, padding: '8px 18px' }}
           onClick={() => setActiveSubTab('prompts')}
         >
           Generador de Prompts (IAs Paralelas)
         </button>
         <button
-          className={`gestion-btn ${activeSubTab === 'approvals' ? 'gestion-btn--primary' : ''}`}
+          className={`g-btn ${activeSubTab === 'approvals' ? 'g-btn-primary' : 'g-btn-outline'}`}
+          style={{ fontSize: 13, padding: '8px 18px', position: 'relative' }}
           onClick={() => setActiveSubTab('approvals')}
-          style={{ position: 'relative' }}
         >
           Aprobación HITL de Prompts
           {pendingCount > 0 && (
@@ -516,13 +531,15 @@ export default function MarketingModule({ onContentChanged }) {
           )}
         </button>
         <button
-          className={`gestion-btn ${activeSubTab === 'cm' ? 'gestion-btn--primary' : ''}`}
+          className={`g-btn ${activeSubTab === 'cm' ? 'g-btn-primary' : 'g-btn-outline'}`}
+          style={{ fontSize: 13, padding: '8px 18px' }}
           onClick={() => setActiveSubTab('cm')}
         >
           Asistente de Redes (CM) & CRM
         </button>
         <button
-          className={`gestion-btn ${activeSubTab === 'agents' ? 'gestion-btn--primary' : ''}`}
+          className={`g-btn ${activeSubTab === 'agents' ? 'g-btn-primary' : 'g-btn-outline'}`}
+          style={{ fontSize: 13, padding: '8px 18px' }}
           onClick={() => setActiveSubTab('agents')}
         >
           Directorio de Agentes IA
@@ -790,16 +807,17 @@ export default function MarketingModule({ onContentChanged }) {
                                     </button>
                                   )}
                                 </td>
-                                <td style={{ padding: '8px 10px', textAlign: 'right' }}>
-                                  <button
-                                    type="button"
-                                    className="gestion-btn"
-                                    style={{ padding: '2px 6px', fontSize: 10, color: '#EF4444' }}
-                                    onClick={() => handleDeletePublicacion(camp.id, pub.id)}
-                                  >
-                                    ✕
-                                  </button>
-                                </td>
+                                  <td style={{ padding: '8px 10px', textAlign: 'right' }}>
+                                    <button
+                                      type="button"
+                                      className="g-btn g-btn-danger g-btn-sm"
+                                      style={{ padding: '2px 8px', fontSize: 11 }}
+                                      onClick={() => handleDeletePublicacion(camp.id, pub.id)}
+                                      title="Eliminar publicación"
+                                    >
+                                      <IconClose size={12} />
+                                    </button>
+                                  </td>
                               </tr>
                             ))}
                           </tbody>
@@ -985,11 +1003,11 @@ export default function MarketingModule({ onContentChanged }) {
                 <div>
                   <button
                     type="button"
-                    className="gestion-btn"
-                    style={{ width: '100%', padding: '10px 14px', background: 'rgba(0, 180, 216, 0.1)', borderColor: '#00B4D8', color: '#0369A1', fontWeight: 600 }}
+                    className="g-btn g-btn-outline"
+                    style={{ width: '100%', padding: '10px 14px', background: 'rgba(0, 180, 216, 0.08)', borderColor: 'var(--cyan)', color: 'var(--cyan-ink)', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                     onClick={handleAutoGeneratePrompt}
                   >
-                    ⚡ Formular Prompt con Criterios AIRO (Voseo, Mínimo 10, Hasselblad)
+                    <IconSparkles size={16} /> Formular Prompt con Criterios AIRO (Voseo, Mínimo 10, Hasselblad)
                   </button>
                 </div>
 
@@ -1283,14 +1301,14 @@ export default function MarketingModule({ onContentChanged }) {
 
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button
-                        className="gestion-btn"
-                        style={{ background: '#DCFCE7', borderColor: '#86EFAC', color: '#166534', fontWeight: 700 }}
+                        className="g-btn g-btn-sm"
+                        style={{ background: '#DCFCE7', borderColor: '#86EFAC', color: '#166534', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
                         onClick={() => handleOpenDecision(p, 'APPROVED')}
                       >
-                        ✓ Aprobar Prompt
+                        <IconCheck size={14} /> Aprobar Prompt
                       </button>
                       <button
-                        className="gestion-btn"
+                        className="g-btn g-btn-outline g-btn-sm"
                         style={{ background: '#FEE2E2', borderColor: '#FCA5A5', color: '#991B1B', fontWeight: 600 }}
                         onClick={() => handleOpenDecision(p, 'REJECTED')}
                       >

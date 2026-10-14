@@ -1,4 +1,4 @@
-import { IconPrinter } from './Icons';
+import { IconPrinter, IconCheck } from './Icons';
 
 export default function RemitoPrintView({ remito, onVolver }) {
   if (!remito) return null;
@@ -125,8 +125,8 @@ export default function RemitoPrintView({ remito, onVolver }) {
             {remito.observaciones || 'Mercadería confeccionada según especificaciones del pedido. Revisada con control de calidad de AIRO Color Lab.'}
           </p>
           {remito.descontar_stock && (
-            <div style={{ marginTop: '0.4rem', fontSize: '0.72rem', color: '#0e7490' }}>
-              ✓ Unidades verificadas y descargadas del inventario central de taller.
+            <div style={{ marginTop: '0.4rem', fontSize: '0.72rem', color: '#0e7490', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <IconCheck size={12} /> Unidades verificadas y descargadas del inventario central de taller.
             </div>
           )}
         </div>

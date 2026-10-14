@@ -9,6 +9,7 @@ import {
   syncWithSupabase,
 } from '../services/storageService';
 import { supabaseEnabled } from '../../lib/supabase';
+import { IconCheck } from './Icons';
 
 const OPERADORES_DISPONIBLES = [
   'Admin AIRO (Taller Central)',
@@ -83,7 +84,7 @@ export default function ConfiguracionModule({ onDataReload }) {
     <div>
       <div className="gestion-module-header">
         <div className="section-eyebrow">
-          <span className="num">07</span> Sistema & Respaldo
+          <span className="num">11</span> Sistema & Sincronización
         </div>
         <h2 className="display section-title">Equipo y sincronización.</h2>
         <p className="section-sub">
@@ -100,7 +101,13 @@ export default function ConfiguracionModule({ onDataReload }) {
         <div className="gestion-kpi-card kpi-accent">
           <div className="gestion-kpi-label">Supabase Cloud Data</div>
           <div className="gestion-kpi-val" style={{ fontSize: '1.25rem' }}>
-            {supabaseEnabled ? '✓ Configurado' : 'Modo Offline'}
+            {supabaseEnabled ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <IconCheck size={18} /> Configurado
+              </span>
+            ) : (
+              'Modo Offline'
+            )}
           </div>
           <div className="gestion-kpi-sub">
             {supabaseEnabled ? 'URL de Supabase activa' : 'Usando persistencia reactiva local'}

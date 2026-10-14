@@ -9,7 +9,7 @@ import {
   getProductos,
 } from '../services/storageService';
 import RemitoPrintView from './RemitoPrintView';
-import { IconFile, IconPrinter, IconEdit, IconRefresh, IconTrash, IconWarning } from './Icons';
+import { IconFile, IconPrinter, IconEdit, IconRefresh, IconTrash, IconWarning, IconCheck, IconClose } from './Icons';
 
 const MODALIDADES_ENVIO = [
   'Retiro en Taller (AIRO)',
@@ -405,7 +405,9 @@ export default function RemitosModule({ onRemitoEmitted }) {
                       </td>
                       <td>
                         {r.descontar_stock ? (
-                          <span style={{ color: '#0e7490', fontSize: '0.8rem', fontWeight: 600 }}>✓ Auto</span>
+                          <span style={{ color: 'var(--cyan-ink)', fontSize: '0.8rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <IconCheck size={12} /> Auto
+                          </span>
                         ) : (
                           <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>No</span>
                         )}
@@ -699,9 +701,11 @@ export default function RemitosModule({ onRemitoEmitted }) {
                             <button
                               type="button"
                               className="g-btn g-btn-danger g-btn-sm"
+                              style={{ padding: '2px 8px', fontSize: 11 }}
                               onClick={() => handleRemoveItem(idx)}
+                              title="Quitar ítem"
                             >
-                              ✕
+                              <IconClose size={12} />
                             </button>
                           </td>
                         </tr>

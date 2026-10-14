@@ -14,7 +14,7 @@ import {
   setActivoDb,
 } from '../../lib/db.js';
 import { logAudit, getOperadorActual } from '../services/storageService.js';
-import { IconStore, IconEye, IconTrash, IconEdit, IconPlus, IconCheck } from './Icons.jsx';
+import { IconStore, IconEye, IconTrash, IconEdit, IconPlus, IconCheck, IconClose } from './Icons.jsx';
 
 const EMPTY_PRODUCTO = {
   id_producto: '',
@@ -298,60 +298,76 @@ export default function CatalogoWebModule({ onContentChanged }) {
     setForm((f) => ({ ...f, [k]: val }));
   };
 
+  const totalProds = productos.length;
+  const activosProds = useMemo(() => productos.filter((p) => p.activo).length, [productos]);
+  const ocultosProds = totalProds - activosProds;
+
   return (
     <div className="gestion-module-container">
-      {/* Encabezado del Módulo */}
-      <div className="gestion-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ display: 'flex', color: 'var(--c-brand-blue, #1A4295)' }}>
-              <IconStore />
-            </span>
-            <h1 className="gestion-title" style={{ margin: 0 }}>Catálogo Tienda Online</h1>
-            <span
-              style={{
-                fontSize: 11,
-                padding: '3px 8px',
-                borderRadius: 4,
-                fontWeight: 600,
-                letterSpacing: '0.04em',
-                textTransform: 'uppercase',
-                background: isDbMode ? 'rgba(0, 180, 216, 0.15)' : 'rgba(234, 179, 8, 0.15)',
-                color: isDbMode ? '#007799' : '#854d0e',
-                border: `1px solid ${isDbMode ? 'rgba(0, 180, 216, 0.4)' : 'rgba(234, 179, 8, 0.4)'}`,
-              }}
-            >
-              {isDbMode ? 'Conexión Postgres / Supabase' : 'Modo Catálogo Local / Borrador'}
-            </span>
-          </div>
-          <p className="gestion-subtitle" style={{ margin: '4px 0 0 0' }}>
-            Administración unificada de productos, fotos, categorías y visibilidad en la tienda web pública (<code>#/productos</code>).
-          </p>
+      {/* Encabezado del Módulo Canónico AIRO */}
+      <div className="gestion-module-header">
+        <div className="section-eyebrow">
+          <span className="num">09</span> Tienda Online & Catálogo Público
         </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <h2 className="display section-title">Catálogo web y tienda online.</h2>
+            <p className="section-sub">
+              Administración centralizada de productos, fotografías, especificaciones técnicas y visibilidad en el catálogo web público de AIRO Color Lab.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button className="g-btn g-btn-primary" onClick={startNew}>
+              <IconPlus size={16} /> Nuevo Producto
+            </button>
+            <label className="g-btn g-btn-outline" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              Importar JSON
+              <input type="file" accept=".json" onChange={handleImportJson} hidden />
+            </label>
+            <button className="g-btn g-btn-outline" onClick={() => exportDraft(productos)}>
+              Exportar Backup JSON
+            </button>
+            <button className="g-btn g-btn-outline" onClick={loadData}>
+              Actualizar
+            </button>
+          </div>
+        </div>
+      </div>
 
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <button className="gestion-btn gestion-btn--primary" onClick={startNew}>
-            <IconPlus /> Nuevo Producto
-          </button>
-          <label className="gestion-btn" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}>
-            Importar JSON
-            <input type="file" accept=".json" onChange={handleImportJson} hidden />
-          </label>
-          <button className="gestion-btn" onClick={() => exportDraft(productos)}>
-            Exportar Backup JSON
-          </button>
-          <button className="gestion-btn" onClick={loadData}>
-            Actualizar
-          </button>
+      {/* KPIs Editoriales AIRO */}
+      <div className="gestion-kpis">
+        <div className="gestion-kpi-card">
+          <div className="gestion-kpi-label">Total Productos</div>
+          <div className="gestion-kpi-val">{totalProds}</div>
+          <div className="gestion-kpi-sub">Modelos registrados en tienda</div>
+        </div>
+        <div className="gestion-kpi-card kpi-success">
+          <div className="gestion-kpi-label">Visibles en Web</div>
+          <div className="gestion-kpi-val">{activosProds}</div>
+          <div className="gestion-kpi-sub">Activos en el catálogo público</div>
+        </div>
+        <div className="gestion-kpi-card kpi-warning">
+          <div className="gestion-kpi-label">Ocultos / Borrador</div>
+          <div className="gestion-kpi-val">{ocultosProds}</div>
+          <div className="gestion-kpi-sub">Fuera de publicación activa</div>
+        </div>
+        <div className="gestion-kpi-card kpi-accent">
+          <div className="gestion-kpi-label">Fuente de Datos</div>
+          <div className="gestion-kpi-val" style={{ fontSize: '1.25rem' }}>
+            {isDbMode ? 'PostgreSQL Supabase' : 'Catálogo Local'}
+          </div>
+          <div className="gestion-kpi-sub">
+            {isDbMode ? 'Sincronización en la nube activa' : 'Borrador en almacenamiento local'}
+          </div>
         </div>
       </div>
 
       {statusMsg && (
         <div
           style={{
-            marginTop: 16,
+            marginBottom: 20,
             padding: '12px 16px',
-            borderRadius: 6,
+            borderRadius: 'var(--r-s, 8px)',
             fontSize: 13,
             background: statusMsg.type === 'error' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
             color: statusMsg.type === 'error' ? '#991b1b' : '#065f46',
@@ -362,39 +378,20 @@ export default function CatalogoWebModule({ onContentChanged }) {
         </div>
       )}
 
-      {/* Barra de Filtros */}
-      <div
-        style={{
-          marginTop: 20,
-          padding: 16,
-          background: '#FFFFFF',
-          borderRadius: 8,
-          border: '1px solid #E5E7EB',
-          display: 'flex',
-          gap: 16,
-          alignItems: 'center',
-          flexWrap: 'wrap',
-        }}
-      >
-        <div style={{ flex: '1 1 240px' }}>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#4B5563', marginBottom: 4 }}>
-            Buscar por producto, ID o descripción
-          </label>
+      {/* Control Bar Oficial */}
+      <div className="gestion-control-bar">
+        <div className="gestion-search-box">
           <input
             type="text"
-            className="gestion-input"
-            placeholder="Ej: Remera Peinada, Buzo Friza, ID..."
+            className="gestion-input-search"
+            placeholder="Buscar por producto, ID o descripción…"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-
-        <div style={{ minWidth: 160 }}>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#4B5563', marginBottom: 4 }}>
-            Categoría
-          </label>
+        <div className="gestion-filters">
           <select
-            className="gestion-input"
+            className="gestion-select"
             value={filterCat}
             onChange={(e) => setFilterCat(e.target.value)}
           >
@@ -403,14 +400,8 @@ export default function CatalogoWebModule({ onContentChanged }) {
             <option value="merchandising">Merchandising</option>
             <option value="packs">Packs</option>
           </select>
-        </div>
-
-        <div style={{ minWidth: 140 }}>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#4B5563', marginBottom: 4 }}>
-            Estado en Tienda
-          </label>
           <select
-            className="gestion-input"
+            className="gestion-select"
             value={filterActivo}
             onChange={(e) => setFilterActivo(e.target.value)}
           >
@@ -418,17 +409,16 @@ export default function CatalogoWebModule({ onContentChanged }) {
             <option value="ACTIVO">Visibles (Activos)</option>
             <option value="OCULTO">Ocultos</option>
           </select>
-        </div>
-
-        <div style={{ marginLeft: 'auto', alignSelf: 'flex-end', fontSize: 13, color: '#6B7280' }}>
-          Mostrando <b>{filteredProductos.length}</b> de <b>{productos.length}</b> productos
+          <span style={{ fontSize: '13px', color: 'var(--ink-45)', marginLeft: 'auto' }}>
+            Mostrando <b>{filteredProductos.length}</b> de <b>{productos.length}</b> productos
+          </span>
         </div>
       </div>
 
-      {/* Contenedor Principal: Tabla y Panel de Edición Lateral / Modal */}
+      {/* Contenedor Principal: Tabla y Panel de Edición Lateral */}
       <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: editingId ? '1fr 420px' : '1fr', gap: 20 }}>
         {/* Tabla de Productos */}
-        <div style={{ background: '#FFFFFF', borderRadius: 8, border: '1px solid #E5E7EB', overflow: 'hidden' }}>
+        <div className="gestion-table-container">
           {loading ? (
             <div style={{ padding: 40, textAlign: 'center', color: '#6B7280' }}>
               Cargando catálogo de la tienda online…
@@ -581,24 +571,34 @@ export default function CatalogoWebModule({ onContentChanged }) {
         {editingId && (
           <div
             style={{
-              background: '#FFFFFF',
-              borderRadius: 8,
-              border: '1px solid #00B4D8',
-              padding: 20,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+              background: 'var(--paper)',
+              borderRadius: 'var(--r-m)',
+              border: '1px solid var(--blue)',
+              padding: 24,
+              boxShadow: 'var(--shadow-2)',
               alignSelf: 'start',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#111827' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+              <h3 className="display" style={{ fontSize: 18, fontWeight: 600, margin: 0, color: 'var(--ink)' }}>
                 {editingId === '__new__' ? 'Nuevo Producto de Tienda' : `Editar ${form.id_producto}`}
-              </h2>
+              </h3>
               <button
                 type="button"
                 onClick={cancelEdit}
-                style={{ background: 'none', border: 'none', fontSize: 18, color: '#9CA3AF', cursor: 'pointer' }}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--ink-45)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: 4,
+                  borderRadius: '50%',
+                }}
+                title="Cerrar edición"
               >
-                ✕
+                <IconClose size={18} />
               </button>
             </div>
 
@@ -767,10 +767,10 @@ export default function CatalogoWebModule({ onContentChanged }) {
                   </label>
                 </div>
 
-                <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+                <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
                   <button
                     type="submit"
-                    className="gestion-btn gestion-btn--primary"
+                    className="g-btn g-btn-primary"
                     style={{ flex: 1 }}
                     disabled={saving}
                   >
@@ -778,7 +778,7 @@ export default function CatalogoWebModule({ onContentChanged }) {
                   </button>
                   <button
                     type="button"
-                    className="gestion-btn"
+                    className="g-btn g-btn-outline"
                     onClick={cancelEdit}
                   >
                     Cancelar

@@ -7,7 +7,7 @@ import {
   saveProveedor,
   deleteProveedor,
 } from '../services/storageService';
-import { IconUsers, IconBriefcase, IconEdit, IconTrash } from './Icons';
+import { IconUsers, IconBriefcase, IconEdit, IconTrash, IconClose } from './Icons';
 
 export default function ContactosModule() {
   const [tab, setTab] = useState('clientes');
@@ -261,8 +261,10 @@ export default function ContactosModule() {
         <div className="gestion-modal-backdrop" onClick={() => setModalCliOpen(false)}>
           <div className="gestion-modal" onClick={(e) => e.stopPropagation()}>
             <div className="gestion-modal-header">
-              <h3>{formCli.id ? 'Editar Cliente' : 'Nuevo Cliente B2B'}</h3>
-              <button className="gestion-modal-close" onClick={() => setModalCliOpen(false)}>×</button>
+              <h3 className="display">{formCli.id ? 'Editar Cliente' : 'Nuevo Cliente B2B'}</h3>
+              <button className="gestion-modal-close" onClick={() => setModalCliOpen(false)} title="Cerrar modal">
+                <IconClose size={18} />
+              </button>
             </div>
             <form onSubmit={handleGuardarCli}>
               <div className="gestion-modal-body">
@@ -311,8 +313,10 @@ export default function ContactosModule() {
         <div className="gestion-modal-backdrop" onClick={() => setModalProvOpen(false)}>
           <div className="gestion-modal" onClick={(e) => e.stopPropagation()}>
             <div className="gestion-modal-header">
-              <h3>{formProv.id ? 'Editar Proveedor' : 'Nuevo Proveedor / Taller'}</h3>
-              <button className="gestion-modal-close" onClick={() => setModalProvOpen(false)}>×</button>
+              <h3 className="display">{formProv.id ? 'Editar Proveedor' : 'Nuevo Proveedor / Taller'}</h3>
+              <button className="gestion-modal-close" onClick={() => setModalProvOpen(false)} title="Cerrar modal">
+                <IconClose size={18} />
+              </button>
             </div>
             <form onSubmit={handleGuardarProv}>
               <div className="gestion-modal-body">

@@ -220,58 +220,61 @@ export default function CrmModule({ onLeadChanged }) {
 
   return (
     <div className="crm-module">
-      {/* Header del CRM */}
-      <div className="gestion-toolbar" style={{ flexWrap: 'wrap', gap: '16px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 700, margin: 0, color: 'var(--blue)' }}>
-            CRM & Pipeline B2B
-          </h2>
-          <span style={{ fontSize: '0.85rem', color: 'var(--ink-45)' }}>
-            AIRO Color Lab · Deduplicación automática <strong style={{ color: 'var(--cyan-ink)' }}>{CRM_RULE_ID}</strong>
-          </span>
+      {/* Header del CRM Canónico AIRO */}
+      <div className="gestion-module-header">
+        <div className="section-eyebrow">
+          <span className="num">07</span> Cartera B2B & Oportunidades
         </div>
-
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <div className="gestion-btn-group" role="group">
-            <button
-              className={`gestion-btn ${viewMode === 'kanban' ? 'gestion-btn-primary' : 'gestion-btn-outline'}`}
-              onClick={() => setViewMode('kanban')}
-              style={{ fontSize: '0.85rem', padding: '6px 14px' }}
-            >
-              Tablero Pipeline
-            </button>
-            <button
-              className={`gestion-btn ${viewMode === 'table' ? 'gestion-btn-primary' : 'gestion-btn-outline'}`}
-              onClick={() => setViewMode('table')}
-              style={{ fontSize: '0.85rem', padding: '6px 14px' }}
-            >
-              Vista Lista
-            </button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <h2 className="display section-title">CRM y pipeline B2B.</h2>
+            <p className="section-sub">
+              Gestión unificada de prospectos, clientes corporativos y oportunidades comerciales con deduplicación automática <strong style={{ color: 'var(--cyan-ink)' }}>{CRM_RULE_ID}</strong>.
+            </p>
           </div>
 
-          <button
-            className="gestion-btn gestion-btn-secondary"
-            onClick={handleSincronizarCotizaciones}
-            disabled={isSyncing}
-            title="Importar cotizaciones entrantes del catálogo web"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-          >
-            <IconRefresh size={14} />
-            {isSyncing ? 'Sincronizando...' : 'Sincronizar Cotizaciones Web'}
-          </button>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ display: 'inline-flex', gap: 4, background: 'var(--neutral)', padding: 4, borderRadius: 'var(--r-pill)' }}>
+              <button
+                className={`g-btn g-btn-sm ${viewMode === 'kanban' ? 'g-btn-primary' : 'g-btn-outline'}`}
+                onClick={() => setViewMode('kanban')}
+                style={{ padding: '6px 14px' }}
+              >
+                Tablero Pipeline
+              </button>
+              <button
+                className={`g-btn g-btn-sm ${viewMode === 'table' ? 'g-btn-primary' : 'g-btn-outline'}`}
+                onClick={() => setViewMode('table')}
+                style={{ padding: '6px 14px' }}
+              >
+                Vista Lista
+              </button>
+            </div>
 
-          <button className="gestion-btn gestion-btn-primary" onClick={handleOpenNuevo}>
-            + Nuevo Lead B2B
-          </button>
+            <button
+              className="g-btn g-btn-outline"
+              onClick={handleSincronizarCotizaciones}
+              disabled={isSyncing}
+              title="Importar cotizaciones entrantes del catálogo web"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              <IconRefresh size={14} />
+              {isSyncing ? 'Sincronizando…' : 'Sincronizar Cotizaciones Web'}
+            </button>
+
+            <button className="g-btn g-btn-primary" onClick={handleOpenNuevo}>
+              + Nuevo Lead B2B
+            </button>
+          </div>
         </div>
       </div>
 
       {syncFeedback && (
         <div
           style={{
-            marginTop: '12px',
-            padding: '10px 16px',
-            borderRadius: 'var(--r-m)',
+            marginBottom: '16px',
+            padding: '12px 16px',
+            borderRadius: 'var(--r-s, 8px)',
             fontSize: '0.875rem',
             background: syncFeedback.tipo === 'success' ? 'rgba(34, 177, 94, 0.12)' : 'rgba(26, 66, 149, 0.08)',
             color: syncFeedback.tipo === 'success' ? '#15803d' : 'var(--blue)',
@@ -282,26 +285,26 @@ export default function CrmModule({ onLeadChanged }) {
         </div>
       )}
 
-      {/* KPIs Editoriales */}
-      <div className="gestion-kpis-grid" style={{ marginTop: '20px' }}>
+      {/* KPIs Editoriales AIRO */}
+      <div className="gestion-kpis">
         <div className="gestion-kpi-card">
           <span className="gestion-kpi-label">Total Oportunidades</span>
           <span className="gestion-kpi-val" style={{ color: 'var(--blue)' }}>{totalLeads}</span>
           <span className="gestion-kpi-sub">Leads en base de datos</span>
         </div>
-        <div className="gestion-kpi-card">
+        <div className="gestion-kpi-card kpi-accent">
           <span className="gestion-kpi-label">Oportunidades Calificadas</span>
-          <span className="gestion-kpi-val" style={{ color: '#0284c7' }}>{hotLeads}</span>
+          <span className="gestion-kpi-val">{hotLeads}</span>
           <span className="gestion-kpi-sub">Score alto / Interés firme</span>
         </div>
-        <div className="gestion-kpi-card">
+        <div className="gestion-kpi-card kpi-warning">
           <span className="gestion-kpi-label">En Cotización & Cierre</span>
-          <span className="gestion-kpi-val" style={{ color: '#b45309' }}>{inPipeline}</span>
-          <span className="gestion-kpi-sub">Propuestas en curso</span>
+          <span className="gestion-kpi-val">{inPipeline}</span>
+          <span className="gestion-kpi-sub">Propuestas comerciales en curso</span>
         </div>
-        <div className="gestion-kpi-card">
+        <div className="gestion-kpi-card kpi-success">
           <span className="gestion-kpi-label">Cuentas Ganadas</span>
-          <span className="gestion-kpi-val" style={{ color: '#15803d' }}>{wonLeads}</span>
+          <span className="gestion-kpi-val">{wonLeads}</span>
           <span className="gestion-kpi-sub">Clientes concretados</span>
         </div>
       </div>

@@ -13,7 +13,7 @@ import {
   ROLES_DEFINICION,
   getOperadorActual,
 } from '../services/storageService.js';
-import { IconUsers, IconShield, IconKey, IconEdit, IconTrash, IconWarning } from './Icons';
+import { IconUsers, IconShield, IconKey, IconEdit, IconTrash, IconWarning, IconCheck, IconClose } from './Icons';
 
 export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated, initialSubTab = 'usuarios' }) {
   const [activeSubTab, setActiveSubTab] = useState(initialSubTab); // 'usuarios' | 'matriz' | 'password'
@@ -268,7 +268,7 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
       {/* Encabezado Editorial AIRO */}
       <div className="gestion-module-header">
         <div className="section-eyebrow">
-          <span className="num">08</span> Seguridad & Accesos
+          <span className="num">10</span> Seguridad & Control de Roles
         </div>
         <h2 className="display section-title">Usuarios y control de accesos.</h2>
         <p className="section-sub">
@@ -607,7 +607,9 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                   fontWeight: 600,
                 }}
               >
-                ✓ {selfPassword.success}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <IconCheck size={16} /> {selfPassword.success}
+                </span>
               </div>
             )}
 
@@ -781,8 +783,8 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                 )}
 
                 {modalMfa.success && (
-                  <div style={{ marginTop: '12px', color: '#15803d', fontWeight: 600, fontSize: '0.9rem' }}>
-                    ✓ {modalMfa.success}
+                  <div style={{ marginTop: '12px', color: '#15803d', fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <IconCheck size={16} /> {modalMfa.success}
                   </div>
                 )}
               </div>
@@ -819,8 +821,9 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
               <button
                 className="gestion-modal-close"
                 onClick={() => setModalUsuario({ open: false, isEdit: false, data: {} })}
+                title="Cerrar modal"
               >
-                ✕
+                <IconClose size={18} />
               </button>
             </div>
             <form onSubmit={handleGuardarUsuario}>
@@ -832,8 +835,8 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                   </div>
                 )}
                 {modalUsuario.success && (
-                  <div style={{ marginBottom: '16px', padding: '10px 14px', borderRadius: 'var(--r-s, 8px)', background: 'rgba(34, 177, 94, 0.1)', color: '#15803d', fontWeight: 600, fontSize: '0.9rem' }}>
-                    ✓ {modalUsuario.success}
+                  <div style={{ marginBottom: '16px', padding: '10px 14px', borderRadius: 'var(--r-s, 8px)', background: 'rgba(34, 177, 94, 0.1)', color: '#15803d', fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <IconCheck size={16} /> {modalUsuario.success}
                   </div>
                 )}
 
@@ -949,8 +952,9 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
               <button
                 className="gestion-modal-close"
                 onClick={() => setModalReset({ open: false, user: null, newPassword: '', confirmPassword: '', error: '', success: '' })}
+                title="Cerrar modal"
               >
-                ✕
+                <IconClose size={18} />
               </button>
             </div>
             <form onSubmit={handleEjecutarReset}>
@@ -976,9 +980,12 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                       fontSize: '13px',
                       marginBottom: '14px',
                       fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
                     }}
                   >
-                    ✓ {modalReset.success}
+                    <IconCheck size={16} /> {modalReset.success}
                   </div>
                 )}
 

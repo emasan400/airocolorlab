@@ -128,6 +128,26 @@
   padding-bottom: 4px;
 }
 
+.gestion-module-container {
+  width: 100%;
+}
+
+.gestion-title {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3vw, 36px);
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.gestion-subtitle {
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--ink-70);
+  line-height: 1.5;
+}
+
 /* ============================================================
    CABECERA SUPERIOR (NAVBAR)
    ============================================================ */
@@ -696,7 +716,8 @@
 /* ============================================================
    KPIS / MÉTRICAS (ESTILO EDITORIAL AIRO)
    ============================================================ */
-.gestion-kpis {
+.gestion-kpis,
+.gestion-kpis-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 20px;
@@ -826,18 +847,43 @@
   box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.14);
 }
 
+.gestion-input {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-s);
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  outline: none;
+  background: var(--paper);
+  color: var(--ink);
+  transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
+}
+
+.gestion-input:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.14);
+}
+
+textarea.gestion-input {
+  min-height: 80px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
 /* ============================================================
    BOTONES OFICIALES (IDÉNTICOS A .btn DEL SISTEMA DE DISEÑO)
    ============================================================ */
-.g-btn {
+.g-btn,
+.gestion-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   font-family: var(--font-display);
-  font-size: 14.5px;
+  font-size: 14px;
   font-weight: 500;
-  padding: 13px 26px;
+  padding: 10px 22px;
   border-radius: var(--r-pill);
   border: 1px solid transparent;
   text-decoration: none;
@@ -847,30 +893,39 @@
     box-shadow 0.18s var(--ease), color 0.18s var(--ease), border-color 0.18s var(--ease);
 }
 
-.g-btn:active {
+.g-btn:active,
+.gestion-btn:active {
   transform: scale(0.96);
 }
 
 /* Primario: fondo negro tinta que en hover pasa a azul profundo */
-.g-btn-primary {
+.g-btn-primary,
+.gestion-btn-primary,
+.gestion-btn--primary {
   background: var(--ink);
   color: var(--paper);
 }
 
-.g-btn-primary:hover {
+.g-btn-primary:hover,
+.gestion-btn-primary:hover,
+.gestion-btn--primary:hover {
   background: var(--blue);
   box-shadow: var(--shadow-2);
   transform: translateY(-2px);
 }
 
 /* Acento Cian / Claro */
-.g-btn-accent {
+.g-btn-accent,
+.gestion-btn-accent,
+.gestion-btn--accent {
   background: var(--cyan);
   color: var(--ink);
   font-weight: 600;
 }
 
-.g-btn-accent:hover {
+.g-btn-accent:hover,
+.gestion-btn-accent:hover,
+.gestion-btn--accent:hover {
   background: var(--blue);
   color: var(--paper);
   transform: translateY(-2px);
@@ -878,35 +933,49 @@
 }
 
 /* Outline / Ghost */
-.g-btn-outline {
+.g-btn-outline,
+.gestion-btn-outline,
+.gestion-btn--outline,
+.gestion-btn-secondary,
+.gestion-btn--secondary {
   background: transparent;
   color: var(--ink);
   border-color: var(--line-strong);
 }
 
-.g-btn-outline:hover {
+.g-btn-outline:hover,
+.gestion-btn-outline:hover,
+.gestion-btn--outline:hover,
+.gestion-btn-secondary:hover,
+.gestion-btn--secondary:hover {
   border-color: var(--ink);
   background: var(--neutral);
   transform: translateY(-1px);
 }
 
 /* Peligro */
-.g-btn-danger {
+.g-btn-danger,
+.gestion-btn-danger,
+.gestion-btn--danger {
   background: transparent;
   color: #c0392b;
   border-color: rgba(192, 57, 43, 0.3);
 }
 
-.g-btn-danger:hover {
+.g-btn-danger:hover,
+.gestion-btn-danger:hover,
+.gestion-btn--danger:hover {
   background: #c0392b;
   color: var(--paper);
   border-color: #c0392b;
   transform: translateY(-1px);
 }
 
-.g-btn-sm {
-  padding: 8px 16px;
-  font-size: 12.5px;
+.g-btn-sm,
+.gestion-btn-sm,
+.gestion-btn--sm {
+  padding: 6px 14px;
+  font-size: 12px;
 }
 
 /* ============================================================
