@@ -3667,6 +3667,7 @@ export const SUITES_DOMINIO = [
     nombre: 'Comando PMBOK & Mejora Continua',
     subtitulo: 'Kanban · Google Tasks · Ciclo PDCA · Cola HITL',
     color: '#1a4295',
+    tabs: ['pmbok_command'],
     modulos: [
       { id: 'pmbok_command', label: 'Tablero PMBOK, Google Tasks & PDCA', badge: 'PMBOK 360°' },
     ],
@@ -3677,6 +3678,7 @@ export const SUITES_DOMINIO = [
     nombre: 'Comercial 360° & Cotizador DTF',
     subtitulo: 'Lead-to-Quote: CRM · Optimizador MaxRects 2D · Cuentas B2B',
     color: '#00b4d8',
+    tabs: ['crm', 'cotizador_dtf', 'contactos'],
     modulos: [
       { id: 'crm', label: 'Pipeline CRM & Leads B2B' },
       { id: 'cotizador_dtf', label: 'Optimizador 2D & Cotizador DTF' },
@@ -3689,6 +3691,7 @@ export const SUITES_DOMINIO = [
     nombre: 'Taller, Inventario & Despacho',
     subtitulo: 'Order-to-Dispatch: Stock · Tienda Web · Insumos · Remitos · Kardex',
     color: '#15803d',
+    tabs: ['productos', 'catalogo', 'materiales', 'remitos', 'kardex'],
     modulos: [
       { id: 'productos', label: 'Productos en Stock' },
       { id: 'catalogo', label: 'Catálogo Tienda Online' },
@@ -3703,9 +3706,11 @@ export const SUITES_DOMINIO = [
     nombre: 'Estudio Creativo & Marketing IA',
     subtitulo: 'Concept-to-Publish: Lienzo Infinito (.canvas) · Campañas · Prompts IA',
     color: '#0e7490',
+    tabs: ['design_studio', 'marketing', 'catalogo'],
     modulos: [
       { id: 'design_studio', label: 'Estudio de Diseño & Lienzo Infinito' },
       { id: 'marketing', label: 'Campañas, Prompts IA & 29 Agentes' },
+      { id: 'catalogo', label: 'Catálogo Tienda Online' },
     ],
   },
   {
@@ -3714,6 +3719,7 @@ export const SUITES_DOMINIO = [
     nombre: 'Finanzas, Equipo & Sincronización',
     subtitulo: 'Dispatch-to-Cash: Flujo de Caja · Roles RBAC · Puente Obsidian',
     color: '#b45309',
+    tabs: ['caja', 'usuarios', 'configuracion', 'perfil'],
     modulos: [
       { id: 'caja', label: 'Flujo de Caja & Tesorería' },
       { id: 'usuarios', label: 'Usuarios, Roles RBAC & 2FA' },

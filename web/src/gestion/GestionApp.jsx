@@ -176,7 +176,15 @@ function GestionAppInner({ session, onSignOut }) {
     perfil: { label: 'Mi Contraseña & 2FA', badge: 'Seguridad' },
   };
 
-  const activeSuite = SUITES_DOMINIO.find((s) => s.tabs.includes(activeTab)) || SUITES_DOMINIO[0];
+  const getSuiteTabs = (suite) =>
+    Array.isArray(suite?.tabs)
+      ? suite.tabs
+      : Array.isArray(suite?.modulos)
+      ? suite.modulos.map((m) => m.id)
+      : [];
+
+  const activeSuite =
+    SUITES_DOMINIO.find((s) => getSuiteTabs(s).includes(activeTab)) || SUITES_DOMINIO[0];
 
   const suiteLabelStyle = {
     fontSize: 10,
@@ -593,9 +601,10 @@ function GestionAppInner({ session, onSignOut }) {
               Suites B2B:
             </span>
             {SUITES_DOMINIO.map((suite) => {
-              const allowedTabs = suite.tabs.filter((t) => isAdmin || isModuloPermitido(currentRol, t));
+              const suiteTabs = getSuiteTabs(suite);
+              const allowedTabs = suiteTabs.filter((t) => isAdmin || isModuloPermitido(currentRol, t));
               if (allowedTabs.length === 0) return null;
-              const isSuiteActive = suite.tabs.includes(activeTab);
+              const isSuiteActive = suiteTabs.includes(activeTab);
               return (
                 <button
                   key={suite.id}
@@ -627,7 +636,7 @@ function GestionAppInner({ session, onSignOut }) {
             <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--ink-45)' }}>
               En {activeSuite.num}:
             </span>
-            {activeSuite.tabs
+            {getSuiteTabs(activeSuite)
               .filter((t) => isAdmin || isModuloPermitido(currentRol, t))
               .map((tabId) => {
                 const meta = TAB_META[tabId] || { label: tabId, badge: '' };

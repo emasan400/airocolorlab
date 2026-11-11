@@ -763,6 +763,10 @@ test('Punto 3 & M-01/M-02 — Motor 2D Nesting MaxRects-BSSF, Cotizador DTF y Pu
 test('TSK-012 — Gobernanza PMBOK (Kanban + Google Tasks), Mejora Continua PDCA (Kaizen), 5 Suites y Puentes Order-to-Cash', () => {
   // 1. Verificar Arquitectura de las 5 Suites de Dominio y constantes PMBOK
   assert.equal(storage.SUITES_DOMINIO.length, 5, 'El portal debe consolidarse en 5 Suites de Dominio');
+  for (const s of storage.SUITES_DOMINIO) {
+    assert.ok(Array.isArray(s.tabs) && s.tabs.length > 0, `Suite ${s.id} debe definir s.tabs como array no vacío`);
+    assert.ok(Array.isArray(s.modulos) && s.modulos.length > 0, `Suite ${s.id} debe definir s.modulos como array no vacío`);
+  }
   assert.equal(storage.PMBOK_PROCESS_GROUPS.length, 5, 'Debe contar con los 5 Grupos de Procesos PMBOK');
   assert.equal(storage.PMBOK_KNOWLEDGE_AREAS.length, 10, 'Debe contar con las 10 Áreas de Conocimiento PMBOK');
   assert.equal(storage.isModuloPermitido('admin', 'pmbok_command'), true);
