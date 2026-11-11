@@ -9,6 +9,8 @@ import {
   getProductos,
   getLeads,
   saveLead,
+  convertDtfQuoteToRemitoDraft,
+  convertDtfQuoteToCajaSena,
 } from '../services/storageService';
 import {
   IconRuler,
@@ -18,6 +20,8 @@ import {
   IconPrinter,
   IconBriefcase,
   IconLayers,
+  IconFile,
+  IconWallet,
 } from './Icons';
 import PresupuestoPrintView from './PresupuestoPrintView';
 
@@ -240,6 +244,28 @@ export default function CotizadorDtfModule({ onNavigateTab, onStockChange }) {
     if (!window.confirm('¿Eliminar esta cotización del historial?')) return;
     deleteDtfQuote(id);
     setQuotes(getDtfQuotes());
+  };
+
+  // Puente desacoplado 1-Clic: Cotización DTF -> Remito Oficial + Google Task PMBOK
+  const handleBridgeToRemito = (q) => {
+    try {
+      const rem = convertDtfQuoteToRemitoDraft(q.id);
+      if (onStockChange) onStockChange();
+      showNotice(`Remito Oficial ${rem.numero} generado en Suite 03 y subtarea agendada en Tablero PMBOK.`);
+    } catch (err) {
+      alert(`Error al generar Remito: ${err.message}`);
+    }
+  };
+
+  // Puente desacoplado 1-Clic: Cotización DTF -> Seña 50% en Flujo de Caja
+  const handleBridgeToCaja = (q) => {
+    try {
+      const trx = convertDtfQuoteToCajaSena(q.id, 50);
+      if (onStockChange) onStockChange();
+      showNotice(`Seña 50% ($${Number(trx.monto).toLocaleString('es-AR')}) registrada en Flujo de Caja (Suite 05).`);
+    } catch (err) {
+      alert(`Error al registrar seña: ${err.message}`);
+    }
   };
 
   if (subTab === 'print' && printQuote) {
@@ -907,7 +933,7 @@ export default function CotizadorDtfModule({ onNavigateTab, onStockChange }) {
                       ${Number(q.precio_venta_sugerido_total || q.total_quote || 0).toLocaleString('es-AR')}
                     </td>
                     <td>
-                      <div style={{ display: 'flex', gap: 6 }}>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                         <button
                           className="g-btn g-btn-outline"
                           style={{ padding: '4px 8px', fontSize: '0.75rem' }}
@@ -915,13 +941,31 @@ export default function CotizadorDtfModule({ onNavigateTab, onStockChange }) {
                             setPrintQuote(q);
                             setSubTab('print');
                           }}
+                          title="Imprimir o guardar Presupuesto Oficial PDF"
                         >
                           <IconPrinter size={13} /> PDF
                         </button>
                         <button
                           className="g-btn g-btn-outline"
+                          style={{ padding: '4px 8px', fontSize: '0.75rem', color: '#15803d' }}
+                          onClick={() => handleBridgeToRemito(q)}
+                          title="Puente Order-to-Cash: Convertir en Remito Oficial + Google Task"
+                        >
+                          <IconFile size={13} /> Remito
+                        </button>
+                        <button
+                          className="g-btn g-btn-outline"
+                          style={{ padding: '4px 8px', fontSize: '0.75rem', color: '#1a4295' }}
+                          onClick={() => handleBridgeToCaja(q)}
+                          title="Puente Order-to-Cash: Registrar cobro de Seña 50% en Flujo de Caja"
+                        >
+                          <IconWallet size={13} /> Seña 50%
+                        </button>
+                        <button
+                          className="g-btn g-btn-outline"
                           style={{ padding: '4px 8px', fontSize: '0.75rem', color: '#b91c1c' }}
                           onClick={() => handleDeleteSavedQuote(q.id)}
+                          title="Eliminar cotización"
                         >
                           <IconTrash size={13} />
                         </button>

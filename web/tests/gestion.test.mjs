@@ -760,6 +760,102 @@ test('Punto 3 & M-01/M-02 — Motor 2D Nesting MaxRects-BSSF, Cotizador DTF y Pu
   assert.equal(importRes, true);
 });
 
+test('TSK-012 — Gobernanza PMBOK (Kanban + Google Tasks), Mejora Continua PDCA (Kaizen), 5 Suites y Puentes Order-to-Cash', () => {
+  // 1. Verificar Arquitectura de las 5 Suites de Dominio y constantes PMBOK
+  assert.equal(storage.SUITES_DOMINIO.length, 5, 'El portal debe consolidarse en 5 Suites de Dominio');
+  assert.equal(storage.PMBOK_PROCESS_GROUPS.length, 5, 'Debe contar con los 5 Grupos de Procesos PMBOK');
+  assert.equal(storage.PMBOK_KNOWLEDGE_AREAS.length, 10, 'Debe contar con las 10 Áreas de Conocimiento PMBOK');
+  assert.equal(storage.isModuloPermitido('admin', 'pmbok_command'), true);
+  assert.equal(storage.isModuloPermitido('taller_produccion', 'pmbok_command'), true);
+
+  // 2. Verificar Tablero Kanban PMBOK + Checklist Google Tasks
+  const initialTasks = storage.getPmbokTasks();
+  assert.ok(initialTasks.length >= 6, 'Debe iniciar con los paquetes de trabajo WBS de la bóveda');
+
+  const nuevaTarea = storage.savePmbokTask({
+    id: 'TSK-TEST-PMBOK',
+    wbs_code: '4.1.9',
+    titulo: 'Calibrar perfil ICC de impresora DTF lote especial',
+    grupo_procesos: 'EJECUCION',
+    area_conocimiento: 'CALIDAD',
+    prioridad: 'ALTA',
+    agente: 'W-06',
+    hitl: 'HITL-1',
+    fecha_vencimiento: '2026-11-20',
+    esfuerzo_estimado_hs: 2,
+    riesgo_asociado: 'RSK-03: Variación de densidad de tinta blanca',
+    subtasks: [
+      { id: 'gt-test-1', text: 'Imprimir tira de control CMYK+W', done: true },
+      { id: 'gt-test-2', text: 'Hornear a 160°C durante 120 seg', done: false },
+    ],
+  });
+
+  assert.equal(nuevaTarea.id, 'TSK-TEST-PMBOK');
+  assert.equal(nuevaTarea.progreso_pct, 50, '1 de 2 Google Tasks completadas = 50% de progreso');
+
+  // Toggle de Google Task -> debe pasar a 100% y moverse automáticamente a CIERRE
+  const toggled = storage.togglePmbokSubtask('TSK-TEST-PMBOK', 'gt-test-2');
+  assert.equal(toggled.progreso_pct, 100);
+  assert.equal(toggled.estado, 'COMPLETADO');
+  assert.equal(toggled.grupo_procesos, 'CIERRE');
+
+  // Mover de fase PMBOK y agregar nueva sub-tarea Google Tasks
+  const moved = storage.movePmbokTaskPhase('TSK-TEST-PMBOK', 'MONITOREO_Y_CONTROL');
+  assert.equal(moved.grupo_procesos, 'MONITOREO_Y_CONTROL');
+
+  const withAddedSub = storage.addPmbokSubtask('TSK-TEST-PMBOK', 'Archivar muestra testigo en taller');
+  assert.equal(withAddedSub.subtasks.length, 3);
+  assert.equal(withAddedSub.progreso_pct, 67);
+
+  // Exportar a formato nativo Obsidian Kanban Markdown
+  const mdKanban = storage.exportPmbokBoardToObsidianMarkdown();
+  assert.ok(mdKanban.includes('kanban-plugin: basic'), 'El export debe ser compatible con el plugin Kanban de Obsidian');
+  assert.ok(mdKanban.includes('## 01 · INICIACIÓN'));
+  assert.ok(mdKanban.includes('TSK-TEST-PMBOK'));
+
+  // 3. Verificar Motor de Mejora Continua (Kaizen + PDCA)
+  const initialKaizen = storage.getKaizenCycles();
+  assert.ok(initialKaizen.length >= 3, 'Debe iniciar con los ciclos Kaizen fundacionales');
+
+  const nuevoKaizen = storage.saveKaizenCycle({
+    codigo: 'KZN-2026-099',
+    titulo: 'Reducción de merma en corte de film DTF 58cm',
+    etapa_pdca: 'PLAN',
+    wbs_ref: '3.2.1',
+    problema_detectado: 'Desperdicio en bordes laterales de pliegos cortos',
+    hipotesis_mejora: 'Agrupar pedidos de gorras con pedidos de remeras en el mismo pliego',
+    kpi_impacto: 'Aprovechamiento > 82%',
+  });
+  assert.equal(nuevoKaizen.etapa_pdca, 'PLAN');
+
+  const advancedDo = storage.advanceKaizenStage(nuevoKaizen.id);
+  assert.equal(advancedDo.etapa_pdca, 'DO');
+  const advancedCheck = storage.advanceKaizenStage(nuevoKaizen.id);
+  assert.equal(advancedCheck.etapa_pdca, 'CHECK');
+
+  // 4. Verificar Puentes 1-Click Order-to-Cash (Cotizador DTF -> Remito + PMBOK Task y Cotizador DTF -> Seña Caja)
+  const dtfQuotes = storage.getDtfQuotes();
+  const sampleQuote = dtfQuotes[0];
+  assert.ok(sampleQuote, 'Debe existir la cotización creada en el test anterior');
+
+  const bridgeRemito = storage.convertDtfQuoteToRemitoDraft(sampleQuote.id);
+  assert.ok(bridgeRemito.id, 'Debe crear el Remito Oficial automáticamente');
+  assert.equal(bridgeRemito.cliente_nombre, sampleQuote.cliente_empresa);
+
+  const scheduledTask = storage.getPmbokTasks().find((t) => t.wbs_code === '4.2.1' && t.titulo.includes(bridgeRemito.numero));
+  assert.ok(scheduledTask, 'Debe agendar automáticamente la tarea WBS 4.2.1 en el Comando PMBOK');
+  assert.equal(scheduledTask.subtasks.length, 2);
+
+  const bridgeCaja = storage.convertDtfQuoteToCajaSena(sampleQuote.id);
+  assert.ok(bridgeCaja.id, 'Debe registrar el ingreso del 50% de seña en Flujo de Caja');
+  assert.equal(bridgeCaja.tipo, 'ingreso');
+  assert.equal(bridgeCaja.monto, Math.round(Number(sampleQuote.precio_venta_sugerido_total) * 0.5));
+
+  // Limpieza tarea test
+  storage.deletePmbokTask('TSK-TEST-PMBOK');
+});
+
+
 
 
 

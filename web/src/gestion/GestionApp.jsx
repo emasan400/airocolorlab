@@ -10,6 +10,9 @@ import {
   getApprovals,
   getDesignCanvases,
   getDtfQuotes,
+  getPmbokTasks,
+  getKaizenCycles,
+  SUITES_DOMINIO,
   getOperadorActual,
   subscribeToSync,
   getUsuarioPorEmail,
@@ -31,6 +34,7 @@ import {
   IconSparkles,
   IconCanvas,
   IconRuler,
+  IconLayers,
   IconShield,
   IconSettings,
   IconKey,
@@ -39,6 +43,7 @@ import {
 } from './components/Icons';
 
 import GestionAuthGuard from './components/GestionAuthGuard';
+import PmbokCommandModule from './components/PmbokCommandModule';
 import InventarioProductos from './components/InventarioProductos';
 import CatalogoWebModule from './components/CatalogoWebModule';
 import InventarioMateriales from './components/InventarioMateriales';
@@ -64,7 +69,7 @@ export default function GestionApp() {
 }
 
 function GestionAppInner({ session, onSignOut }) {
-  const [activeTab, setActiveTab] = useState('productos');
+  const [activeTab, setActiveTab] = useState('pmbok_command');
   const [operador, setOperador] = useState(() => session?.user?.email || getOperadorActual());
   const [, setRefreshKey] = useState(0);
 
@@ -118,7 +123,7 @@ function GestionAppInner({ session, onSignOut }) {
   // Protección de navegación RBAC: redirigir si no tiene permiso
   useEffect(() => {
     if (activeTab !== 'perfil' && !isModuloPermitido(currentRol, activeTab)) {
-      const modulos = ['productos', 'catalogo', 'materiales', 'cotizador_dtf', 'remitos', 'caja', 'kardex', 'contactos', 'crm', 'marketing', 'design_studio'];
+      const modulos = ['pmbok_command', 'productos', 'catalogo', 'materiales', 'cotizador_dtf', 'remitos', 'caja', 'kardex', 'contactos', 'crm', 'marketing', 'design_studio'];
       const primerPermitido = modulos.find((k) => isModuloPermitido(currentRol, k)) || 'perfil';
       setActiveTab(primerPermitido);
     }
@@ -136,11 +141,14 @@ function GestionAppInner({ session, onSignOut }) {
   const approvalsList = getApprovals();
   const canvasesList = getDesignCanvases();
   const dtfQuotesList = getDtfQuotes();
+  const pmbokTasksList = getPmbokTasks();
+  const kaizenList = getKaizenCycles();
   const pendingApprovalsCount = approvalsList.filter((a) => a.estado === 'PENDING').length;
 
   const prodsAlert = prods.filter((p) => p.stock_actual <= p.stock_minimo).length;
   const matsAlert = mats.filter((m) => Number(m.stock_actual) <= Number(m.stock_minimo)).length;
   const remsPendientes = rems.filter((r) => r.estado === 'Emitido' || r.estado === 'En Tránsito').length;
+  const pmbokOpenCount = pmbokTasksList.filter((t) => t.estado !== 'COMPLETADO').length;
 
   const totalIngresos = flujos
     .filter((t) => t.tipo === 'ingreso' && t.estado === 'Cobrado')
@@ -149,6 +157,35 @@ function GestionAppInner({ session, onSignOut }) {
     .filter((t) => t.tipo === 'egreso' && t.estado === 'Pagado')
     .reduce((acc, t) => acc + (Number(t.monto) || 0), 0);
   const balanceCaja = totalIngresos - totalEgresos;
+
+  const TAB_META = {
+    pmbok_command: { label: 'Comando PMBOK & Google Tasks', badge: `${pmbokOpenCount} act.` },
+    crm: { label: 'CRM & Leads B2B', badge: `${leadsList.length}` },
+    cotizador_dtf: { label: 'Cotizador DTF 2D', badge: `${dtfQuotesList.length} cot.` },
+    contactos: { label: 'Contactos B2B', badge: '' },
+    productos: { label: 'Productos en Stock', badge: `${prods.length}` },
+    materiales: { label: 'Insumos & Materiales', badge: `${mats.length}` },
+    remitos: { label: 'Confección de Remitos', badge: `${rems.length}` },
+    kardex: { label: 'Kardex de Movimientos', badge: '' },
+    design_studio: { label: 'Estudio de Diseño', badge: `${canvasesList.length}` },
+    marketing: { label: 'Agentes & Marketing', badge: pendingApprovalsCount > 0 ? `${pendingApprovalsCount} pend.` : 'IA' },
+    catalogo: { label: 'Catálogo Tienda Online', badge: 'Web' },
+    caja: { label: 'Flujo de Caja', badge: `$${balanceCaja.toLocaleString('es-AR')}` },
+    usuarios: { label: 'Usuarios & Roles', badge: 'RBAC' },
+    configuracion: { label: 'Sincronización & Bóveda', badge: 'Sync' },
+    perfil: { label: 'Mi Contraseña & 2FA', badge: 'Seguridad' },
+  };
+
+  const activeSuite = SUITES_DOMINIO.find((s) => s.tabs.includes(activeTab)) || SUITES_DOMINIO[0];
+
+  const suiteLabelStyle = {
+    fontSize: 10,
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.09em',
+    color: 'var(--ink-45)',
+    padding: '12px 14px 4px',
+  };
 
   return (
     <div className="gestion-wrapper">
@@ -159,10 +196,10 @@ function GestionAppInner({ session, onSignOut }) {
         aria-hidden="true"
       />
 
-      {/* Drawer Sidebar Desplegable Izquierdo */}
+      {/* Drawer Sidebar Desplegable Izquierdo — Reingeniería 5 Suites */}
       <aside
         className={`gestion-sidebar-drawer ${sidebarOpen ? 'open' : ''}`}
-        aria-label="Menú principal de módulos"
+        aria-label="Menú principal de Suites de Dominio"
       >
         <div className="gestion-sidebar-header">
           <div className="gestion-sidebar-brand">
@@ -176,7 +213,7 @@ function GestionAppInner({ session, onSignOut }) {
             <div>
               <h3>AIRO COLOR LAB.</h3>
               <div style={{ fontSize: '10px', color: 'var(--ink-45)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                Sistema de Gestión B2B
+                Arquitectura 5 Suites · PMBOK
               </div>
             </div>
           </div>
@@ -190,6 +227,67 @@ function GestionAppInner({ session, onSignOut }) {
         </div>
 
         <nav className="gestion-sidebar-nav">
+          {/* SUITE 01: GOBERNANZA PMBOK & MEJORA CONTINUA */}
+          <div style={suiteLabelStyle}>01 · Comando PMBOK & Mejora Continua</div>
+          {(isAdmin || isModuloPermitido(currentRol, 'pmbok_command')) && (
+            <button
+              className={`gestion-sidebar-item ${activeTab === 'pmbok_command' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('pmbok_command'); setSidebarOpen(false); }}
+            >
+              <div className="gestion-sidebar-item-left">
+                <div className="gestion-sidebar-item-icon"><IconLayers /></div>
+                <span>Comando PMBOK & Google Tasks</span>
+              </div>
+              <span className="gestion-tab-badge" style={{ background: 'rgba(26, 66, 149, 0.14)', color: '#1a4295' }}>
+                {pmbokOpenCount} act. · {kaizenList.length} PDCA
+              </span>
+            </button>
+          )}
+
+          {/* SUITE 02: COMERCIAL 360° & COTIZADOR DTF */}
+          <div style={suiteLabelStyle}>02 · Suite Comercial 360° & Cotizador</div>
+          {(isAdmin || isModuloPermitido(currentRol, 'crm')) && (
+            <button
+              className={`gestion-sidebar-item ${activeTab === 'crm' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('crm'); setSidebarOpen(false); }}
+            >
+              <div className="gestion-sidebar-item-left">
+                <div className="gestion-sidebar-item-icon"><IconBriefcase /></div>
+                <span>CRM & Leads B2B</span>
+              </div>
+              <span className="gestion-tab-badge">{leadsList.length}</span>
+            </button>
+          )}
+
+          {(isAdmin || isModuloPermitido(currentRol, 'cotizador_dtf')) && (
+            <button
+              className={`gestion-sidebar-item ${activeTab === 'cotizador_dtf' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('cotizador_dtf'); setSidebarOpen(false); }}
+            >
+              <div className="gestion-sidebar-item-left">
+                <div className="gestion-sidebar-item-icon"><IconRuler /></div>
+                <span>Cotizador DTF 2D</span>
+              </div>
+              <span className="gestion-tab-badge" style={{ background: 'rgba(26, 66, 149, 0.14)', color: '#1a4295' }}>
+                {dtfQuotesList.length} cot.
+              </span>
+            </button>
+          )}
+
+          {(isAdmin || isModuloPermitido(currentRol, 'contactos')) && (
+            <button
+              className={`gestion-sidebar-item ${activeTab === 'contactos' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('contactos'); setSidebarOpen(false); }}
+            >
+              <div className="gestion-sidebar-item-left">
+                <div className="gestion-sidebar-item-icon"><IconUsers /></div>
+                <span>Contactos B2B</span>
+              </div>
+            </button>
+          )}
+
+          {/* SUITE 03: TALLER, INVENTARIO & DESPACHO */}
+          <div style={suiteLabelStyle}>03 · Suite Taller, Stock & Despacho</div>
           {(isAdmin || isModuloPermitido(currentRol, 'productos')) && (
             <button
               className={`gestion-sidebar-item ${activeTab === 'productos' ? 'active' : ''}`}
@@ -201,21 +299,6 @@ function GestionAppInner({ session, onSignOut }) {
               </div>
               <span className="gestion-tab-badge">
                 {prods.length} {prodsAlert > 0 ? `(${prodsAlert} alertas)` : ''}
-              </span>
-            </button>
-          )}
-
-          {(isAdmin || isModuloPermitido(currentRol, 'catalogo')) && (
-            <button
-              className={`gestion-sidebar-item ${activeTab === 'catalogo' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('catalogo'); setSidebarOpen(false); }}
-            >
-              <div className="gestion-sidebar-item-left">
-                <div className="gestion-sidebar-item-icon"><IconStore /></div>
-                <span>Catálogo Tienda Online</span>
-              </div>
-              <span className="gestion-tab-badge" style={{ background: 'rgba(0, 180, 216, 0.16)', color: '#007799' }}>
-                Web
               </span>
             </button>
           )}
@@ -235,21 +318,6 @@ function GestionAppInner({ session, onSignOut }) {
             </button>
           )}
 
-          {(isAdmin || isModuloPermitido(currentRol, 'cotizador_dtf')) && (
-            <button
-              className={`gestion-sidebar-item ${activeTab === 'cotizador_dtf' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('cotizador_dtf'); setSidebarOpen(false); }}
-            >
-              <div className="gestion-sidebar-item-left">
-                <div className="gestion-sidebar-item-icon"><IconRuler /></div>
-                <span>Cotizador DTF 2D</span>
-              </div>
-              <span className="gestion-tab-badge" style={{ background: 'rgba(26, 66, 149, 0.14)', color: '#1a4295' }}>
-                {dtfQuotesList.length} cot.
-              </span>
-            </button>
-          )}
-
           {(isAdmin || isModuloPermitido(currentRol, 'remitos')) && (
             <button
               className={`gestion-sidebar-item ${activeTab === 'remitos' ? 'active' : ''}`}
@@ -261,27 +329,6 @@ function GestionAppInner({ session, onSignOut }) {
               </div>
               <span className="gestion-tab-badge">
                 {rems.length} {remsPendientes > 0 ? `(${remsPendientes} desp.)` : ''}
-              </span>
-            </button>
-          )}
-
-          {(isAdmin || isModuloPermitido(currentRol, 'caja')) && (
-            <button
-              className={`gestion-sidebar-item ${activeTab === 'caja' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('caja'); setSidebarOpen(false); }}
-            >
-              <div className="gestion-sidebar-item-left">
-                <div className="gestion-sidebar-item-icon"><IconWallet /></div>
-                <span>Flujo de Caja</span>
-              </div>
-              <span
-                className="gestion-tab-badge"
-                style={{
-                  background: balanceCaja >= 0 ? 'rgba(34, 177, 94, 0.16)' : 'rgba(192, 57, 43, 0.16)',
-                  color: balanceCaja >= 0 ? '#178a48' : '#c0392b',
-                }}
-              >
-                ${balanceCaja.toLocaleString('es-AR')}
               </span>
             </button>
           )}
@@ -298,28 +345,20 @@ function GestionAppInner({ session, onSignOut }) {
             </button>
           )}
 
-          {(isAdmin || isModuloPermitido(currentRol, 'contactos')) && (
+          {/* SUITE 04: ESTUDIO CREATIVO & MARKETING IA */}
+          <div style={suiteLabelStyle}>04 · Suite Estudio Creativo & Marketing</div>
+          {(isAdmin || isModuloPermitido(currentRol, 'design_studio')) && (
             <button
-              className={`gestion-sidebar-item ${activeTab === 'contactos' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('contactos'); setSidebarOpen(false); }}
+              className={`gestion-sidebar-item ${activeTab === 'design_studio' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('design_studio'); setSidebarOpen(false); }}
             >
               <div className="gestion-sidebar-item-left">
-                <div className="gestion-sidebar-item-icon"><IconUsers /></div>
-                <span>Contactos B2B</span>
+                <div className="gestion-sidebar-item-icon"><IconCanvas /></div>
+                <span>Estudio de Diseño</span>
               </div>
-            </button>
-          )}
-
-          {(isAdmin || isModuloPermitido(currentRol, 'crm')) && (
-            <button
-              className={`gestion-sidebar-item ${activeTab === 'crm' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('crm'); setSidebarOpen(false); }}
-            >
-              <div className="gestion-sidebar-item-left">
-                <div className="gestion-sidebar-item-icon"><IconBriefcase /></div>
-                <span>CRM & Leads B2B</span>
-              </div>
-              <span className="gestion-tab-badge">{leadsList.length}</span>
+              <span className="gestion-tab-badge" style={{ background: 'rgba(0, 180, 216, 0.16)', color: '#007799' }}>
+                {canvasesList.length} lienzos
+              </span>
             </button>
           )}
 
@@ -344,17 +383,40 @@ function GestionAppInner({ session, onSignOut }) {
             </button>
           )}
 
-          {(isAdmin || isModuloPermitido(currentRol, 'design_studio')) && (
+          {(isAdmin || isModuloPermitido(currentRol, 'catalogo')) && (
             <button
-              className={`gestion-sidebar-item ${activeTab === 'design_studio' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('design_studio'); setSidebarOpen(false); }}
+              className={`gestion-sidebar-item ${activeTab === 'catalogo' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('catalogo'); setSidebarOpen(false); }}
             >
               <div className="gestion-sidebar-item-left">
-                <div className="gestion-sidebar-item-icon"><IconCanvas /></div>
-                <span>Estudio de Diseño</span>
+                <div className="gestion-sidebar-item-icon"><IconStore /></div>
+                <span>Catálogo Tienda Online</span>
               </div>
               <span className="gestion-tab-badge" style={{ background: 'rgba(0, 180, 216, 0.16)', color: '#007799' }}>
-                {canvasesList.length} lienzos
+                Web
+              </span>
+            </button>
+          )}
+
+          {/* SUITE 05: FINANZAS, EQUIPO & GOBERNANZA */}
+          <div style={suiteLabelStyle}>05 · Suite Finanzas, Equipo & Bóveda</div>
+          {(isAdmin || isModuloPermitido(currentRol, 'caja')) && (
+            <button
+              className={`gestion-sidebar-item ${activeTab === 'caja' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('caja'); setSidebarOpen(false); }}
+            >
+              <div className="gestion-sidebar-item-left">
+                <div className="gestion-sidebar-item-icon"><IconWallet /></div>
+                <span>Flujo de Caja</span>
+              </div>
+              <span
+                className="gestion-tab-badge"
+                style={{
+                  background: balanceCaja >= 0 ? 'rgba(34, 177, 94, 0.16)' : 'rgba(192, 57, 43, 0.16)',
+                  color: balanceCaja >= 0 ? '#178a48' : '#c0392b',
+                }}
+              >
+                ${balanceCaja.toLocaleString('es-AR')}
               </span>
             </button>
           )}
@@ -382,20 +444,10 @@ function GestionAppInner({ session, onSignOut }) {
               </div>
             </button>
           )}
-
-          <button
-            className={`gestion-sidebar-item ${activeTab === 'perfil' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('perfil'); setSidebarOpen(false); }}
-          >
-            <div className="gestion-sidebar-item-left">
-              <div className="gestion-sidebar-item-icon"><IconKey /></div>
-              <span>Mi Contraseña</span>
-            </div>
-          </button>
         </nav>
 
         <div className="gestion-sidebar-footer">
-          <div><strong>AIRO Gestor B2B v2.1</strong> · Build 2026.10</div>
+          <div><strong>AIRO Gestor B2B v2.2</strong> · Build 2026.11 (PMBOK + Kaizen)</div>
           <div>Usuario: {currentUserEmail}</div>
         </div>
       </aside>
@@ -519,6 +571,110 @@ function GestionAppInner({ session, onSignOut }) {
 
       {/* Área de Trabajo Principal */}
       <main className="gestion-main">
+        {/* Barra Contextual de las 5 Suites de Dominio (Reingeniería BPR & Desacoplamiento) */}
+        <div
+          style={{
+            background: '#fff',
+            border: '1px solid var(--line)',
+            borderRadius: 12,
+            padding: '10px 14px',
+            marginBottom: 18,
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 10,
+            boxShadow: '0 2px 10px rgba(26, 66, 149, 0.04)',
+          }}
+        >
+          {/* Conmutador de las 5 Suites */}
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+            <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-45)', marginRight: 4 }}>
+              Suites B2B:
+            </span>
+            {SUITES_DOMINIO.map((suite) => {
+              const allowedTabs = suite.tabs.filter((t) => isAdmin || isModuloPermitido(currentRol, t));
+              if (allowedTabs.length === 0) return null;
+              const isSuiteActive = suite.tabs.includes(activeTab);
+              return (
+                <button
+                  key={suite.id}
+                  type="button"
+                  onClick={() => setActiveTab(allowedTabs[0])}
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    padding: '5px 10px',
+                    borderRadius: 7,
+                    border: isSuiteActive ? `1.5px solid ${suite.color}` : '1px solid var(--line)',
+                    background: isSuiteActive ? `${suite.color}14` : '#f8fafc',
+                    color: isSuiteActive ? suite.color : 'var(--ink-70)',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 5,
+                  }}
+                >
+                  <span style={{ opacity: 0.7 }}>{suite.num}</span>
+                  <span>{suite.nombre.replace(/^Suite \w+ · /, '')}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Sub-pestañas hermanas dentro de la Suite Activa */}
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+            <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--ink-45)' }}>
+              En {activeSuite.num}:
+            </span>
+            {activeSuite.tabs
+              .filter((t) => isAdmin || isModuloPermitido(currentRol, t))
+              .map((tabId) => {
+                const meta = TAB_META[tabId] || { label: tabId, badge: '' };
+                const isCurrent = activeTab === tabId;
+                return (
+                  <button
+                    key={tabId}
+                    type="button"
+                    onClick={() => setActiveTab(tabId)}
+                    style={{
+                      fontSize: 11,
+                      fontWeight: isCurrent ? 700 : 600,
+                      padding: '4px 10px',
+                      borderRadius: 6,
+                      border: isCurrent ? '1px solid #1a4295' : '1px solid var(--line)',
+                      background: isCurrent ? '#1a4295' : '#fff',
+                      color: isCurrent ? '#fff' : 'var(--ink)',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 5,
+                    }}
+                  >
+                    <span>{meta.label}</span>
+                    {meta.badge && (
+                      <span
+                        style={{
+                          fontSize: 9,
+                          padding: '1px 5px',
+                          borderRadius: 4,
+                          background: isCurrent ? 'rgba(255,255,255,0.22)' : 'rgba(13,27,62,0.07)',
+                          color: isCurrent ? '#fff' : 'var(--ink-70)',
+                        }}
+                      >
+                        {meta.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+          </div>
+        </div>
+
+        {activeTab === 'pmbok_command' && (
+          <PmbokCommandModule onNavigateTab={setActiveTab} onDataChanged={triggerRefresh} />
+        )}
+
         {activeTab === 'productos' && (
           <InventarioProductos onStockChange={triggerRefresh} />
         )}

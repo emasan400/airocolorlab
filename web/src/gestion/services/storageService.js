@@ -42,6 +42,8 @@ export const KEYS = {
   PROMPTS: `${PREFIX}prompts`,
   DESIGN_CANVASES: `${PREFIX}design_canvases`,
   DTF_QUOTES: `${PREFIX}dtf_quotes`,
+  PMBOK_TASKS: `${PREFIX}pmbok_tasks`,
+  KAIZEN_PDCA: `${PREFIX}kaizen_pdca`,
 };
 
 export const MARKETING_CHANNELS = [
@@ -963,10 +965,11 @@ export const ROLES_DEFINICION = [
       'marketing_rw',
       'design_studio_rw',
       'cotizador_dtf_rw',
+      'pmbok_command_rw',
       'usuarios_rw',
       'config_rw',
     ],
-    modulosPermitidos: ['productos', 'catalogo', 'materiales', 'cotizador_dtf', 'remitos', 'caja', 'kardex', 'contactos', 'crm', 'marketing', 'design_studio', 'usuarios', 'configuracion'],
+    modulosPermitidos: ['pmbok_command', 'productos', 'catalogo', 'materiales', 'cotizador_dtf', 'remitos', 'caja', 'kardex', 'contactos', 'crm', 'marketing', 'design_studio', 'usuarios', 'configuracion'],
   },
   {
     id: 'marketing_cm',
@@ -974,8 +977,8 @@ export const ROLES_DEFINICION = [
     descripcion: 'Operación del sistema multiagente, estudio de diseño en lienzo infinito, revisión y aprobación de contenidos en cola HITL, calendario editorial y clasificación de consultas para CRM.',
     color: '#00b4d8',
     badgeClass: 'g-badge-brand',
-    permisos: ['marketing_rw', 'design_studio_rw', 'catalogo_r', 'crm_rw', 'contactos_r'],
-    modulosPermitidos: ['marketing', 'design_studio', 'catalogo', 'crm', 'contactos'],
+    permisos: ['pmbok_command_rw', 'marketing_rw', 'design_studio_rw', 'catalogo_r', 'crm_rw', 'contactos_r'],
+    modulosPermitidos: ['pmbok_command', 'marketing', 'design_studio', 'catalogo', 'crm', 'contactos'],
   },
   {
     id: 'taller_produccion',
@@ -983,8 +986,8 @@ export const ROLES_DEFINICION = [
     descripcion: 'Control y ajustes físicos de stock de prendas, insumos textiles, optimizador y cotizador DTF (MaxRects), bobinas, films DTF, tintas y kardex de taller.',
     color: '#15803d',
     badgeClass: 'g-badge-success',
-    permisos: ['productos_rw', 'materiales_rw', 'cotizador_dtf_rw', 'design_studio_r', 'kardex_r'],
-    modulosPermitidos: ['productos', 'materiales', 'cotizador_dtf', 'design_studio', 'kardex'],
+    permisos: ['pmbok_command_rw', 'productos_rw', 'materiales_rw', 'cotizador_dtf_rw', 'design_studio_r', 'kardex_r'],
+    modulosPermitidos: ['pmbok_command', 'productos', 'materiales', 'cotizador_dtf', 'design_studio', 'kardex'],
   },
   {
     id: 'logistica_despacho',
@@ -992,8 +995,8 @@ export const ROLES_DEFINICION = [
     descripcion: 'Confección de remitos oficiales tipo R, asignación de bultos, impresión, despacho y recepción de firmas de entrega.',
     color: '#0e7490',
     badgeClass: 'g-badge-brand',
-    permisos: ['remitos_rw', 'productos_r', 'contactos_r', 'kardex_r'],
-    modulosPermitidos: ['remitos', 'productos', 'contactos', 'kardex'],
+    permisos: ['pmbok_command_rw', 'remitos_rw', 'productos_r', 'contactos_r', 'kardex_r'],
+    modulosPermitidos: ['pmbok_command', 'remitos', 'productos', 'contactos', 'kardex'],
   },
   {
     id: 'finanzas_caja',
@@ -1001,8 +1004,8 @@ export const ROLES_DEFINICION = [
     descripcion: 'Controlador de flujo de caja, registro de cobros, pagos a talleres/proveedores, balances y consulta de remitos emitidos.',
     color: '#b45309',
     badgeClass: 'g-badge-warning',
-    permisos: ['caja_rw', 'remitos_r', 'contactos_rw'],
-    modulosPermitidos: ['caja', 'remitos', 'contactos'],
+    permisos: ['pmbok_command_rw', 'caja_rw', 'remitos_r', 'contactos_rw'],
+    modulosPermitidos: ['pmbok_command', 'caja', 'remitos', 'contactos'],
   },
   {
     id: 'comercial_ventas',
@@ -1010,8 +1013,8 @@ export const ROLES_DEFINICION = [
     descripcion: 'Atención a clientes corporativos, gestión de leads y pipeline comercial CRM, cotizador DTF y presupuestos, existencias y remitos.',
     color: '#7c3aed',
     badgeClass: 'g-badge-info',
-    permisos: ['crm_rw', 'cotizador_dtf_rw', 'design_studio_r', 'catalogo_r', 'productos_r', 'contactos_rw', 'remitos_r', 'marketing_r'],
-    modulosPermitidos: ['crm', 'cotizador_dtf', 'design_studio', 'catalogo', 'productos', 'contactos', 'remitos', 'marketing'],
+    permisos: ['pmbok_command_rw', 'crm_rw', 'cotizador_dtf_rw', 'design_studio_r', 'catalogo_r', 'productos_r', 'contactos_rw', 'remitos_r', 'marketing_r'],
+    modulosPermitidos: ['pmbok_command', 'crm', 'cotizador_dtf', 'design_studio', 'catalogo', 'productos', 'contactos', 'remitos', 'marketing'],
   },
 ];
 
@@ -3613,6 +3616,8 @@ export function exportUnifiedRepoBundle() {
       approvals_queue: getApprovals(),
       design_canvases: getDesignCanvases(),
       dtf_quotes: getDtfQuotes(),
+      pmbok_tasks: getPmbokTasks(),
+      kaizen_pdca: getKaizenCycles(),
     },
     null,
     2
@@ -3620,7 +3625,7 @@ export function exportUnifiedRepoBundle() {
 }
 
 export function importUnifiedRepoBundle(jsonStr) {
-  const bundle = JSON.parse(jsonStr);
+  const bundle = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr;
   if (!bundle || bundle.schema !== 'AIRO_UNIFIED_REPO_BUNDLE_V1') {
     throw new Error('El paquete no corresponde al esquema AIRO_UNIFIED_REPO_BUNDLE_V1');
   }
@@ -3639,9 +3644,634 @@ export function importUnifiedRepoBundle(jsonStr) {
   if (Array.isArray(bundle.dtf_quotes)) {
     setLocal(KEYS.DTF_QUOTES, bundle.dtf_quotes);
   }
+  if (Array.isArray(bundle.pmbok_tasks)) {
+    setLocal(KEYS.PMBOK_TASKS, bundle.pmbok_tasks);
+  }
+  if (Array.isArray(bundle.kaizen_pdca)) {
+    setLocal(KEYS.KAIZEN_PDCA, bundle.kaizen_pdca);
+  }
   logAudit(getOperadorActual(), 'SYNC_OBSIDIAN_REPO_BUNDLE', 'CONFIGURACION', 'Sincronizado paquete unificado Web <-> Repositorio / Bóveda Obsidian');
   broadcastUpdate('FULL_DATA_RELOADED', null);
   return true;
 }
+
+// ============================================================
+// 14. REINGENIERÍA EN 5 SUITES, GOBERNANZA PMBOK (KANBAN + GOOGLE TASKS),
+//     MEJORA CONTINUA (PDCA / KAIZEN) Y BUS DE EVENTOS DESACOPLADO
+// ============================================================
+
+export const SUITES_DOMINIO = [
+  {
+    id: 'SUITE_01_PMBOK',
+    num: '01',
+    nombre: 'Comando PMBOK & Mejora Continua',
+    subtitulo: 'Kanban · Google Tasks · Ciclo PDCA · Cola HITL',
+    color: '#1a4295',
+    modulos: [
+      { id: 'pmbok_command', label: 'Tablero PMBOK, Google Tasks & PDCA', badge: 'PMBOK 360°' },
+    ],
+  },
+  {
+    id: 'SUITE_02_COMERCIAL',
+    num: '02',
+    nombre: 'Comercial 360° & Cotizador DTF',
+    subtitulo: 'Lead-to-Quote: CRM · Optimizador MaxRects 2D · Cuentas B2B',
+    color: '#00b4d8',
+    modulos: [
+      { id: 'crm', label: 'Pipeline CRM & Leads B2B' },
+      { id: 'cotizador_dtf', label: 'Optimizador 2D & Cotizador DTF' },
+      { id: 'contactos', label: 'Directorio de Clientes & Proveedores' },
+    ],
+  },
+  {
+    id: 'SUITE_03_OPERACIONES',
+    num: '03',
+    nombre: 'Taller, Inventario & Despacho',
+    subtitulo: 'Order-to-Dispatch: Stock · Tienda Web · Insumos · Remitos · Kardex',
+    color: '#15803d',
+    modulos: [
+      { id: 'productos', label: 'Productos en Stock' },
+      { id: 'catalogo', label: 'Catálogo Tienda Online' },
+      { id: 'materiales', label: 'Insumos & Materiales' },
+      { id: 'remitos', label: 'Confección de Remitos' },
+      { id: 'kardex', label: 'Kardex Auditable' },
+    ],
+  },
+  {
+    id: 'SUITE_04_CREATIVO',
+    num: '04',
+    nombre: 'Estudio Creativo & Marketing IA',
+    subtitulo: 'Concept-to-Publish: Lienzo Infinito (.canvas) · Campañas · Prompts IA',
+    color: '#0e7490',
+    modulos: [
+      { id: 'design_studio', label: 'Estudio de Diseño & Lienzo Infinito' },
+      { id: 'marketing', label: 'Campañas, Prompts IA & 29 Agentes' },
+    ],
+  },
+  {
+    id: 'SUITE_05_GOBERNANZA',
+    num: '05',
+    nombre: 'Finanzas, Equipo & Sincronización',
+    subtitulo: 'Dispatch-to-Cash: Flujo de Caja · Roles RBAC · Puente Obsidian',
+    color: '#b45309',
+    modulos: [
+      { id: 'caja', label: 'Flujo de Caja & Tesorería' },
+      { id: 'usuarios', label: 'Usuarios, Roles RBAC & 2FA' },
+      { id: 'configuracion', label: 'Sincronización Cloud & Obsidian' },
+    ],
+  },
+];
+
+export const PMBOK_PROCESS_GROUPS = [
+  { id: 'INICIACION', num: '01', label: 'Iniciación & Demanda', desc: 'Project Charter, insumos y factibilidad', color: '#475569' },
+  { id: 'PLANIFICACION', num: '02', label: 'Planificación & EDT/WBS', desc: 'Alcance, cronograma, costos y riesgos', color: '#1a4295' },
+  { id: 'EJECUCION', num: '03', label: 'Ejecución en Curso (WIP <= 3)', desc: 'Foco diario estilo Google Tasks', color: '#0284c7' },
+  { id: 'MONITOREO_Y_CONTROL', num: '04', label: 'Monitoreo, QA (X-03/X-04) & HITL', desc: 'Validación de calidad y firma humana', color: '#b45309' },
+  { id: 'CIERRE', num: '05', label: 'Cierre & Lecciones Aprendidas', desc: 'Entregable desplegado y auditado', color: '#15803d' },
+];
+
+export const PMBOK_KNOWLEDGE_AREAS = [
+  { id: 'INTEGRACION', label: '1. Integración', wbsPrefix: '5.0' },
+  { id: 'ALCANCE', label: '2. Alcance (EDT/WBS)', wbsPrefix: '1.0' },
+  { id: 'CRONOGRAMA', label: '3. Cronograma', wbsPrefix: '5.2' },
+  { id: 'COSTOS', label: '4. Costos & Presupuesto DTF', wbsPrefix: '4.1' },
+  { id: 'CALIDAD', label: '5. Calidad (X-03 / X-04)', wbsPrefix: '2.1' },
+  { id: 'RECURSOS', label: '6. Recursos & Taller', wbsPrefix: '1.2' },
+  { id: 'COMUNICACIONES', label: '7. Comunicaciones & Marketing', wbsPrefix: '2.2' },
+  { id: 'RIESGOS', label: '8. Riesgos (RAID Log)', wbsPrefix: '5.1' },
+  { id: 'ADQUISICIONES', label: '9. Adquisiciones & Proveedores', wbsPrefix: '4.2' },
+  { id: 'INTERESADOS', label: '10. Interesados (CRM & HITL)', wbsPrefix: '3.1' },
+];
+
+export const initialPmbokTasks = [
+  {
+    id: 'TSK-001',
+    wbs_code: '2.1.1',
+    titulo: 'Aprobar y publicar Semana 1 (APR-20261005-001 y APR-20261005-002)',
+    grupo_procesos: 'MONITOREO_Y_CONTROL',
+    area_conocimiento: 'CALIDAD',
+    estado: 'PENDIENTE',
+    prioridad: 'ALTA',
+    progreso_pct: 80,
+    fecha_vencimiento: '2026-11-12',
+    esfuerzo_estimado_hs: 2,
+    riesgo_asociado: 'NINGUNO',
+    hitl: 'HITL-2',
+    agente: 'I-01 / X-03 / X-04',
+    responsable: 'Owner Humano',
+    subtasks: [
+      { id: 'st-101', text: 'Revisar y aprobar APR-20261005-001 (Carrusel IG DTF vs Sublimación + Post LinkedIn)', done: false },
+      { id: 'st-102', text: 'Ejecutar prueba real de WhatsApp Estados (APR-20261005-002)', done: false },
+      { id: 'st-103', text: 'Validar dictamen PASS de X-03 Content QA y X-04 Brand Guardian', done: true },
+    ],
+  },
+  {
+    id: 'TSK-002',
+    wbs_code: '1.2.1',
+    titulo: 'Proveer fotos y videos reales del taller para contenido BTS',
+    grupo_procesos: 'INICIACION',
+    area_conocimiento: 'RECURSOS',
+    estado: 'PENDIENTE',
+    prioridad: 'ALTA',
+    progreso_pct: 0,
+    fecha_vencimiento: '2026-11-15',
+    esfuerzo_estimado_hs: 3,
+    riesgo_asociado: 'RAID-01 (I-02 Falta evidencia real)',
+    hitl: 'HITL-2',
+    agente: 'I-04 / I-05',
+    responsable: 'Owner Humano',
+    subtasks: [
+      { id: 'st-201', text: 'Grabar 3 clips verticales (9:16) de planchado DTF y sublimación en taller', done: false },
+      { id: 'st-202', text: 'Tomar 5 fotos macro de costuras y estampas reales sin filtro', done: false },
+      { id: 'st-203', text: 'Depositar archivos en 08 - Recursos/Productos/ de la bóveda Obsidian', done: false },
+    ],
+  },
+  {
+    id: 'TSK-003',
+    wbs_code: '5.1.1',
+    titulo: 'Decisión Backend Supabase y Política de Privacidad (DEC-WEB-BACKEND-20261008-v1)',
+    grupo_procesos: 'MONITOREO_Y_CONTROL',
+    area_conocimiento: 'RIESGOS',
+    estado: 'PENDIENTE',
+    prioridad: 'ALTA',
+    progreso_pct: 70,
+    fecha_vencimiento: '2026-11-14',
+    esfuerzo_estimado_hs: 2,
+    riesgo_asociado: 'RAID-02 (DEC-WEB-BACKEND)',
+    hitl: 'HITL-3',
+    agente: 'ORC',
+    responsable: 'Owner Humano',
+    subtasks: [
+      { id: 'st-301', text: 'Elegir Opción A, B o C en DEC-WEB-BACKEND-20261008-v1.md', done: false },
+      { id: 'st-302', text: 'Verificar políticas RLS y función is_airo_admin() en Supabase', done: true },
+    ],
+  },
+  {
+    id: 'TSK-005',
+    wbs_code: '2.2.1',
+    titulo: 'Campaña B2B Packs Corporativos (Onboarding PK1 y Eventos PK2)',
+    grupo_procesos: 'PLANIFICACION',
+    area_conocimiento: 'COMUNICACIONES',
+    estado: 'PENDIENTE',
+    prioridad: 'ALTA',
+    progreso_pct: 30,
+    fecha_vencimiento: '2026-11-16',
+    esfuerzo_estimado_hs: 4,
+    riesgo_asociado: 'NINGUNO',
+    hitl: 'HITL-2',
+    agente: 'I-01 / I-03 / I-04',
+    responsable: 'Orquestador IA',
+    subtasks: [
+      { id: 'st-501', text: 'Diseñar secuencia en Lienzo Infinito (.canvas) para Pack Bienvenida PK1', done: true },
+      { id: 'st-502', text: 'Diseñar secuencia para Pack Eventos PK2 y validar con Linter X-03/X-04', done: false },
+      { id: 'st-503', text: 'Empaquetar ambos artboards hacia la Cola HITL-2', done: false },
+    ],
+  },
+  {
+    id: 'TSK-006',
+    wbs_code: '3.1.1',
+    titulo: 'Prospección B2B de Eventos y Áreas de RRHH (L-01 / L-03 / G-01)',
+    grupo_procesos: 'PLANIFICACION',
+    area_conocimiento: 'INTERESADOS',
+    estado: 'PENDIENTE',
+    prioridad: 'MEDIA',
+    progreso_pct: 15,
+    fecha_vencimiento: '2026-11-19',
+    esfuerzo_estimado_hs: 5,
+    riesgo_asociado: 'NINGUNO',
+    hitl: 'HITL-2',
+    agente: 'L-01 / L-03 / G-01',
+    responsable: 'Orquestador IA',
+    subtasks: [
+      { id: 'st-601', text: 'Relevar 20 empresas objetivo (RRHH y productoras de eventos en CABA/GBA)', done: false },
+      { id: 'st-602', text: 'Redactar secuencias B2B con voseo rioplatense y CTA a WhatsApp', done: false },
+    ],
+  },
+  {
+    id: 'TSK-008',
+    wbs_code: '5.2.1',
+    titulo: 'Desarrollar DesignStudioModule.jsx (Lienzo Infinito + Linter X-03/X-04 + JSON Canvas)',
+    grupo_procesos: 'CIERRE',
+    area_conocimiento: 'ALCANCE',
+    estado: 'COMPLETADO',
+    prioridad: 'ALTA',
+    progreso_pct: 100,
+    fecha_vencimiento: '2026-11-10',
+    esfuerzo_estimado_hs: 6,
+    riesgo_asociado: 'CERRADO',
+    hitl: 'HITL-2',
+    agente: 'ORC / I-04 / X-04',
+    responsable: 'Orquestador IA',
+    subtasks: [
+      { id: 'st-801', text: 'Construir lienzo interactivo con soporte JSON Canvas 1.0 (.canvas)', done: true },
+      { id: 'st-802', text: 'Integrar validador en vivo X-03 Content QA y X-04 Brand Guardian', done: true },
+    ],
+  },
+  {
+    id: 'TSK-010',
+    wbs_code: '4.1.1',
+    titulo: 'Desarrollar CotizadorDtfModule.jsx (Motor MaxRects 2D) + PresupuestoPrintView.jsx',
+    grupo_procesos: 'CIERRE',
+    area_conocimiento: 'COSTOS',
+    estado: 'COMPLETADO',
+    prioridad: 'ALTA',
+    progreso_pct: 100,
+    fecha_vencimiento: '2026-11-10',
+    esfuerzo_estimado_hs: 6,
+    riesgo_asociado: 'RAID-03 (R-05 Resuelto)',
+    hitl: 'HITL-2',
+    agente: 'ORC / X-04',
+    responsable: 'Orquestador IA',
+    subtasks: [
+      { id: 'st-1001', text: 'Portar algoritmo determinístico MaxRects-BSSF (58 cm y 28 cm útiles)', done: true },
+      { id: 'st-1002', text: 'Construir generador de Presupuesto Oficial B2B en PDF (PresupuestoPrintView)', done: true },
+    ],
+  },
+  {
+    id: 'TSK-011',
+    wbs_code: '5.2.4',
+    titulo: 'Implementar Tablero PMBOK Kanban y Google Tasks en Obsidian y Web',
+    grupo_procesos: 'CIERRE',
+    area_conocimiento: 'CRONOGRAMA',
+    estado: 'COMPLETADO',
+    prioridad: 'ALTA',
+    progreso_pct: 100,
+    fecha_vencimiento: '2026-11-10',
+    esfuerzo_estimado_hs: 3,
+    riesgo_asociado: 'CERRADO',
+    hitl: 'HITL-0',
+    agente: 'ORC',
+    responsable: 'Orquestador IA',
+    subtasks: [
+      { id: 'st-1101', text: 'Crear Tablero Kanban y Google Tasks (PMBOK) en Bóveda Obsidian', done: true },
+      { id: 'st-1102', text: 'Enriquecer tareas con las 10 Áreas de Conocimiento y 5 Fases PMBOK', done: true },
+    ],
+  },
+  {
+    id: 'TSK-012',
+    wbs_code: '5.3.1',
+    titulo: 'Reingeniería Modular del Portal #/gestion (5 Suites Desacopladas + Proceso de Mejora Continua)',
+    grupo_procesos: 'CIERRE',
+    area_conocimiento: 'INTEGRACION',
+    estado: 'COMPLETADO',
+    prioridad: 'ALTA',
+    progreso_pct: 100,
+    fecha_vencimiento: '2026-11-11',
+    esfuerzo_estimado_hs: 8,
+    riesgo_asociado: 'RAID-04 (Mitigado por 5 Suites)',
+    hitl: 'HITL-2',
+    agente: 'ORC',
+    responsable: 'Owner Humano / Orquestador IA',
+    subtasks: [
+      { id: 'st-1201', text: 'Reorganizar los 14 módulos en 5 Suites de Dominio Cohesivas con barra rápida contextual', done: true },
+      { id: 'st-1202', text: 'Construir Suite 01 PmbokCommandModule.jsx (Kanban + Google Tasks + Ciclo PDCA Kaizen)', done: true },
+      { id: 'st-1203', text: 'Implementar puentes desacoplados Cotizador DTF -> Remito y Cotizador DTF -> Seña en Caja', done: true },
+      { id: 'st-1204', text: 'Aprobar pasaje a producción (HITL-2 APR-20261110-002) tras verificar tests y build local', done: true },
+    ],
+  },
+];
+
+export const initialKaizenCycles = [
+  {
+    id: 'KZN-2026-001',
+    codigo: 'KZN-2026-001',
+    titulo: 'Unificación de Lienzo Creativo (.canvas) y Linter de Marca en Vivo (X-03/X-04)',
+    etapa_pdca: 'ACT',
+    wbs_ref: '5.2.1',
+    problema_detectado: 'Fricción al diseñar piezas en herramientas aisladas sin validación automática de voz de marca ni catálogo.',
+    hipotesis_mejora: 'Integrar un lienzo infinito compatible con JSON Canvas 1.0 de Obsidian y validador X-03/X-04 en tiempo real reduce el retrabajo creativo.',
+    kpi_impacto: '100% de piezas validadas antes de entrar a la cola HITL-2 (0 rechazos por tuteo o precios prohibidos).',
+    leccion_aprendida: 'Estandarizar sobre archivos .canvas permite interoperabilidad total entre Obsidian Desktop y el portal web #/gestion.',
+    audit_ref: 'AUDIT-20261110-003',
+    updated_at: '2026-11-10T21:56:00.000Z',
+  },
+  {
+    id: 'KZN-2026-002',
+    codigo: 'KZN-2026-002',
+    titulo: 'Integración del Motor Determinístico 2D MaxRects DTF y Presupuesto Oficial PDF',
+    etapa_pdca: 'ACT',
+    wbs_ref: '4.1.1',
+    problema_detectado: 'El motor Python de anidamiento DTF vivía fuera del portal web y las cotizaciones no alimentaban directamente el CRM.',
+    hipotesis_mejora: 'Portar el algoritmo MaxRects-BSSF a #/gestion con plano SVG interactivo y hoja imprimible acelera la respuesta comercial B2B (<24 h).',
+    kpi_impacto: 'Cotización técnica DTF emitida en <2 minutos con aprovechamiento de bobina >80% e inyección en 1 clic al CRM.',
+    leccion_aprendida: 'La regla comercial de mínimo 10 unidades y múltiplos de 10 debe forzarse por diseño en el motor de cálculo.',
+    audit_ref: 'AUDIT-20261110-005',
+    updated_at: '2026-11-10T22:11:40.000Z',
+  },
+  {
+    id: 'KZN-2026-003',
+    codigo: 'KZN-2026-003',
+    titulo: 'Reingeniería de 14 Módulos Planos a 5 Suites de Dominio y Puentes Order-to-Cash',
+    etapa_pdca: 'ACT',
+    wbs_ref: '5.3.1',
+    problema_detectado: 'Fatiga de navegación (14 ítems laterales) y doble carga manual de datos entre Cotizador DTF, Remitos y Flujo de Caja.',
+    hipotesis_mejora: 'Consolidar la interfaz en 5 Suites de Dominio y habilitar puentes de 1 clic (Cotización -> Remito y Cotización -> Seña en Caja) elimina la redundancia.',
+    kpi_impacto: 'Reducción del 64% en opciones de nivel superior (14 -> 5 Suites) y 0% de recarga manual de ítems en despacho y tesorería.',
+    leccion_aprendida: 'Estandarizado en producción (APR-20261110-002 aprobada). La barra contextual superior y los puentes Order-to-Cash reducen drásticamente los clics operativos.',
+    audit_ref: 'AUDIT-20261111-001',
+    updated_at: '2026-11-11T18:14:00.000Z',
+  },
+];
+
+export function getPmbokTasks() {
+  return getLocal(KEYS.PMBOK_TASKS, initialPmbokTasks);
+}
+
+export function savePmbokTask(taskData, actor = null) {
+  const operador = actor || getOperadorActual();
+  const list = getPmbokTasks();
+  const nowIso = new Date().toISOString();
+
+  let saved = null;
+  if (taskData.id) {
+    const idx = list.findIndex((t) => t.id === taskData.id);
+    if (idx !== -1) {
+      const subtasks = Array.isArray(taskData.subtasks) ? taskData.subtasks : list[idx].subtasks || [];
+      const doneCount = subtasks.filter((s) => s.done).length;
+      const autoPct = subtasks.length > 0 ? Math.round((doneCount / subtasks.length) * 100) : taskData.progreso_pct ?? list[idx].progreso_pct;
+      const finalGrp = autoPct === 100 && taskData.grupo_procesos === list[idx].grupo_procesos ? 'CIERRE' : (taskData.grupo_procesos || list[idx].grupo_procesos);
+      saved = {
+        ...list[idx],
+        ...taskData,
+        subtasks,
+        grupo_procesos: finalGrp,
+        progreso_pct: finalGrp === 'CIERRE' ? 100 : autoPct,
+        estado: finalGrp === 'CIERRE' ? 'COMPLETADO' : finalGrp === 'EJECUCION' ? 'EN_CURSO' : 'PENDIENTE',
+        updated_at: nowIso,
+      };
+      list[idx] = saved;
+    }
+  }
+
+  if (!saved) {
+    const nextNum = list.length + 1;
+    const id = taskData.id || `TSK-${String(nextNum).padStart(3, '0')}`;
+    const grp = taskData.grupo_procesos || 'PLANIFICACION';
+    const subtasks = Array.isArray(taskData.subtasks) && taskData.subtasks.length > 0
+      ? taskData.subtasks
+      : [
+          { id: `st-${Date.now()}-1`, text: 'Verificar inputs en fuentes canónicas (Regla #1)', done: false },
+          { id: `st-${Date.now()}-2`, text: 'Ejecutar paquete de trabajo y validar con QA X-03/X-04', done: false },
+        ];
+    const doneCount = subtasks.filter((s) => s.done).length;
+    const initialPct = grp === 'CIERRE' ? 100 : (subtasks.length > 0 ? Math.round((doneCount / subtasks.length) * 100) : 0);
+    saved = {
+      id,
+      wbs_code: taskData.wbs_code || `1.${nextNum}.1`,
+      titulo: (taskData.titulo || 'Nuevo Paquete de Trabajo PMBOK').trim(),
+      grupo_procesos: grp,
+      area_conocimiento: taskData.area_conocimiento || 'ALCANCE',
+      estado: grp === 'CIERRE' ? 'COMPLETADO' : grp === 'EJECUCION' ? 'EN_CURSO' : 'PENDIENTE',
+      prioridad: taskData.prioridad || 'ALTA',
+      progreso_pct: initialPct,
+      fecha_vencimiento: taskData.fecha_vencimiento || nowIso.slice(0, 10),
+      esfuerzo_estimado_hs: Number(taskData.esfuerzo_estimado_hs) || 4,
+      riesgo_asociado: taskData.riesgo_asociado || 'NINGUNO',
+      hitl: taskData.hitl || 'HITL-2',
+      agente: taskData.agente || 'ORC',
+      responsable: taskData.responsable || operador,
+      subtasks,
+      created_at: nowIso,
+      updated_at: nowIso,
+    };
+    list.unshift(saved);
+  }
+
+  setLocal(KEYS.PMBOK_TASKS, list);
+  broadcastUpdate('PMBOK_TASKS_UPDATED', list);
+  logAudit(operador, 'SAVE_PMBOK_TASK', 'PMBOK_COMMAND', `Actualizado paquete WBS ${saved.wbs_code} (${saved.id}: ${saved.titulo}) en fase ${saved.grupo_procesos}`);
+  return saved;
+}
+
+export function movePmbokTaskPhase(taskId, newProcessGroup, actor = null) {
+  const list = getPmbokTasks();
+  const target = list.find((t) => t.id === taskId);
+  if (!target) throw new Error('Tarea PMBOK no encontrada');
+  return savePmbokTask({ ...target, grupo_procesos: newProcessGroup }, actor);
+}
+
+export function togglePmbokSubtask(taskId, subtaskId, actor = null) {
+  const list = getPmbokTasks();
+  const target = list.find((t) => t.id === taskId);
+  if (!target) throw new Error('Tarea PMBOK no encontrada');
+  const updatedSubtasks = (target.subtasks || []).map((st) =>
+    st.id === subtaskId ? { ...st, done: !st.done } : st
+  );
+  return savePmbokTask({ ...target, subtasks: updatedSubtasks }, actor);
+}
+
+export function addPmbokSubtask(taskId, text, actor = null) {
+  if (!text || !text.trim()) throw new Error('El texto de la subtarea Google Tasks es requerido');
+  const list = getPmbokTasks();
+  const target = list.find((t) => t.id === taskId);
+  if (!target) throw new Error('Tarea PMBOK no encontrada');
+  const updatedSubtasks = [
+    ...(target.subtasks || []),
+    { id: `st-${Date.now()}-${Math.floor(Math.random() * 100)}`, text: text.trim(), done: false },
+  ];
+  return savePmbokTask({ ...target, subtasks: updatedSubtasks }, actor);
+}
+
+export function deletePmbokTask(taskId, actor = null) {
+  const operador = actor || getOperadorActual();
+  const list = getPmbokTasks();
+  const target = list.find((t) => t.id === taskId);
+  if (!target) return false;
+  const filtered = list.filter((t) => t.id !== taskId);
+  setLocal(KEYS.PMBOK_TASKS, filtered);
+  broadcastUpdate('PMBOK_TASKS_UPDATED', filtered);
+  logAudit(operador, 'DELETE_PMBOK_TASK', 'PMBOK_COMMAND', `Eliminada tarea PMBOK ${target.id} (${target.wbs_code})`);
+  return true;
+}
+
+// Exporta el tablero actual al formato Markdown nativo del plugin Obsidian Kanban (kanban-plugin: basic)
+export function exportPmbokBoardToObsidianMarkdown() {
+  const tasks = getPmbokTasks();
+  const lines = [
+    '---',
+    'kanban-plugin: basic',
+    'tipo: kanban_pmbok',
+    'documento: "Tablero Maestro Kanban y Google Tasks (Gobernanza PMBOK)"',
+    `actualizado: "${new Date().toISOString().slice(0, 10)}"`,
+    '---',
+    '',
+  ];
+
+  for (const grp of PMBOK_PROCESS_GROUPS) {
+    lines.push(`## ${grp.num} · ${grp.label.toUpperCase()}`);
+    lines.push('');
+    const groupTasks = tasks.filter((t) => t.grupo_procesos === grp.id);
+    for (const t of groupTasks) {
+      const check = grp.id === 'CIERRE' || t.estado === 'COMPLETADO' ? 'x' : ' ';
+      lines.push(
+        `- [${check}] **WBS ${t.wbs_code}** · **${t.id}:** ${t.titulo} @{${t.fecha_vencimiento}} #pmbok/${String(t.area_conocimiento).toLowerCase()} #prioridad/${String(t.prioridad).toLowerCase()}`
+      );
+      lines.push(`  - **Grupo PMBOK:** \`${t.grupo_procesos}\` · **Área:** \`${t.area_conocimiento}\` · **Gate:** \`${t.hitl}\` · **Responsable:** ${t.responsable}`);
+      if (Array.isArray(t.subtasks) && t.subtasks.length > 0) {
+        lines.push('  - **Subtareas (Google Tasks):**');
+        for (const st of t.subtasks) {
+          lines.push(`    - [${st.done ? 'x' : ' '}] ${st.text}`);
+        }
+      }
+    }
+    lines.push('');
+  }
+
+  lines.push('%% kanban:settings');
+  lines.push('```');
+  lines.push('{"kanban-plugin":"basic","show-checkboxes":true,"lane-width":310}');
+  lines.push('```');
+  lines.push('%%');
+  return lines.join('\n');
+}
+
+export function getKaizenCycles() {
+  return getLocal(KEYS.KAIZEN_PDCA, initialKaizenCycles);
+}
+
+export function saveKaizenCycle(cycleData, actor = null) {
+  const operador = actor || getOperadorActual();
+  const list = getKaizenCycles();
+  const nowIso = new Date().toISOString();
+
+  let saved = null;
+  if (cycleData.id) {
+    const idx = list.findIndex((c) => c.id === cycleData.id);
+    if (idx !== -1) {
+      saved = { ...list[idx], ...cycleData, updated_at: nowIso };
+      list[idx] = saved;
+    }
+  }
+
+  if (!saved) {
+    const code = cycleData.codigo || `KZN-2026-${String(list.length + 1).padStart(3, '0')}`;
+    saved = {
+      id: code,
+      codigo: code,
+      titulo: (cycleData.titulo || 'Nueva Iniciativa de Mejora Continua').trim(),
+      etapa_pdca: cycleData.etapa_pdca || 'PLAN',
+      wbs_ref: cycleData.wbs_ref || '5.3.1',
+      problema_detectado: cycleData.problema_detectado || '',
+      hipotesis_mejora: cycleData.hipotesis_mejora || '',
+      kpi_impacto: cycleData.kpi_impacto || '',
+      leccion_aprendida: cycleData.leccion_aprendida || 'En evaluación.',
+      audit_ref: cycleData.audit_ref || `AUDIT-${nowIso.slice(0, 10).replace(/-/g, '')}-KZN`,
+      updated_at: nowIso,
+    };
+    list.unshift(saved);
+  }
+
+  setLocal(KEYS.KAIZEN_PDCA, list);
+  broadcastUpdate('KAIZEN_UPDATED', list);
+  logAudit(operador, 'SAVE_KAIZEN_CYCLE', 'MEJORA_CONTINUA', `Registrado ciclo PDCA ${saved.codigo} (${saved.etapa_pdca}): ${saved.titulo}`);
+  return saved;
+}
+
+export function advanceKaizenStage(cycleId, nextStage = null, learningNote = '', actor = null) {
+  const list = getKaizenCycles();
+  const target = list.find((c) => c.id === cycleId);
+  if (!target) throw new Error('Ciclo Kaizen PDCA no encontrado');
+  const order = ['PLAN', 'DO', 'CHECK', 'ACT'];
+  const currentIdx = order.indexOf(target.etapa_pdca);
+  const resolvedNext = nextStage || order[Math.min(order.length - 1, currentIdx + 1)] || 'ACT';
+  return saveKaizenCycle(
+    {
+      ...target,
+      etapa_pdca: resolvedNext,
+      leccion_aprendida: learningNote ? learningNote.trim() : target.leccion_aprendida,
+    },
+    actor
+  );
+}
+
+// ============================================================
+// PUENTES DESACOPLADOS ENTRE SUITES (BUS DE EVENTOS ORDER-TO-CASH)
+// ============================================================
+
+// Convierte en 1 clic una Cotización DTF en un Remito Oficial listo para despacho + Tarea Google Tasks
+export function convertDtfQuoteToRemitoDraft(quoteId, actor = null) {
+  const operador = actor || getOperadorActual();
+  const quotes = getDtfQuotes();
+  const quote = quotes.find((q) => q.id === quoteId || q.codigo === quoteId);
+  if (!quote) throw new Error('Cotización DTF no encontrada para generar Remito');
+
+  const numero = getNextRemitoNumero();
+  const demanda = Number(quote.demanda_prendas || quote.demanda || 10);
+  const piezas = Array.isArray(quote.piezas_kit) ? quote.piezas_kit : [];
+  const piezasDesc = piezas.map((p) => `${p.name || p.label} (${p.width || p.widthCm}x${p.height || p.heightCm}cm)`).join(' + ');
+
+  const nuevoRemito = saveRemito({
+    numero,
+    fecha_emision: new Date().toISOString().slice(0, 10),
+    cliente_nombre: quote.cliente_empresa || quote.cliente_nombre || 'Cliente Corporativo B2B',
+    cliente_cuit: 'A confirmar en despacho',
+    cliente_whatsapp: quote.cliente_whatsapp || '',
+    contacto_receptor: quote.cliente_nombre || 'Responsable de Recepción',
+    modalidad_envio: 'Retiro en Taller / Mensajería B2B',
+    cantidad_bultos: Math.max(1, Math.ceil(demanda / 20)),
+    descontar_stock: false,
+    estado: 'Emitido',
+    observaciones: `Generado automáticamente desde Cotización Oficial ${quote.codigo} (${quote.metros_requeridos || 1} m lineales DTF · Aprovechamiento ${quote.aprovechamiento_pct || 0}%).`,
+    items: [
+      {
+        id: `it-${Date.now()}`,
+        sku: quote.codigo,
+        descripcion: `${quote.titulo || 'Producción Personalizada DTF'} — ${piezasDesc || 'Pliego DTF'}`,
+        cantidad: demanda,
+        unidad: 'unidades',
+        bulto: 'Bulto 1',
+      },
+    ],
+  });
+
+  // Agendar automáticamente subtarea en el Tablero PMBOK / Google Tasks (bajo acoplamiento)
+  savePmbokTask(
+    {
+      wbs_code: '4.2.1',
+      titulo: `Despachar Remito ${nuevoRemito.numero} (${quote.cliente_empresa || 'Cliente B2B'})`,
+      grupo_procesos: 'EJECUCION',
+      area_conocimiento: 'ADQUISICIONES',
+      prioridad: 'ALTA',
+      hitl: 'HITL-1',
+      agente: 'ORC',
+      responsable: operador,
+      subtasks: [
+        { id: `st-rem-1-${Date.now()}`, text: `Controlar calidad de ${demanda} u. de ${quote.codigo} en taller`, done: false },
+        { id: `st-rem-2-${Date.now()}`, text: `Imprimir y firmar Remito Oficial ${nuevoRemito.numero}`, done: false },
+      ],
+    },
+    operador
+  );
+
+  logAudit(operador, 'BRIDGE_QUOTE_TO_REMITO', 'ORDER_TO_CASH', `Cotización ${quote.codigo} convertida en Remito Oficial ${nuevoRemito.numero} sin recarga manual`);
+  return nuevoRemito;
+}
+
+// Registra en 1 clic la Seña B2B (50%) de una Cotización DTF en el Flujo de Caja
+export function convertDtfQuoteToCajaSena(quoteId, porcentaje = 50, actor = null) {
+  const operador = actor || getOperadorActual();
+  const quotes = getDtfQuotes();
+  const quote = quotes.find((q) => q.id === quoteId || q.codigo === quoteId);
+  if (!quote) throw new Error('Cotización DTF no encontrada para registrar seña en Caja');
+
+  const totalQuote = Number(quote.precio_venta_sugerido_total || quote.total_quote || 0);
+  const pct = Math.max(10, Math.min(100, Number(porcentaje) || 50));
+  const montoSena = Math.round((totalQuote * pct) / 100);
+
+  const trx = saveTransaccion({
+    fecha: new Date().toISOString().slice(0, 10),
+    tipo: 'ingreso',
+    categoria: `Cobro Cliente (Seña ${pct}%)`,
+    concepto: `Seña ${pct}% Presupuesto DTF ${quote.codigo} — ${quote.cliente_empresa || 'Cliente B2B'} (${quote.demanda_prendas || 10} u.)`,
+    monto: montoSena,
+    medio_pago: 'Transferencia Bancaria B2B',
+    referencia: quote.codigo,
+    estado: 'Cobrado',
+  });
+
+  logAudit(operador, 'BRIDGE_QUOTE_TO_CAJA', 'ORDER_TO_CASH', `Registrada seña del ${pct}% ($${montoSena.toLocaleString('es-AR')}) en Flujo de Caja desde Cotización ${quote.codigo}`);
+  return trx;
+}
+
 
 
