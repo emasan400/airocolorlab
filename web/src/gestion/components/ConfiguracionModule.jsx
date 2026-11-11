@@ -4,12 +4,14 @@ import {
   setOperadorActual,
   exportarBackupCompleto,
   importarBackupCompleto,
+  exportUnifiedRepoBundle,
+  importUnifiedRepoBundle,
   restablecerDatosIniciales,
   getAuditLogs,
   syncWithSupabase,
 } from '../services/storageService';
 import { supabaseEnabled } from '../../lib/supabase';
-import { IconCheck } from './Icons';
+import { IconCheck, IconLayers } from './Icons';
 
 const OPERADORES_DISPONIBLES = [
   'Admin AIRO (Taller Central)',
@@ -24,11 +26,37 @@ export default function ConfiguracionModule({ onDataReload }) {
   const [auditLogs] = useState(getAuditLogs());
   const [syncStatus, setSyncStatus] = useState(null);
   const [importText, setImportText] = useState('');
+  const [repoBundleText, setRepoBundleText] = useState('');
   const [sqlCopied, setSqlCopied] = useState(false);
 
   const handleChangeOperador = (newOp) => {
     setOperador(newOp);
     setOperadorActual(newOp);
+  };
+
+  const handleExportUnifiedBundle = () => {
+    const jsonStr = exportUnifiedRepoBundle();
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `airo_unified_repo_obsidian_bundle_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportUnifiedBundle = () => {
+    if (!repoBundleText.trim()) return alert('Pegá el paquete JSON del repositorio / bóveda Obsidian.');
+    try {
+      importUnifiedRepoBundle(repoBundleText);
+      alert('Puente unificado (CRM, Calendario, Lienzos .canvas, Cotizaciones DTF y Auditoría) sincronizado con éxito.');
+      setRepoBundleText('');
+      if (onDataReload) onDataReload();
+    } catch (e) {
+      alert('Error al sincronizar puente unificado: ' + e.message);
+    }
   };
 
   const handleExportBackup = () => {
@@ -189,7 +217,40 @@ export default function ConfiguracionModule({ onDataReload }) {
         </div>
       </div>
 
-      {/* Panel 3: Copias de Seguridad & Migración */}
+      {/* Panel 3.B: Puente Unificado Bóveda Obsidian & Repositorio (M-02) */}
+      <div style={{ background: '#fff', border: '1px solid var(--g-border)', borderRadius: '8px', padding: '1.5rem', marginBottom: '2rem', boxShadow: 'var(--g-shadow-sm)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: '0.6rem' }}>
+          <h4 style={{ margin: 0, color: 'var(--g-blue)', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <IconLayers size={18} /> Puente Unificado Bóveda Obsidian & Repositorio Canónico (data/)
+          </h4>
+          <span className="g-badge g-badge-info">JSON Canvas 1.0 + CRM + DTF + HITL</span>
+        </div>
+        <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1rem' }}>
+          Exportá o importá el paquete bidireccional que vincula el CRM único (<code>data/crm/leads.json</code>), el calendario editorial (<code>data/content/calendar.json</code>), la cola HITL-2/HITL-3, las cotizaciones DTF 2D y los lienzos nativos de <code>Boveda Airo Obsidian</code> con <code>node tools/obsidian/airo-obsidian.mjs sync</code>.
+        </p>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+          <button className="g-btn g-btn-primary" onClick={handleExportUnifiedBundle}>
+            Exportar Paquete Unificado Obsidian / Repo (JSON)
+          </button>
+        </div>
+
+        <div className="g-form-group">
+          <label>Importar Paquete Unificado desde Repositorio / Bóveda Obsidian:</label>
+          <textarea
+            rows={3}
+            placeholder="Pegá aquí el contenido de airo_unified_repo_obsidian_bundle.json para sincronizar leads, campañas, lienzos y cotizaciones..."
+            value={repoBundleText}
+            onChange={(e) => setRepoBundleText(e.target.value)}
+          />
+          <div style={{ marginTop: '0.5rem' }}>
+            <button className="g-btn g-btn-outline" onClick={handleImportUnifiedBundle}>
+              Sincronizar Paquete Unificado
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Panel 4: Copias de Seguridad & Migración */}
       <div style={{ background: '#fff', border: '1px solid var(--g-border)', borderRadius: '8px', padding: '1.5rem', marginBottom: '2rem', boxShadow: 'var(--g-shadow-sm)' }}>
         <h4 style={{ margin: '0 0 0.75rem', color: 'var(--g-blue)' }}>Copia de Seguridad & Portabilidad de Datos</h4>
         <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1rem' }}>

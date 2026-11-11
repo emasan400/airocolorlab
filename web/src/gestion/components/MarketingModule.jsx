@@ -29,9 +29,10 @@ import {
   IconTrash,
   IconClose,
   IconSparkles,
+  IconCanvas,
 } from './Icons.jsx';
 
-export default function MarketingModule({ onContentChanged }) {
+export default function MarketingModule({ onContentChanged, onOpenDesignStudio }) {
   // Pestañas: 'campaigns' | 'prompts' | 'approvals' | 'cm' | 'agents'
   const [activeSubTab, setActiveSubTab] = useState('campaigns');
 
@@ -544,6 +545,24 @@ export default function MarketingModule({ onContentChanged }) {
         >
           Directorio de Agentes IA
         </button>
+        {onOpenDesignStudio && (
+          <button
+            className="g-btn g-btn-outline"
+            style={{
+              fontSize: 13,
+              padding: '8px 18px',
+              marginLeft: 'auto',
+              borderColor: 'var(--brand-accent, #00b4d8)',
+              color: 'var(--brand-primary, #1a4295)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
+            onClick={onOpenDesignStudio}
+          >
+            <IconCanvas size={15} /> Abrir Estudio de Diseño & Lienzo Infinito
+          </button>
+        )}
       </div>
 
       {/* ========================================================

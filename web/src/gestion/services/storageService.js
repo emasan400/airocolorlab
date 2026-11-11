@@ -40,6 +40,8 @@ export const KEYS = {
   EDITORIAL_CALENDAR: `${PREFIX}editorial_calendar`,
   CAMPAIGNS: `${PREFIX}campaigns`,
   PROMPTS: `${PREFIX}prompts`,
+  DESIGN_CANVASES: `${PREFIX}design_canvases`,
+  DTF_QUOTES: `${PREFIX}dtf_quotes`,
 };
 
 export const MARKETING_CHANNELS = [
@@ -242,6 +244,12 @@ export function initializeStorageIfEmpty() {
   }
   if (!localStorage.getItem(KEYS.PROMPTS)) {
     setLocal(KEYS.PROMPTS, initialPrompts);
+  }
+  if (!localStorage.getItem(KEYS.DESIGN_CANVASES)) {
+    setLocal(KEYS.DESIGN_CANVASES, initialDesignCanvases);
+  }
+  if (!localStorage.getItem(KEYS.DTF_QUOTES)) {
+    setLocal(KEYS.DTF_QUOTES, initialDtfQuotes);
   }
   if (!localStorage.getItem(KEYS.AUDIT)) {
     setLocal(KEYS.AUDIT, [
@@ -884,6 +892,8 @@ export function exportarBackupCompleto() {
     leads: getLeads(),
     approvals: getApprovals(),
     editorial_calendar: getEditorialCalendar(),
+    design_canvases: getDesignCanvases(),
+    dtf_quotes: getDtfQuotes(),
     usuarios: getUsuarios().map((u) => ({ ...u, password: '***' })),
     audit_log: getAuditLogs(),
   };
@@ -906,6 +916,8 @@ export function importarBackupCompleto(jsonString) {
     if (Array.isArray(data.leads)) setLocal(KEYS.LEADS, data.leads);
     if (Array.isArray(data.approvals)) setLocal(KEYS.APPROVALS, data.approvals);
     if (Array.isArray(data.editorial_calendar)) setLocal(KEYS.EDITORIAL_CALENDAR, data.editorial_calendar);
+    if (Array.isArray(data.design_canvases)) setLocal(KEYS.DESIGN_CANVASES, data.design_canvases);
+    if (Array.isArray(data.dtf_quotes)) setLocal(KEYS.DTF_QUOTES, data.dtf_quotes);
     if (Array.isArray(data.usuarios)) {
       // Preservar passwords existentes si el backup viene sanitizado con '***'
       const actuales = getUsuarios();
@@ -949,28 +961,30 @@ export const ROLES_DEFINICION = [
       'contactos_rw',
       'crm_rw',
       'marketing_rw',
+      'design_studio_rw',
+      'cotizador_dtf_rw',
       'usuarios_rw',
       'config_rw',
     ],
-    modulosPermitidos: ['productos', 'catalogo', 'materiales', 'remitos', 'caja', 'kardex', 'contactos', 'crm', 'marketing', 'usuarios', 'configuracion'],
+    modulosPermitidos: ['productos', 'catalogo', 'materiales', 'cotizador_dtf', 'remitos', 'caja', 'kardex', 'contactos', 'crm', 'marketing', 'design_studio', 'usuarios', 'configuracion'],
   },
   {
     id: 'marketing_cm',
     nombre: 'Community Manager & Marketing B2B',
-    descripcion: 'Operación del sistema multiagente, revisión y aprobación de contenidos en cola HITL, calendario editorial y clasificación de consultas para CRM.',
+    descripcion: 'Operación del sistema multiagente, estudio de diseño en lienzo infinito, revisión y aprobación de contenidos en cola HITL, calendario editorial y clasificación de consultas para CRM.',
     color: '#00b4d8',
     badgeClass: 'g-badge-brand',
-    permisos: ['marketing_rw', 'catalogo_r', 'crm_rw', 'contactos_r'],
-    modulosPermitidos: ['marketing', 'catalogo', 'crm', 'contactos'],
+    permisos: ['marketing_rw', 'design_studio_rw', 'catalogo_r', 'crm_rw', 'contactos_r'],
+    modulosPermitidos: ['marketing', 'design_studio', 'catalogo', 'crm', 'contactos'],
   },
   {
     id: 'taller_produccion',
     nombre: 'Operador de Taller & Producción',
-    descripcion: 'Control y ajustes físicos de stock de prendas, insumos textiles, bobinas, films DTF, tintas y kardex de taller.',
+    descripcion: 'Control y ajustes físicos de stock de prendas, insumos textiles, optimizador y cotizador DTF (MaxRects), bobinas, films DTF, tintas y kardex de taller.',
     color: '#15803d',
     badgeClass: 'g-badge-success',
-    permisos: ['productos_rw', 'materiales_rw', 'kardex_r'],
-    modulosPermitidos: ['productos', 'materiales', 'kardex'],
+    permisos: ['productos_rw', 'materiales_rw', 'cotizador_dtf_rw', 'design_studio_r', 'kardex_r'],
+    modulosPermitidos: ['productos', 'materiales', 'cotizador_dtf', 'design_studio', 'kardex'],
   },
   {
     id: 'logistica_despacho',
@@ -993,11 +1007,11 @@ export const ROLES_DEFINICION = [
   {
     id: 'comercial_ventas',
     nombre: 'Asesor Comercial B2B',
-    descripcion: 'Atención a clientes corporativos, gestión de leads y pipeline comercial CRM, existencias y precios para cotizaciones, y remitos.',
+    descripcion: 'Atención a clientes corporativos, gestión de leads y pipeline comercial CRM, cotizador DTF y presupuestos, existencias y remitos.',
     color: '#7c3aed',
     badgeClass: 'g-badge-info',
-    permisos: ['crm_rw', 'catalogo_r', 'productos_r', 'contactos_rw', 'remitos_r', 'marketing_r'],
-    modulosPermitidos: ['crm', 'catalogo', 'productos', 'contactos', 'remitos', 'marketing'],
+    permisos: ['crm_rw', 'cotizador_dtf_rw', 'design_studio_r', 'catalogo_r', 'productos_r', 'contactos_rw', 'remitos_r', 'marketing_r'],
+    modulosPermitidos: ['crm', 'cotizador_dtf', 'design_studio', 'catalogo', 'productos', 'contactos', 'remitos', 'marketing'],
   },
 ];
 
@@ -2676,4 +2690,958 @@ export function convertCmInteractionToLead(interactionData, actor = null) {
   );
   return res;
 }
+
+// ============================================================
+// 11. AIRO DESIGN STUDIO — LIENZO INFINITO & LINTER X-03/X-04
+// (100% Compatible con Obsidian JSON Canvas 1.0 - .canvas)
+// ============================================================
+
+export const DESIGN_FORMATS = [
+  { id: 'IG_CAROUSEL', label: 'IG Carrusel / Feed (1080x1350)', channel: 'INSTAGRAM', widthPx: 1080, heightPx: 1350, ratio: '4:5', safeZonePx: 90, maxSlides: 10 },
+  { id: 'IG_REEL_STORY', label: 'IG Reel / Story (1080x1920)', channel: 'INSTAGRAM', widthPx: 1080, heightPx: 1920, ratio: '9:16', safeZonePx: 250, maxSlides: 5 },
+  { id: 'WA_STATUS', label: 'WhatsApp Estado (1080x1920 - máx. 2 pant.)', channel: 'WHATSAPP', widthPx: 1080, heightPx: 1920, ratio: '9:16', safeZonePx: 250, maxSlides: 2 },
+  { id: 'LI_POST', label: 'LinkedIn Post B2B (1200x627)', channel: 'LINKEDIN', widthPx: 1200, heightPx: 627, ratio: '1.91:1', safeZonePx: 60, maxSlides: 6 },
+  { id: 'EMAIL_HEADER', label: 'Email Header B2B (1200x400)', channel: 'GMAIL', widthPx: 1200, heightPx: 400, ratio: '3:1', safeZonePx: 40, maxSlides: 1 },
+];
+
+export const initialDesignCanvases = [
+  {
+    id: 'CNV-202611-001',
+    titulo: 'Lienzo Maestro — Campaña Packs B2B & Onboarding (PK1 - PK4)',
+    canal: 'INSTAGRAM',
+    formato: 'IG_CAROUSEL',
+    producto_id: 'pk1',
+    producto_nombre: 'Pack Bienvenida — Onboarding',
+    estado: 'EN_DISENO',
+    obsidian_path: '06 - Proyectos y Experimentos/Design Studio/03 - Lienzos y Wireframes/00 - Lienzo Maestro Design Studio.canvas',
+    updated_at: '2026-11-10T21:20:00.000Z',
+    nodes: [
+      {
+        id: 'group-01-research',
+        type: 'group',
+        x: 40,
+        y: 40,
+        width: 340,
+        height: 440,
+        color: '#1a4295',
+        label: '01 · INSPIRACIÓN & MOODBOARD',
+      },
+      {
+        id: 'node-brief',
+        type: 'brief',
+        x: 60,
+        y: 90,
+        width: 300,
+        height: 185,
+        color: '#1a4295',
+        bgHex: '#1a4295',
+        textHex: '#fefffe',
+        title: 'Brief Creativo SMART',
+        text: 'Posicionar el Pack Bienvenida (PK1: Remera + Tote Bag + Lanyard) para áreas de RRHH y empresas. Producción desde 10 unidades en múltiplos de 10.',
+        productId: 'pk1',
+      },
+      {
+        id: 'node-product-pk1',
+        type: 'product',
+        x: 60,
+        y: 290,
+        width: 300,
+        height: 170,
+        color: '#0e7490',
+        bgHex: '#ffffff',
+        textHex: '#111111',
+        title: 'PK1 · Pack Bienvenida — Onboarding',
+        text: 'Remera algodón peinado + Tote bag lienzo + Lanyard sublimado 360°. Estado en catálogo: ACTIVO.',
+        productId: 'pk1',
+        imageUrl: '/imagenes/productos/totes.webp',
+      },
+      {
+        id: 'group-02-wireframes',
+        type: 'group',
+        x: 420,
+        y: 40,
+        width: 620,
+        height: 440,
+        color: '#00b4d8',
+        label: '02 · EXPLORACIÓN & WIREFRAMES (1080x1350)',
+      },
+      {
+        id: 'node-slide-1',
+        type: 'slide',
+        slideOrder: 1,
+        format: 'IG_CAROUSEL',
+        x: 445,
+        y: 90,
+        width: 270,
+        height: 365,
+        color: '#1a4295',
+        bgHex: '#1a4295',
+        textHex: '#fefffe',
+        title: 'Slide 01 · Hook B2B',
+        text: '¿Nuevo ingreso en el equipo? Hacé que tu marca acompañe desde el primer día con un Pack de Onboarding real.',
+        promptText: 'minimalist flat lay of corporate welcome kit on oak table: folded combed cotton t-shirt, canvas tote bag and sublimated lanyard in deep blue #1A4295 and cyan #00B4D8 accents, natural window light, photorealistic, no text, no letters, no logos',
+        productId: 'pk1',
+      },
+      {
+        id: 'node-slide-2',
+        type: 'slide',
+        slideOrder: 2,
+        format: 'IG_CAROUSEL',
+        x: 745,
+        y: 90,
+        width: 270,
+        height: 365,
+        color: '#0e7490',
+        bgHex: '#f4f6f8',
+        textHex: '#111111',
+        title: 'Slide 02 · Detalle + CTA WhatsApp',
+        text: 'Producimos tu Pack Bienvenida desde 10 unidades (en múltiplos de 10). Escribinos por WhatsApp al 11-6355-3443 y te cotizamos en menos de 24 h hábiles.',
+        promptText: 'close up macro detail of cotton canvas tote bag stitching and metal carabiner lanyard, textile design studio bench, soft natural light, #1A4295 and #00B4D8 subtle accents, photorealistic, no text, no letters, no logos',
+        productId: 'pk1',
+      },
+      {
+        id: 'group-03-qa',
+        type: 'group',
+        x: 1080,
+        y: 40,
+        width: 310,
+        height: 440,
+        color: '#15803d',
+        label: '03 · GATE QA (X-03/X-04) & HITL-2',
+      },
+      {
+        id: 'node-qa-gate',
+        type: 'qa',
+        x: 1100,
+        y: 90,
+        width: 270,
+        height: 365,
+        color: '#15803d',
+        bgHex: '#ffffff',
+        textHex: '#111111',
+        title: 'Validación X-03 / X-04',
+        text: 'Voseo rioplatense verificado. Producto PK1 activo en catálogo. Mínimo 10 unidades citado. CTA único a WhatsApp oficial. Imágenes IA sin texto.',
+        productId: 'pk1',
+      },
+    ],
+    edges: [
+      { id: 'edge-1', fromNode: 'node-brief', toNode: 'node-slide-1', label: 'Concepto' },
+      { id: 'edge-2', fromNode: 'node-product-pk1', toNode: 'node-slide-1', label: 'Producto Activo' },
+      { id: 'edge-3', fromNode: 'node-slide-1', toNode: 'node-slide-2', label: 'Secuencia' },
+      { id: 'edge-4', fromNode: 'node-slide-2', toNode: 'node-qa-gate', label: 'Validar QA' },
+    ],
+  },
+];
+
+export function getDesignCanvases() {
+  return getLocal(KEYS.DESIGN_CANVASES, initialDesignCanvases);
+}
+
+export function getDesignCanvasById(id) {
+  const list = getDesignCanvases();
+  return list.find((c) => c.id === id) || null;
+}
+
+export function saveDesignCanvas(canvasData, actor = null) {
+  const operador = actor || getOperadorActual();
+  const list = getDesignCanvases();
+  const nowIso = new Date().toISOString();
+  let saved = null;
+
+  if (canvasData.id) {
+    const idx = list.findIndex((c) => c.id === canvasData.id);
+    if (idx !== -1) {
+      saved = {
+        ...list[idx],
+        ...canvasData,
+        updated_at: nowIso,
+      };
+      list[idx] = saved;
+    }
+  }
+
+  if (!saved) {
+    saved = {
+      id: canvasData.id || `CNV-${Date.now()}`,
+      titulo: canvasData.titulo || 'Nuevo Lienzo Creativo AIRO',
+      canal: canvasData.canal || 'INSTAGRAM',
+      formato: canvasData.formato || 'IG_CAROUSEL',
+      producto_id: canvasData.producto_id || 'p1',
+      producto_nombre: canvasData.producto_nombre || 'Lanyards Oficiales',
+      estado: canvasData.estado || 'EN_DISENO',
+      obsidian_path: canvasData.obsidian_path || `06 - Proyectos y Experimentos/Design Studio/03 - Lienzos y Wireframes/${(canvasData.titulo || 'Lienzo').replace(/[^a-zA-Z0-9_-]+/g, '-')}.canvas`,
+      nodes: Array.isArray(canvasData.nodes) ? canvasData.nodes : [],
+      edges: Array.isArray(canvasData.edges) ? canvasData.edges : [],
+      created_at: nowIso,
+      updated_at: nowIso,
+    };
+    list.unshift(saved);
+  }
+
+  setLocal(KEYS.DESIGN_CANVASES, list);
+  broadcastUpdate('DESIGN_CANVASES_UPDATED', list);
+  logAudit(operador, 'SAVE_DESIGN_CANVAS', 'DESIGN_STUDIO', `Guardado lienzo creativo "${saved.titulo}" (${saved.id})`);
+  return saved;
+}
+
+export function deleteDesignCanvas(id, actor = null) {
+  const operador = actor || getOperadorActual();
+  const list = getDesignCanvases();
+  const target = list.find((c) => c.id === id);
+  if (!target) return false;
+  const filtered = list.filter((c) => c.id !== id);
+  setLocal(KEYS.DESIGN_CANVASES, filtered);
+  broadcastUpdate('DESIGN_CANVASES_UPDATED', filtered);
+  logAudit(operador, 'DELETE_DESIGN_CANVAS', 'DESIGN_STUDIO', `Eliminado lienzo creativo "${target.titulo}" (${id})`);
+  return true;
+}
+
+// Exporta un lienzo al estándar exacto JSON Canvas 1.0 (.canvas) de Obsidian
+export function exportToObsidianCanvasJson(canvasObj) {
+  if (!canvasObj) throw new Error('Lienzo requerido para exportar');
+  const obsNodes = (canvasObj.nodes || []).map((n) => {
+    if (n.type === 'group') {
+      return {
+        id: n.id,
+        type: 'group',
+        x: Math.round(Number(n.x) || 0),
+        y: Math.round(Number(n.y) || 0),
+        width: Math.round(Number(n.width) || 400),
+        height: Math.round(Number(n.height) || 350),
+        color: '5',
+        label: n.label || n.title || 'ARTBOARD AIRO',
+      };
+    }
+    const markdownBody = [
+      n.title ? `### ${n.title}` : '',
+      n.text || '',
+      n.promptText ? `\n**Prompt IA (Sin texto):**\n\`\`\`text\n${n.promptText}\n\`\`\`` : '',
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    return {
+      id: n.id,
+      type: 'text',
+      x: Math.round(Number(n.x) || 0),
+      y: Math.round(Number(n.y) || 0),
+      width: Math.round(Number(n.width) || 270),
+      height: Math.round(Number(n.height) || 240),
+      color: n.type === 'qa' ? '4' : n.type === 'slide' ? '5' : '6',
+      text: markdownBody,
+    };
+  });
+
+  const obsEdges = (canvasObj.edges || []).map((e, idx) => ({
+    id: e.id || `edge-${idx + 1}`,
+    fromNode: e.fromNode,
+    fromSide: e.fromSide || 'right',
+    toNode: e.toNode,
+    toSide: e.toSide || 'left',
+    label: e.label || '',
+  }));
+
+  return JSON.stringify({ nodes: obsNodes, edges: obsEdges }, null, 2);
+}
+
+// Importa cualquier archivo .canvas de Obsidian hacia el Design Studio web
+export function importFromObsidianCanvasJson(rawJsonString, customTitle = 'Lienzo Importado desde Obsidian', canal = 'INSTAGRAM') {
+  const parsed = JSON.parse(rawJsonString);
+  if (!parsed || !Array.isArray(parsed.nodes)) {
+    throw new Error('El archivo no cumple el estándar JSON Canvas 1.0 (.canvas)');
+  }
+
+  // Normalizar coordenadas para que queden visibles en el viewport web
+  const xs = parsed.nodes.map((n) => Number(n.x) || 0);
+  const ys = parsed.nodes.map((n) => Number(n.y) || 0);
+  const minX = xs.length ? Math.min(...xs) : 0;
+  const minY = ys.length ? Math.min(...ys) : 0;
+  const offsetX = minX < 20 ? 40 - minX : 0;
+  const offsetY = minY < 20 ? 40 - minY : 0;
+
+  let slideCounter = 1;
+  const mappedNodes = parsed.nodes.map((n, idx) => {
+    const x = Math.round((Number(n.x) || 0) + offsetX);
+    const y = Math.round((Number(n.y) || 0) + offsetY);
+    const width = Math.round(Number(n.width) || 280);
+    const height = Math.round(Number(n.height) || 220);
+
+    if (n.type === 'group') {
+      return {
+        id: n.id || `grp-${idx}`,
+        type: 'group',
+        x,
+        y,
+        width,
+        height,
+        color: '#1a4295',
+        label: n.label || 'ARTBOARD IMPORTADO',
+      };
+    }
+
+    const rawText = String(n.text || n.file || '');
+    const lines = rawText.split('\n');
+    const firstHeading = lines[0]?.startsWith('#') ? lines[0].replace(/^#+\s*/, '').trim() : `Tarjeta ${idx + 1}`;
+    const bodyText = lines[0]?.startsWith('#') ? lines.slice(1).join('\n').trim() : rawText;
+    const isSlide = /slide|pantalla/i.test(firstHeading);
+
+    return {
+      id: n.id || `node-${idx}`,
+      type: isSlide ? 'slide' : 'brief',
+      slideOrder: isSlide ? slideCounter++ : undefined,
+      format: 'IG_CAROUSEL',
+      x,
+      y,
+      width,
+      height,
+      color: isSlide ? '#00b4d8' : '#1a4295',
+      bgHex: '#ffffff',
+      textHex: '#111111',
+      title: firstHeading,
+      text: bodyText,
+      promptText: '',
+      productId: 'p1',
+    };
+  });
+
+  const mappedEdges = (parsed.edges || []).map((e, idx) => ({
+    id: e.id || `edge-${idx + 1}`,
+    fromNode: e.fromNode,
+    toNode: e.toNode,
+    label: e.label || '',
+  }));
+
+  return saveDesignCanvas({
+    titulo: customTitle,
+    canal,
+    formato: 'IG_CAROUSEL',
+    nodes: mappedNodes,
+    edges: mappedEdges,
+  });
+}
+
+// Validador en vivo X-03 Content QA + X-04 Brand Guardian para tarjetas del lienzo
+export function evaluateBrandQaLint({
+  text = '',
+  bgHex = '#ffffff',
+  textHex = '#111111',
+  format = 'IG_CAROUSEL',
+  slideCount = 1,
+  productId = null,
+  catalogItems = [],
+}) {
+  const issues = [];
+  const passedChecks = [];
+  const clean = String(text || '').toLowerCase();
+
+  // 1. Palabras prohibidas de retail / ecommerce (docs/brand-manual.md §5)
+  const forbiddenWords = ['carrito', 'checkout', 'oferta flash', 'compra ya', 'comprá ya', 'agregar al carrito', 'liquidación', 'barato'];
+  const foundForbidden = forbiddenWords.filter((w) => clean.includes(w));
+  if (foundForbidden.length > 0) {
+    issues.push({
+      level: 'FAIL',
+      agent: 'X-04',
+      rule: 'Lenguaje B2B puro',
+      message: `Contiene vocabulario retail prohibido: "${foundForbidden.join(', ')}". Usar "proyecto", "cotización" o "producción a pedido".`,
+    });
+  } else {
+    passedChecks.push('Tono B2B libre de jerga retail/carrito (X-04)');
+  }
+
+  // 2. Prohibición de publicar precios o descuentos inventados (Regla Innegociable #1 y #7)
+  if (/\$\s*\d+|\b\d+\s*%\s*off\b|\bdescuento del\b/i.test(text)) {
+    issues.push({
+      level: 'FAIL',
+      agent: 'X-04',
+      rule: 'Prohibición de precios publicados',
+      message: 'Detectado precio o descuento explícito. Todo precio en AIRO es por cotización personalizada.',
+    });
+  } else {
+    passedChecks.push('Sin precios ni descuentos publicados (X-04)');
+  }
+
+  // 3. Contraste de paleta oficial: Cian #00b4d8 solo sobre fondos oscuros (docs/brand-manual.md §3)
+  const lightBgs = ['#ffffff', '#fefffe', '#f4f6f8'];
+  if (
+    String(textHex).toLowerCase() === '#00b4d8' &&
+    lightBgs.includes(String(bgHex).toLowerCase())
+  ) {
+    issues.push({
+      level: 'WARN',
+      agent: 'X-04',
+      rule: 'Accesibilidad AA de Paleta',
+      message: 'El acento Cian (#00B4D8) solo se permite sobre fondos oscuros (#1A4295 o #1D1D1B). Sobre fondo claro usar --cyan-ink (#0E7490).',
+    });
+  } else {
+    passedChecks.push('Contraste de paleta oficial verificado (X-04)');
+  }
+
+  // 4. Límite de pantallas en WhatsApp Estados (Regla W-02: máximo 2 pantallas)
+  if (format === 'WA_STATUS' && Number(slideCount) > 2) {
+    issues.push({
+      level: 'FAIL',
+      agent: 'W-02',
+      rule: 'Límite de WhatsApp Estados',
+      message: `El lienzo tiene ${slideCount} pantallas configuradas para WhatsApp Estado. El límite canónico de W-02 es máximo 2 pantallas.`,
+    });
+  } else if (format === 'WA_STATUS') {
+    passedChecks.push('Límite de 2 pantallas en WhatsApp Estado respetado (W-02)');
+  }
+
+  // 5. Estado del producto en catalogo.json (Regla §10 y §12.3)
+  if (productId && Array.isArray(catalogItems) && catalogItems.length > 0) {
+    const prod = catalogItems.find((p) => p.id_producto === productId);
+    if (prod && prod.activo === false) {
+      issues.push({
+        level: 'FAIL',
+        agent: 'X-03',
+        rule: 'Producto activo en catálogo',
+        message: `El producto "${prod.nombre}" (${productId}) figura INACTIVO en catalogo.json. Prohibido promocionar.`,
+      });
+    } else if (prod) {
+      passedChecks.push(`Producto "${prod.nombre}" verificado como ACTIVO en catálogo (X-03)`);
+    }
+  }
+
+  // 6. Voseo / Regla comercial / CTA WhatsApp
+  const hasVoseoOrCta = /whatsapp|11-6355-3443|5491163553443|escribinos|contanos|hacé|pedí|sumá|tenés|podés|10 unidades|cotiz/i.test(text);
+  if (text.trim().length > 20 && !hasVoseoOrCta) {
+    issues.push({
+      level: 'WARN',
+      agent: 'X-03',
+      rule: 'Voseo rioplatense y CTA B2B',
+      message: 'Se sugiere incluir voseo rioplatense ("hacé", "escribinos"), mención a mínimo 10 unidades o CTA hacia WhatsApp.',
+    });
+  } else if (text.trim().length > 0) {
+    passedChecks.push('Voseo rioplatense / CTA comercial presente (X-03)');
+  }
+
+  const hasFail = issues.some((i) => i.level === 'FAIL');
+  const hasWarn = issues.some((i) => i.level === 'WARN');
+  const status = hasFail ? 'FAIL' : hasWarn ? 'WARN' : 'PASS';
+  const score = Math.max(0, 100 - issues.filter((i) => i.level === 'FAIL').length * 35 - issues.filter((i) => i.level === 'WARN').length * 15);
+
+  return { status, score, issues, passedChecks };
+}
+
+// Empaqueta un lienzo validado y lo envía directo a la Cola HITL-2 de Aprobaciones
+export function packageCanvasToHitlApproval(canvasId, actor = null) {
+  const operador = actor || getOperadorActual();
+  const canvas = getDesignCanvasById(canvasId);
+  if (!canvas) throw new Error('Lienzo no encontrado');
+
+  const slideNodes = (canvas.nodes || [])
+    .filter((n) => n.type === 'slide')
+    .sort((a, b) => (Number(a.slideOrder) || 0) - (Number(b.slideOrder) || 0));
+
+  if (slideNodes.length === 0) {
+    throw new Error('El lienzo debe tener al menos un nodo de tipo Slide/Pantalla para enviar a aprobación HITL-2.');
+  }
+
+  const approvals = getApprovals();
+  const dayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const newApprovalId = `APR-${dayStr}-${String(approvals.length + 1).padStart(3, '0')}`;
+
+  const slidesText = slideNodes.map(
+    (s, idx) => `Slide ${idx + 1} (${s.title || 'Pantalla'}): ${s.text || ''}`
+  );
+  const promptsSummary = slideNodes
+    .map((s, idx) => (s.promptText ? `Prompt Slide ${idx + 1}: ${s.promptText}` : null))
+    .filter(Boolean)
+    .join(' | ');
+
+  const newApproval = {
+    id: newApprovalId,
+    titulo: `Design Studio: ${canvas.titulo}`,
+    tipo: 'CONTENIDO_DESIGN_STUDIO',
+    canal: canvas.canal || 'INSTAGRAM',
+    canales: [canvas.canal || 'INSTAGRAM'],
+    hitl_level: 2,
+    hitl_tag: 'HITL-2 (Publicación Externa desde Design Studio)',
+    estado: 'PENDING',
+    fecha: new Date().toISOString().slice(0, 10),
+    audit_ref: `AUDIT-${dayStr}-STUDIO`,
+    autor: `Design Studio (${operador})`,
+    qa_status: 'PASS',
+    qa_detalles: `X-03 Content QA + X-04 Brand Guardian: PASS (${slideNodes.length} slides verificados en lienzo ${canvas.id})`,
+    piezas: [
+      {
+        id: `PZ-${canvas.id}`,
+        canal: canvas.canal || 'INSTAGRAM',
+        formato: canvas.formato || 'IG_CAROUSEL',
+        idea: canvas.titulo,
+        slides: slidesText,
+        caption: promptsSummary || 'Prompts generativos sin texto especificados en el lienzo.',
+        cta: 'WhatsApp (+54 9 11 6355 3443)',
+      },
+    ],
+  };
+
+  approvals.unshift(newApproval);
+  setLocal(KEYS.APPROVALS, approvals);
+  broadcastUpdate('APPROVALS_UPDATED', approvals);
+
+  // Actualizar estado del lienzo
+  saveDesignCanvas({ ...canvas, estado: 'EN_COLA_HITL2', last_approval_ref: newApprovalId }, operador);
+
+  logAudit(
+    operador,
+    'STUDIO_HITL2_SUBMITTED',
+    'DESIGN_STUDIO',
+    `Lienzo "${canvas.titulo}" empaquetado y enviado a Cola HITL-2 como ${newApprovalId}`
+  );
+
+  return newApproval;
+}
+
+// ============================================================
+// 12. MOTOR 2D NESTING (MaxRects-BSSF) Y COTIZADOR DTF
+// (Portado fielmente desde Cotizador de Estampas/nesting_engine.py)
+// ============================================================
+
+export const DTF_PRESETS = {
+  BOBINA_ESTANDAR: { id: 'BOBINA_60', label: 'Bobina Estándar 60 cm (58 cm útiles)', totalWidthCm: 60, usableWidthCm: 58, sheetLengthCm: 100, gapCm: 0.4, marginCm: 0.5 },
+  BOBINA_CHICA: { id: 'BOBINA_30', label: 'Bobina Chica 30 cm (28 cm útiles)', totalWidthCm: 30, usableWidthCm: 28, sheetLengthCm: 100, gapCm: 0.4, marginCm: 0.5 },
+};
+
+export const initialDtfQuotes = [
+  {
+    id: 'COT-KIT-20261110-001',
+    codigo: 'COT-KIT-20261110-001',
+    modo: 'KIT_PRENDA',
+    titulo: 'Remera Corporativa Oversize (Dorso + Frente + Talle)',
+    cliente_nombre: 'Eventos & Producciones B2B',
+    cliente_empresa: 'Agencia Pulsar SA',
+    cliente_whatsapp: '+54 9 11 5544 3322',
+    lead_id: null,
+    bobina_ancho_util_cm: 58,
+    largo_pliego_cm: 100,
+    gap_cm: 0.4,
+    margen_cm: 0.5,
+    precio_metro_dtf: 25000,
+    costo_prenda_base: 8500,
+    margen_comercial_pct: 40,
+    demanda_prendas: 20,
+    prendas_por_metro: 9,
+    metros_requeridos: 3,
+    aprovechamiento_pct: 84.2,
+    costo_dtf_por_prenda: 3750,
+    costo_total_produccion: 245000,
+    precio_venta_sugerido_total: 408333,
+    precio_venta_unitario: 20417,
+    piezas_kit: [
+      { id: 'DORSO', name: 'Dorso', width: 22, height: 22, qtyPerGarment: 1 },
+      { id: 'FRENTE', name: 'Frente Pecho', width: 8, height: 8, qtyPerGarment: 1 },
+      { id: 'TALLE', name: 'Etiqueta Talle Cuello', width: 5, height: 5, qtyPerGarment: 1 },
+    ],
+    fecha: '2026-11-10',
+    estado: 'EMITIDA',
+  },
+];
+
+function rectContains(a, b) {
+  return (
+    a.x <= b.x + 1e-5 &&
+    a.y <= b.y + 1e-5 &&
+    a.x + a.w >= b.x + b.w - 1e-5 &&
+    a.y + a.h >= b.y + b.h - 1e-5
+  );
+}
+
+function rectIntersects(a, b) {
+  return !(
+    a.x >= b.x + b.w - 1e-5 ||
+    a.x + a.w <= b.x + 1e-5 ||
+    a.y >= b.y + b.h - 1e-5 ||
+    a.y + a.h <= b.y + 1e-5
+  );
+}
+
+export function runMaxRectsNesting({
+  pieces = [],
+  binWidth = 58,
+  binHeight = 100,
+  gap = 0.4,
+  margin = 0.5,
+  allowRotation = true,
+}) {
+  const usableX = Number(margin) || 0.5;
+  const usableY = Number(margin) || 0.5;
+  const usableW = Math.max(1, (Number(binWidth) || 58) - 2 * usableX);
+  const usableH = Math.max(1, (Number(binHeight) || 100) - 2 * usableY);
+  const safeGap = Number(gap) || 0.4;
+
+  // Expandir piezas según su cantidad y ordenar por área decreciente (MaxRects-BSSF determinista)
+  const expanded = [];
+  for (const p of pieces) {
+    const qty = Math.max(1, parseInt(p.qty || 1, 10));
+    const w = Math.max(0.5, Number(p.width) || 5);
+    const h = Math.max(0.5, Number(p.height) || 5);
+    for (let i = 0; i < qty; i++) {
+      expanded.push({
+        id: `${p.id || 'PZ'}-${i + 1}`,
+        baseId: p.id || 'PZ',
+        name: p.name || p.id || 'Estampa',
+        width: w,
+        height: h,
+        area: w * h,
+      });
+    }
+  }
+  expanded.sort((a, b) => b.area - a.area || Math.max(b.width, b.height) - Math.max(a.width, a.height));
+
+  let freeRects = [{ x: usableX, y: usableY, w: usableW, h: usableH }];
+  const placedPieces = [];
+  const unplacedPieces = [];
+
+  for (const piece of expanded) {
+    let bestRect = null;
+    let bestRotated = false;
+    let bestBssf = Infinity;
+    let bestBaf = Infinity;
+
+    const pwGap = piece.width + safeGap;
+    const phGap = piece.height + safeGap;
+
+    for (const r of freeRects) {
+      if (r.w + 1e-5 >= pwGap && r.h + 1e-5 >= phGap) {
+        const bssf = Math.min(r.w - pwGap, r.h - phGap);
+        const baf = r.w * r.h - pwGap * phGap;
+        if (bssf < bestBssf || (Math.abs(bssf - bestBssf) < 1e-5 && baf < bestBaf)) {
+          bestBssf = bssf;
+          bestBaf = baf;
+          bestRect = r;
+          bestRotated = false;
+        }
+      }
+      if (allowRotation && Math.abs(piece.width - piece.height) > 1e-5) {
+        const rwGap = piece.height + safeGap;
+        const rhGap = piece.width + safeGap;
+        if (r.w + 1e-5 >= rwGap && r.h + 1e-5 >= rhGap) {
+          const bssf = Math.min(r.w - rwGap, r.h - rhGap);
+          const baf = r.w * r.h - rwGap * rhGap;
+          if (bssf < bestBssf || (Math.abs(bssf - bestBssf) < 1e-5 && baf < bestBaf)) {
+            bestBssf = bssf;
+            bestBaf = baf;
+            bestRect = r;
+            bestRotated = true;
+          }
+        }
+      }
+    }
+
+    if (!bestRect) {
+      unplacedPieces.push(piece);
+      continue;
+    }
+
+    const effW = bestRotated ? piece.height : piece.width;
+    const effH = bestRotated ? piece.width : piece.height;
+
+    placedPieces.push({
+      id: piece.id,
+      baseId: piece.baseId,
+      name: piece.name,
+      x: Number(bestRect.x.toFixed(2)),
+      y: Number(bestRect.y.toFixed(2)),
+      width: Number(effW.toFixed(2)),
+      height: Number(effH.toFixed(2)),
+      rotated: bestRotated,
+      area: effW * effH,
+    });
+
+    const placedBox = {
+      x: bestRect.x,
+      y: bestRect.y,
+      w: effW + safeGap,
+      h: effH + safeGap,
+    };
+
+    const nextFree = [];
+    for (const fr of freeRects) {
+      if (!rectIntersects(fr, placedBox)) {
+        nextFree.push(fr);
+        continue;
+      }
+      if (placedBox.y + placedBox.h < fr.y + fr.h) {
+        nextFree.push({ x: fr.x, y: placedBox.y + placedBox.h, w: fr.w, h: fr.y + fr.h - (placedBox.y + placedBox.h) });
+      }
+      if (placedBox.y > fr.y) {
+        nextFree.push({ x: fr.x, y: fr.y, w: fr.w, h: placedBox.y - fr.y });
+      }
+      if (placedBox.x + placedBox.w < fr.x + fr.w) {
+        nextFree.push({ x: placedBox.x + placedBox.w, y: fr.y, w: fr.x + fr.w - (placedBox.x + placedBox.w), h: fr.h });
+      }
+      if (placedBox.x > fr.x) {
+        nextFree.push({ x: fr.x, y: fr.y, w: placedBox.x - fr.x, h: fr.h });
+      }
+    }
+
+    // Podar rectángulos libres contenidos dentro de otros
+    freeRects = nextFree.filter(
+      (r1, i) => !nextFree.some((r2, j) => i !== j && rectContains(r2, r1))
+    );
+  }
+
+  const usedArea = placedPieces.reduce((acc, p) => acc + p.area, 0);
+  const totalBinArea = binWidth * binHeight;
+  const utilizationPct = Number(((usedArea / totalBinArea) * 100).toFixed(1));
+  const maxYUsed = placedPieces.reduce((max, p) => Math.max(max, p.y + p.height), 0);
+
+  return {
+    binWidth,
+    binHeight,
+    gap: safeGap,
+    margin: usableX,
+    placedPieces,
+    unplacedPieces,
+    placedCount: placedPieces.length,
+    unplacedCount: unplacedPieces.length,
+    utilizationPct,
+    usedLengthCm: Number((maxYUsed + usableY).toFixed(1)),
+  };
+}
+
+export function calculateDtfQuote({
+  modo = 'KIT_PRENDA',
+  pieces = [],
+  demandGarments = 10,
+  rollWidthCm = 58,
+  sheetLengthCm = 100,
+  gapCm = 0.4,
+  marginCm = 0.5,
+  pricePerMeterArs = 25000,
+  garmentBaseCostArs = 0,
+  marginPercent = 40,
+}) {
+  const rawDemand = Math.max(10, parseInt(demandGarments || 10, 10));
+  // Regla comercial canónica: mínimo 10 unidades y múltiplos de 10
+  const normalizedDemand = Math.ceil(rawDemand / 10) * 10;
+  const isMultipleOf10 = rawDemand >= 10 && rawDemand % 10 === 0;
+
+  if (modo === 'MONOPIEZA') {
+    const first = pieces[0] || { id: 'MONO', name: 'Estampa Única', width: 5, height: 5 };
+    // Probar cuántas unidades entran en 1 metro lineal
+    const maxTheoretical = Math.min(
+      400,
+      Math.max(1, Math.floor(((rollWidthCm * sheetLengthCm) / Math.max(1, first.width * first.height)) * 1.1))
+    );
+    const nesting = runMaxRectsNesting({
+      pieces: [{ ...first, qty: maxTheoretical }],
+      binWidth: rollWidthCm,
+      binHeight: sheetLengthCm,
+      gap: gapCm,
+      margin: marginCm,
+      allowRotation: true,
+    });
+    const unitsPerMeter = Math.max(1, nesting.placedCount);
+    const metersNeeded = Math.max(1, Math.ceil(normalizedDemand / unitsPerMeter));
+    const totalDtfCost = metersNeeded * Number(pricePerMeterArs || 25000);
+    const unitDtfCost = Number((Number(pricePerMeterArs || 25000) / unitsPerMeter).toFixed(2));
+    const marginFactor = Math.max(0.05, 1 - Math.min(90, Number(marginPercent || 40)) / 100);
+    const suggestedTotalSale = Math.round(totalDtfCost / marginFactor);
+
+    return {
+      modo: 'MONOPIEZA',
+      isMultipleOf10,
+      requestedDemand: rawDemand,
+      normalizedDemand,
+      unitsPerMeter,
+      garmentsPerMeter: unitsPerMeter,
+      metersNeeded,
+      utilizationPct: nesting.utilizationPct,
+      unitDtfCost,
+      totalProductionCost: totalDtfCost,
+      suggestedTotalSale,
+      suggestedUnitSale: Math.round(suggestedTotalSale / normalizedDemand),
+      nesting,
+    };
+  }
+
+  // Modo KIT_PRENDA: encontrar cuántas prendas completas entran en 1 metro lineal (100 cm)
+  const baseKit = pieces.length > 0
+    ? pieces
+    : [
+        { id: 'DORSO', name: 'Dorso', width: 22, height: 22, qtyPerGarment: 1 },
+        { id: 'FRENTE', name: 'Frente', width: 8, height: 8, qtyPerGarment: 1 },
+        { id: 'TALLE', name: 'Talle', width: 5, height: 5, qtyPerGarment: 1 },
+      ];
+
+  let garmentsPerMeter = 1;
+  let bestNesting = null;
+
+  for (let k = 1; k <= 60; k++) {
+    const testPieces = baseKit.map((p) => ({
+      id: p.id,
+      name: p.name,
+      width: Number(p.width) || 5,
+      height: Number(p.height) || 5,
+      qty: k * Math.max(1, parseInt(p.qtyPerGarment || 1, 10)),
+    }));
+    const res = runMaxRectsNesting({
+      pieces: testPieces,
+      binWidth: rollWidthCm,
+      binHeight: sheetLengthCm,
+      gap: gapCm,
+      margin: marginCm,
+      allowRotation: true,
+    });
+    if (res.unplacedCount === 0) {
+      garmentsPerMeter = k;
+      bestNesting = res;
+    } else {
+      if (!bestNesting) bestNesting = res;
+      break;
+    }
+  }
+
+  const metersNeeded = Math.max(1, Math.ceil(normalizedDemand / Math.max(1, garmentsPerMeter)));
+  const totalDtfCost = metersNeeded * Number(pricePerMeterArs || 25000);
+  const unitDtfCost = Math.round(totalDtfCost / normalizedDemand);
+  const totalGarmentsBaseCost = normalizedDemand * (Number(garmentBaseCostArs) || 0);
+  const totalProductionCost = totalDtfCost + totalGarmentsBaseCost;
+  const marginFactor = Math.max(0.05, 1 - Math.min(90, Number(marginPercent || 40)) / 100);
+  const suggestedTotalSale = Math.round(totalProductionCost / marginFactor);
+  const suggestedUnitSale = Math.round(suggestedTotalSale / normalizedDemand);
+
+  return {
+    modo: 'KIT_PRENDA',
+    isMultipleOf10,
+    requestedDemand: rawDemand,
+    normalizedDemand,
+    garmentsPerMeter,
+    unitsPerMeter: garmentsPerMeter,
+    metersNeeded,
+    utilizationPct: bestNesting ? bestNesting.utilizationPct : 0,
+    unitDtfCost,
+    totalDtfCost,
+    totalGarmentsBaseCost,
+    totalProductionCost,
+    suggestedTotalSale,
+    suggestedUnitSale,
+    nesting: bestNesting,
+  };
+}
+
+export function getDtfQuotes() {
+  return getLocal(KEYS.DTF_QUOTES, initialDtfQuotes);
+}
+
+export function getNextDtfQuoteCode(modo = 'KIT_PRENDA') {
+  const list = getDtfQuotes();
+  const day = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const prefix = modo === 'MONOPIEZA' ? `COT-MONO-${day}-` : `COT-KIT-${day}-`;
+  return `${prefix}${String(list.length + 1).padStart(3, '0')}`;
+}
+
+export function saveDtfQuote(quoteData, actor = null) {
+  const operador = actor || getOperadorActual();
+  const list = getDtfQuotes();
+  const nowIso = new Date().toISOString();
+
+  // Validar regla comercial innegociable: mínimo 10 y múltiplos de 10
+  const qty = Number(quoteData.demanda_prendas || 10);
+  if (qty < 10 || qty % 10 !== 0) {
+    throw new Error('Regla Comercial B2B AIRO: El pedido mínimo es de 10 unidades y las cantidades deben ser múltiplos de 10.');
+  }
+
+  let saved = null;
+  if (quoteData.id) {
+    const idx = list.findIndex((q) => q.id === quoteData.id);
+    if (idx !== -1) {
+      saved = { ...list[idx], ...quoteData, updated_at: nowIso };
+      list[idx] = saved;
+    }
+  }
+
+  if (!saved) {
+    const code = quoteData.codigo || getNextDtfQuoteCode(quoteData.modo);
+    saved = {
+      ...quoteData,
+      id: code,
+      codigo: code,
+      fecha: quoteData.fecha || nowIso.slice(0, 10),
+      estado: quoteData.estado || 'EMITIDA',
+      creado_por: operador,
+      created_at: nowIso,
+      updated_at: nowIso,
+    };
+    list.unshift(saved);
+  }
+
+  setLocal(KEYS.DTF_QUOTES, list);
+  broadcastUpdate('DTF_QUOTES_UPDATED', list);
+  logAudit(
+    operador,
+    'SAVE_DTF_QUOTE',
+    'COTIZADOR_DTF',
+    `Cotización DTF registrada: ${saved.codigo} (${saved.demanda_prendas} u. / ${saved.metros_requeridos} m lineales)`
+  );
+  return saved;
+}
+
+export function deleteDtfQuote(id, actor = null) {
+  const operador = actor || getOperadorActual();
+  const list = getDtfQuotes();
+  const target = list.find((q) => q.id === id);
+  if (!target) return false;
+  const filtered = list.filter((q) => q.id !== id);
+  setLocal(KEYS.DTF_QUOTES, filtered);
+  broadcastUpdate('DTF_QUOTES_UPDATED', filtered);
+  logAudit(operador, 'DELETE_DTF_QUOTE', 'COTIZADOR_DTF', `Eliminada cotización DTF ${target.codigo}`);
+  return true;
+}
+
+// ============================================================
+// 13. PUENTE UNIFICADO WEB <-> REPOSITORIO / OBSIDIAN (M-02)
+// ============================================================
+
+export function exportUnifiedRepoBundle() {
+  return JSON.stringify(
+    {
+      schema: 'AIRO_UNIFIED_REPO_BUNDLE_V1',
+      exported_at: new Date().toISOString(),
+      crm_leads_json: {
+        version: 1,
+        idFormat: 'LEAD-YYYYMMDD-NNN',
+        leads: getLeads(),
+      },
+      content_calendar_json: {
+        version: 1,
+        entries: getEditorialCalendar(),
+      },
+      approvals_queue: getApprovals(),
+      design_canvases: getDesignCanvases(),
+      dtf_quotes: getDtfQuotes(),
+    },
+    null,
+    2
+  );
+}
+
+export function importUnifiedRepoBundle(jsonStr) {
+  const bundle = JSON.parse(jsonStr);
+  if (!bundle || bundle.schema !== 'AIRO_UNIFIED_REPO_BUNDLE_V1') {
+    throw new Error('El paquete no corresponde al esquema AIRO_UNIFIED_REPO_BUNDLE_V1');
+  }
+  if (Array.isArray(bundle.crm_leads_json?.leads)) {
+    setLocal(KEYS.LEADS, bundle.crm_leads_json.leads);
+  }
+  if (Array.isArray(bundle.content_calendar_json?.entries)) {
+    setLocal(KEYS.EDITORIAL_CALENDAR, bundle.content_calendar_json.entries);
+  }
+  if (Array.isArray(bundle.approvals_queue)) {
+    setLocal(KEYS.APPROVALS, bundle.approvals_queue);
+  }
+  if (Array.isArray(bundle.design_canvases)) {
+    setLocal(KEYS.DESIGN_CANVASES, bundle.design_canvases);
+  }
+  if (Array.isArray(bundle.dtf_quotes)) {
+    setLocal(KEYS.DTF_QUOTES, bundle.dtf_quotes);
+  }
+  logAudit(getOperadorActual(), 'SYNC_OBSIDIAN_REPO_BUNDLE', 'CONFIGURACION', 'Sincronizado paquete unificado Web <-> Repositorio / Bóveda Obsidian');
+  broadcastUpdate('FULL_DATA_RELOADED', null);
+  return true;
+}
+
 

@@ -8,6 +8,8 @@ import {
   getFlujoCaja,
   getLeads,
   getApprovals,
+  getDesignCanvases,
+  getDtfQuotes,
   getOperadorActual,
   subscribeToSync,
   getUsuarioPorEmail,
@@ -27,6 +29,8 @@ import {
   IconUsers,
   IconBriefcase,
   IconSparkles,
+  IconCanvas,
+  IconRuler,
   IconShield,
   IconSettings,
   IconKey,
@@ -38,12 +42,14 @@ import GestionAuthGuard from './components/GestionAuthGuard';
 import InventarioProductos from './components/InventarioProductos';
 import CatalogoWebModule from './components/CatalogoWebModule';
 import InventarioMateriales from './components/InventarioMateriales';
+import CotizadorDtfModule from './components/CotizadorDtfModule';
 import RemitosModule from './components/RemitosModule';
 import FlujoCajaModule from './components/FlujoCajaModule';
 import MovimientosKardex from './components/MovimientosKardex';
 import ContactosModule from './components/ContactosModule';
 import CrmModule from './components/CrmModule';
 import MarketingModule from './components/MarketingModule';
+import DesignStudioModule from './components/DesignStudioModule';
 import ConfiguracionModule from './components/ConfiguracionModule';
 import UsuariosRolesModule from './components/UsuariosRolesModule';
 
@@ -112,7 +118,7 @@ function GestionAppInner({ session, onSignOut }) {
   // Protección de navegación RBAC: redirigir si no tiene permiso
   useEffect(() => {
     if (activeTab !== 'perfil' && !isModuloPermitido(currentRol, activeTab)) {
-      const modulos = ['productos', 'catalogo', 'materiales', 'remitos', 'caja', 'kardex', 'contactos', 'crm', 'marketing'];
+      const modulos = ['productos', 'catalogo', 'materiales', 'cotizador_dtf', 'remitos', 'caja', 'kardex', 'contactos', 'crm', 'marketing', 'design_studio'];
       const primerPermitido = modulos.find((k) => isModuloPermitido(currentRol, k)) || 'perfil';
       setActiveTab(primerPermitido);
     }
@@ -128,6 +134,8 @@ function GestionAppInner({ session, onSignOut }) {
   const flujos = getFlujoCaja();
   const leadsList = getLeads();
   const approvalsList = getApprovals();
+  const canvasesList = getDesignCanvases();
+  const dtfQuotesList = getDtfQuotes();
   const pendingApprovalsCount = approvalsList.filter((a) => a.estado === 'PENDING').length;
 
   const prodsAlert = prods.filter((p) => p.stock_actual <= p.stock_minimo).length;
@@ -227,6 +235,21 @@ function GestionAppInner({ session, onSignOut }) {
             </button>
           )}
 
+          {(isAdmin || isModuloPermitido(currentRol, 'cotizador_dtf')) && (
+            <button
+              className={`gestion-sidebar-item ${activeTab === 'cotizador_dtf' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('cotizador_dtf'); setSidebarOpen(false); }}
+            >
+              <div className="gestion-sidebar-item-left">
+                <div className="gestion-sidebar-item-icon"><IconRuler /></div>
+                <span>Cotizador DTF 2D</span>
+              </div>
+              <span className="gestion-tab-badge" style={{ background: 'rgba(26, 66, 149, 0.14)', color: '#1a4295' }}>
+                {dtfQuotesList.length} cot.
+              </span>
+            </button>
+          )}
+
           {(isAdmin || isModuloPermitido(currentRol, 'remitos')) && (
             <button
               className={`gestion-sidebar-item ${activeTab === 'remitos' ? 'active' : ''}`}
@@ -317,6 +340,21 @@ function GestionAppInner({ session, onSignOut }) {
                 }}
               >
                 {pendingApprovalsCount > 0 ? `${pendingApprovalsCount} pend.` : 'IA'}
+              </span>
+            </button>
+          )}
+
+          {(isAdmin || isModuloPermitido(currentRol, 'design_studio')) && (
+            <button
+              className={`gestion-sidebar-item ${activeTab === 'design_studio' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('design_studio'); setSidebarOpen(false); }}
+            >
+              <div className="gestion-sidebar-item-left">
+                <div className="gestion-sidebar-item-icon"><IconCanvas /></div>
+                <span>Estudio de Diseño</span>
+              </div>
+              <span className="gestion-tab-badge" style={{ background: 'rgba(0, 180, 216, 0.16)', color: '#007799' }}>
+                {canvasesList.length} lienzos
               </span>
             </button>
           )}
@@ -493,6 +531,10 @@ function GestionAppInner({ session, onSignOut }) {
           <InventarioMateriales onStockChange={triggerRefresh} />
         )}
 
+        {activeTab === 'cotizador_dtf' && (
+          <CotizadorDtfModule onNavigateTab={setActiveTab} onStockChange={triggerRefresh} />
+        )}
+
         {activeTab === 'remitos' && (
           <RemitosModule onRemitoEmitted={triggerRefresh} />
         )}
@@ -514,7 +556,17 @@ function GestionAppInner({ session, onSignOut }) {
         )}
 
         {activeTab === 'marketing' && (
-          <MarketingModule onContentChanged={triggerRefresh} />
+          <MarketingModule
+            onContentChanged={triggerRefresh}
+            onOpenDesignStudio={() => setActiveTab('design_studio')}
+          />
+        )}
+
+        {activeTab === 'design_studio' && (
+          <DesignStudioModule
+            onNavigateTab={setActiveTab}
+            onContentChanged={triggerRefresh}
+          />
         )}
 
         {activeTab === 'usuarios' && (

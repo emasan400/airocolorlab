@@ -594,5 +594,172 @@ test('Marketing B2B — 5 Canales Oficiales, Campañas Multicanal y Generador de
   assert.equal(delRes, true);
 });
 
+test('Punto 1 & 2 — Estudio de Diseño, Lienzo Infinito (.canvas JSON 1.0), Linter X-03/X-04 y Empaquetado HITL-2', () => {
+  // 1. Verificar lienzos iniciales y RBAC
+  const initialCanvases = storage.getDesignCanvases();
+  assert.ok(initialCanvases.length >= 1, 'Debe iniciar con al menos el lienzo maestro B2B');
+  assert.equal(storage.isModuloPermitido('comercial_ventas', 'design_studio'), true);
+
+  // 2. Crear un nuevo lienzo de diseño
+  const nuevoCanvas = storage.saveDesignCanvas({
+    titulo: 'Tablero Lanzamiento Camperas Rompeviento B2B',
+    canal: 'INSTAGRAM',
+    formato: 'IG_CAROUSEL',
+    producto_id: 'p1',
+    nodes: [
+      {
+        id: 'node-prod-1',
+        type: 'product',
+        title: 'Producto — Campera Rompeviento',
+        x: 60,
+        y: 80,
+        width: 280,
+        height: 220,
+        color: '#1a4295',
+        bgHex: '#ffffff',
+        textHex: '#111111',
+        text: 'Campera Rompeviento Impermeable · Mínimo 10 unidades.',
+      },
+      {
+        id: 'node-slide-1',
+        type: 'slide',
+        slideOrder: 1,
+        format: 'IG_CAROUSEL',
+        title: 'Slide 1 — Copy Principal',
+        x: 400,
+        y: 80,
+        width: 320,
+        height: 220,
+        color: '#00b4d8',
+        bgHex: '#1a4295',
+        textHex: '#fefffe',
+        text: 'Equipá a tu equipo con camperas técnicas personalizadas. Pedido mínimo 10 unidades (múltiplos de 10). Escribinos por WhatsApp al 11-6355-3443 para cotización a medida.',
+        promptText: 'Editorial studio photography of a navy blue windbreaker jacket on minimalist concrete background, #1A4295 and #00B4D8 lighting accents. Photorealistic, no text, no letters, no logos.',
+      },
+    ],
+    edges: [
+      { id: 'edge-1', fromNode: 'node-prod-1', toNode: 'node-slide-1', label: 'Flujo B2B' },
+    ],
+  });
+
+  assert.ok(nuevoCanvas.id.startsWith('CNV-'));
+  assert.equal(nuevoCanvas.nodes.length, 2);
+
+  // 3. Evaluar Linter de Marca en vivo (X-03 Content QA + X-04 Brand Guardian)
+  const qaPass = storage.evaluateBrandQaLint({
+    text: nuevoCanvas.nodes[1].text,
+    bgHex: '#1a4295',
+    textHex: '#fefffe',
+    format: 'IG_CAROUSEL',
+    slideCount: 1,
+  });
+  assert.equal(qaPass.status, 'PASS', 'El slide que cumple voseo, mín. 10 u. y CTA WhatsApp debe aprobar QA');
+  assert.equal(qaPass.score, 100);
+
+  // Evaluar caso con infracción (vocabulario retail prohibido + precio explícito)
+  const qaFail = storage.evaluateBrandQaLint({
+    text: 'Agregá al carrito muy barato en oferta flash por $5000.',
+    bgHex: '#ffffff',
+    textHex: '#00b4d8',
+    format: 'WA_STATUS',
+    slideCount: 4,
+  });
+  assert.equal(qaFail.status, 'FAIL', 'Debe detectar infracción por vocabulario retail, precio explícito y exceso de pantallas WA');
+
+  // 4. Interoperabilidad nativa con Obsidian JSON Canvas 1.0 (.canvas)
+  const jsonCanvasStr = storage.exportToObsidianCanvasJson(nuevoCanvas);
+  const parsedSpec = JSON.parse(jsonCanvasStr);
+  assert.ok(Array.isArray(parsedSpec.nodes));
+  assert.ok(Array.isArray(parsedSpec.edges));
+  assert.equal(parsedSpec.nodes.length, 2);
+  assert.equal(parsedSpec.nodes[0].type, 'text');
+
+  const reimported = storage.importFromObsidianCanvasJson(jsonCanvasStr, 'Lienzo Importado desde Obsidian');
+  assert.ok(reimported.id.startsWith('CNV-'));
+  assert.equal(reimported.nodes.length, 2);
+
+  // 5. Empaquetado 1-Click hacia la Cola HITL-2
+  const approval = storage.packageCanvasToHitlApproval(nuevoCanvas.id);
+  assert.ok(approval.id.startsWith('APR-'));
+  assert.equal(approval.hitl_level, 2);
+  assert.equal(approval.estado, 'PENDING');
+  const updatedCanvas = storage.getDesignCanvasById(nuevoCanvas.id);
+  assert.equal(updatedCanvas.estado, 'EN_COLA_HITL2');
+
+  // Limpieza
+  storage.deleteDesignCanvas(reimported.id);
+});
+
+test('Punto 3 & M-01/M-02 — Motor 2D Nesting MaxRects-BSSF, Cotizador DTF y Puente Unificado Obsidian', () => {
+  // 1. Verificar motor determinístico MaxRects-BSSF
+  const nesting = storage.runMaxRectsNesting({
+    binWidth: 58,
+    binHeight: 100,
+    gap: 0.4,
+    margin: 0.5,
+    pieces: [
+      { id: 'DORSO', name: 'Dorso', width: 22, height: 22, qty: 4 },
+      { id: 'FRENTE', name: 'Frente', width: 8, height: 8, qty: 4 },
+      { id: 'TALLE', name: 'Talle', width: 5, height: 5, qty: 4 },
+    ],
+  });
+
+  assert.equal(nesting.binWidth, 58);
+  assert.equal(nesting.placedCount, 12, '4 kits * 3 piezas = 12 piezas anidadas en 1 metro');
+  assert.ok(nesting.usedLengthCm > 0, 'Debe calcular largo lineal usado en cm');
+  assert.ok(nesting.utilizationPct > 25, 'El algoritmo MaxRects debe reportar el porcentaje de aprovechamiento');
+
+  // 2. Verificar cálculo de cotización con regla comercial (mínimo 10, múltiplos de 10)
+  const quoteCalc = storage.calculateDtfQuote({
+    modo: 'KIT_PRENDA',
+    rollWidthCm: 58,
+    pricePerMeterArs: 25000,
+    demandGarments: 14, // Debe normalizarse automáticamente a 20 (múltiplo de 10 superior)
+    pieces: [
+      { id: 'P1', name: 'Dorso', width: 22, height: 22, qtyPerGarment: 1 },
+      { id: 'P2', name: 'Frente', width: 8, height: 8, qtyPerGarment: 1 },
+    ],
+    garmentBaseCostArs: 8500,
+    marginPercent: 40,
+  });
+
+  assert.equal(quoteCalc.normalizedDemand, 20, 'La demanda 14 debe ajustarse a múltiplo de 10 (20 unidades)');
+  assert.ok(quoteCalc.suggestedTotalSale > quoteCalc.totalProductionCost, 'El precio total debe contemplar el margen B2B');
+  assert.ok(quoteCalc.metersNeeded >= 1);
+
+  // 3. Guardar cotización DTF y validar regla de múltiplos de 10
+  const savedQuote = storage.saveDtfQuote({
+    codigo: storage.getNextDtfQuoteCode('KIT_PRENDA'),
+    cliente_empresa: 'Agencia Creativa Sur',
+    modo: 'KIT_PRENDA',
+    demanda_prendas: quoteCalc.normalizedDemand,
+    metros_requeridos: quoteCalc.metersNeeded,
+    precio_venta_unitario: quoteCalc.suggestedUnitSale,
+    precio_venta_sugerido_total: quoteCalc.suggestedTotalSale,
+    piezas_kit: [
+      { id: 'P1', name: 'Dorso', width: 22, height: 22, qtyPerGarment: 1 },
+    ],
+  });
+  assert.ok(savedQuote.codigo.startsWith('COT-KIT-'));
+
+  assert.throws(
+    () => storage.saveDtfQuote({ demanda_prendas: 7, modo: 'KIT_PRENDA' }),
+    /múltiplos de 10/,
+    'Debe rechazar guardar cotización que viole el mínimo de 10 o múltiplos de 10'
+  );
+
+  // 4. Puente Unificado Repositorio / Bóveda Obsidian (M-02)
+  const bundleStr = storage.exportUnifiedRepoBundle();
+  const bundleObj = JSON.parse(bundleStr);
+  assert.equal(bundleObj.schema, 'AIRO_UNIFIED_REPO_BUNDLE_V1');
+  assert.ok(Array.isArray(bundleObj.crm_leads_json.leads));
+  assert.ok(Array.isArray(bundleObj.design_canvases));
+  assert.ok(Array.isArray(bundleObj.dtf_quotes));
+
+  const importRes = storage.importUnifiedRepoBundle(bundleStr);
+  assert.equal(importRes, true);
+});
+
+
 
 
