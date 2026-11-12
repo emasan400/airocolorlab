@@ -859,6 +859,65 @@ test('TSK-012 — Gobernanza PMBOK (Kanban + Google Tasks), Mejora Continua PDCA
   storage.deletePmbokTask('TSK-TEST-PMBOK');
 });
 
+test('TSK-013 — Work OS Dashboard, 6 Workflows Estándar AIRO, Quick Add NLP y Funcionalidades de las 14 Apps', () => {
+  // 1. Verificar los 6 Workflows Estándar de AIRO Color Lab (Asana / Wrike / Monday.com)
+  assert.equal(storage.AIRO_COMPANY_WORKFLOWS.length, 6, 'Deben existir los 6 Workflows normales de la empresa');
+  const wf1 = storage.launchCompanyWorkflow('WF-01', {
+    cliente_lote: 'Cervecería Quilmes 50 Buzos',
+    fecha_vencimiento: '2026-11-18',
+  });
+  assert.ok(wf1.id.startsWith('TSK-'));
+  assert.ok(wf1.titulo.includes('WF-01'));
+  assert.ok(wf1.titulo.includes('Cervecería Quilmes 50 Buzos'));
+  assert.equal(wf1.modulo_vinculado, 'cotizador_dtf');
+  assert.equal(wf1.subtasks.length, 6, 'WF-01 debe incluir los 6 pasos Order-to-Cash preconfigurados');
+
+  // 2. Verificar Captura Rápida NLP (Todoist / TickTick)
+  const qaTask = storage.quickAddPmbokTask(
+    'Cotizar 30 remeras algodón peinado #dtf #corporativo @Comercial !urgente ^mañana ~3.5h'
+  );
+  assert.equal(qaTask.titulo, 'Cotizar 30 remeras algodón peinado');
+  assert.equal(qaTask.prioridad, 'URGENTE');
+  assert.equal(qaTask.responsable, 'Comercial');
+  assert.equal(qaTask.esfuerzo_estimado_hs, 3.5);
+  assert.equal(qaTask.modulo_vinculado, 'cotizador_dtf');
+  assert.ok(qaTask.etiquetas.includes('dtf'));
+  assert.ok(qaTask.etiquetas.includes('corporativo'));
+
+  // 3. Verificar Bloqueos (Jira / Linear), Tiempo Real Pomodoro (TickTick), Comentarios (Basecamp) y Clonación (Trello)
+  const blocked = storage.togglePmbokTaskBlocker(wf1.id, true, 'Falta confirmar curva de talles XL/XXL');
+  assert.equal(blocked.bloqueada, true);
+  assert.equal(blocked.prioridad, 'URGENTE', 'El bloqueo debe escalar prioridad a URGENTE según AUTO-03');
+  assert.equal(blocked.motivo_bloqueo, 'Falta confirmar curva de talles XL/XXL');
+
+  const unblocked = storage.togglePmbokTaskBlocker(wf1.id, false);
+  assert.equal(unblocked.bloqueada, false);
+
+  const withTime = storage.logPmbokTaskTime(wf1.id, 1.5);
+  assert.equal(withTime.horas_reales, 1.5);
+
+  const withComment = storage.addPmbokTaskComment(wf1.id, 'Cliente aprobó muestra digital por WhatsApp');
+  assert.equal(withComment.comentarios.length, 1);
+  assert.equal(withComment.comentarios[0].texto, 'Cliente aprobó muestra digital por WhatsApp');
+
+  const cloned = storage.duplicatePmbokTask(wf1.id);
+  assert.notEqual(cloned.id, wf1.id);
+  assert.ok(cloned.titulo.includes('(Copia)'));
+
+  // 4. Verificar Recetas de Automatización (Monday.com / ClickUp / Trello Butler)
+  const recipes = storage.getAutomationRecipes();
+  assert.equal(recipes.length, 5);
+  const toggledRecipes = storage.toggleAutomationRecipe('AUTO-01');
+  assert.equal(toggledRecipes.find((r) => r.id === 'AUTO-01').enabled, false);
+  storage.toggleAutomationRecipe('AUTO-01'); // Restaurar
+
+  // Limpieza
+  storage.deletePmbokTask(wf1.id);
+  storage.deletePmbokTask(qaTask.id);
+  storage.deletePmbokTask(cloned.id);
+});
+
+
 
 
 

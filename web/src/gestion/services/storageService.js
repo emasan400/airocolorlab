@@ -44,6 +44,7 @@ export const KEYS = {
   DTF_QUOTES: `${PREFIX}dtf_quotes`,
   PMBOK_TASKS: `${PREFIX}pmbok_tasks`,
   KAIZEN_PDCA: `${PREFIX}kaizen_pdca`,
+  AUTOMATION_RECIPES: `${PREFIX}automation_recipes`,
 };
 
 export const MARKETING_CHANNELS = [
@@ -3979,6 +3980,212 @@ export const initialKaizenCycles = [
   },
 ];
 
+export const AIRO_COMPANY_WORKFLOWS = [
+  {
+    id: 'WF-01',
+    codigo: 'WF-01',
+    nombre: 'Pedido B2B Estándar (Order-to-Cash)',
+    subtitulo: 'Mín. 10 u. · Múltiplos de 10 · SLA Cotización < 24 h hábiles',
+    wbs_prefix: '4.1',
+    grupo_inicial: 'EJECUCION',
+    area_conocimiento: 'COSTOS',
+    prioridad: 'ALTA',
+    hitl: 'HITL-2',
+    esfuerzo_estimado_hs: 4,
+    modulo_vinculado: 'cotizador_dtf',
+    color_portada: '#1a4295',
+    etiquetas: ['Order-to-Cash', 'B2B', 'SLA-24h', 'Múltiplos-10'],
+    inspirado_en: 'Monday.com / Asana / Airtable',
+    subtasks: [
+      'Calificar Lead en CRM y validar mínimo 10 unidades (múltiplos de 10)',
+      'Optimizar pliego en Cotizador DTF 2D (MaxRects 58cm/28cm) y calcular costo',
+      'Emitir Presupuesto Oficial PDF y enviar por WhatsApp (<24h hábiles)',
+      'Registrar cobro de Seña 50% en Flujo de Caja para liberar orden a taller',
+      'Ejecutar estampado/confección en Taller y control de calidad físico',
+      'Emitir Remito Oficial de despacho y registrar cobro del 50% final',
+    ],
+  },
+  {
+    id: 'WF-02',
+    codigo: 'WF-02',
+    nombre: 'Lote de Impresión DTF Textil (Taller)',
+    subtitulo: 'Control de pliego 58cm/28cm · CMYK+W · Curado 160°C',
+    wbs_prefix: '1.2',
+    grupo_inicial: 'EJECUCION',
+    area_conocimiento: 'CALIDAD',
+    prioridad: 'ALTA',
+    hitl: 'HITL-1',
+    esfuerzo_estimado_hs: 3,
+    modulo_vinculado: 'materiales',
+    color_portada: '#0284c7',
+    etiquetas: ['Taller-DTF', 'Calidad', 'Bobina-58cm'],
+    inspirado_en: 'Jira / Linear / TickTick',
+    subtasks: [
+      'Auditar archivos PNG a 300 DPI sin fondo y perfil de color CMYK+W',
+      'Armar anidamiento 2D MaxRects con eficiencia de bobina > 75%',
+      'Verificar disponibilidad de Film PET, Tinta Blanca y Poliamida en Insumos',
+      'Imprimir lote, aplicar poliamida y hornear a 160°C durante 120 seg',
+      'Aprobar inspección visual de curado y generar Remito de entrega',
+    ],
+  },
+  {
+    id: 'WF-03',
+    codigo: 'WF-03',
+    nombre: 'Pack Corporativo RRHH / Eventos (PK1 / PK2)',
+    subtitulo: 'Kits de Bienvenida, Onboarding y Merchandising Corporativo',
+    wbs_prefix: '2.2',
+    grupo_inicial: 'PLANIFICACION',
+    area_conocimiento: 'ALCANCE',
+    prioridad: 'ALTA',
+    hitl: 'HITL-2',
+    esfuerzo_estimado_hs: 6,
+    modulo_vinculado: 'productos',
+    color_portada: '#0e7490',
+    etiquetas: ['Pack-RRHH', 'Onboarding', 'Merchandising'],
+    inspirado_en: 'Wrike / Notion / Trello',
+    subtasks: [
+      'Seleccionar prendas y accesorios base en Productos en Stock (mín. 10 kits)',
+      'Armar propuesta visual del kit en Estudio de Diseño (.canvas)',
+      'Validar identidad y contraste con Linter X-04 Brand Guardian',
+      'Confirmar curva de talles definitiva con el cliente corporativo',
+      'Ensamblar kits, controlar empaque y despachar con Remito Oficial',
+    ],
+  },
+  {
+    id: 'WF-04',
+    codigo: 'WF-04',
+    nombre: 'Campaña Multicanal & Pieza Creativa IA',
+    subtitulo: 'Concept-to-Publish: Lienzo .canvas · Linter X-03/X-04 · Gate HITL-2',
+    wbs_prefix: '2.1',
+    grupo_inicial: 'PLANIFICACION',
+    area_conocimiento: 'COMUNICACIONES',
+    prioridad: 'MEDIA',
+    hitl: 'HITL-2',
+    esfuerzo_estimado_hs: 3,
+    modulo_vinculado: 'design_studio',
+    color_portada: '#7c3aed',
+    etiquetas: ['Marketing-IA', 'Voseo-B2B', 'QA-Pass'],
+    inspirado_en: 'Asana / Notion / ClickUp',
+    subtasks: [
+      'Crear artboard en Estudio de Diseño vinculando ítem real de catalogo.json',
+      'Redactar copy en español rioplatense (voseo) con CTA a WhatsApp 11-6355-3443',
+      'Generar prompt editorial I-04 sin texto sobreimpreso',
+      'Ejecutar Linter en vivo (X-03 Content QA + X-04 Brand Guardian = 100/100)',
+      'Empaquetar hacia Cola HITL-2 para firma humana y publicación',
+    ],
+  },
+  {
+    id: 'WF-05',
+    codigo: 'WF-05',
+    nombre: 'Reposición Crítica de Stock & Insumos DTF',
+    subtitulo: 'Procurement: Alertas de Stock Mínimo · Proveedores · Kardex',
+    wbs_prefix: '4.2',
+    grupo_inicial: 'PLANIFICACION',
+    area_conocimiento: 'ADQUISICIONES',
+    prioridad: 'ALTA',
+    hitl: 'HITL-3',
+    esfuerzo_estimado_hs: 3,
+    modulo_vinculado: 'materiales',
+    color_portada: '#b45309',
+    etiquetas: ['Compras', 'Stock-Crítico', 'Kardex'],
+    inspirado_en: 'Smartsheet / Airtable',
+    subtasks: [
+      'Relevar alertas de stock mínimo en Insumos DTF y Prendas Lisas',
+      'Consultar shortlist de proveedores verificados (W-06 / I-07)',
+      'Comparar cotizaciones y aprobar orden de compra (Gate HITL-3)',
+      'Registrar egreso correspondiente en Flujo de Caja',
+      'Recepcionar mercadería y asentar ingreso en Kardex auditable',
+    ],
+  },
+  {
+    id: 'WF-06',
+    codigo: 'WF-06',
+    nombre: 'Ciclo de Mejora Continua Kaizen (PDCA)',
+    subtitulo: 'Reingeniería operativa · Reducción de mermas · Estandarización',
+    wbs_prefix: '5.3',
+    grupo_inicial: 'PLANIFICACION',
+    area_conocimiento: 'INTEGRACION',
+    prioridad: 'MEDIA',
+    hitl: 'HITL-1',
+    esfuerzo_estimado_hs: 4,
+    modulo_vinculado: 'pmbok_command',
+    color_portada: '#15803d',
+    etiquetas: ['Kaizen', 'PDCA', 'Mejora-Continua'],
+    inspirado_en: 'Basecamp / Linear / PMBOK 7',
+    subtasks: [
+      'PLAN: Medir fricción o merma actual (Línea Base As-Is) y definir hipótesis',
+      'DO: Implementar mejora en entorno controlado sin afectar producción',
+      'CHECK: Verificar KPI antes vs. después con auditoría en data/audit/',
+      'ACT: Estandarizar proceso en Bóveda Obsidian y capacitar al equipo',
+    ],
+  },
+];
+
+export const AIRO_AUTOMATION_RECIPES = [
+  {
+    id: 'AUTO-01',
+    codigo: 'AUTO-01',
+    nombre: 'Auto-Cierre por Checklist Completo (Trello Butler / ClickUp)',
+    trigger: 'Cuando el 100% de las subtareas Google Tasks se marcan completadas',
+    action: 'Mover automáticamente la tarjeta a 05 · CIERRE, fijar progreso en 100% y auditar',
+    origen_app: 'Trello / ClickUp',
+    enabled: true,
+  },
+  {
+    id: 'AUTO-02',
+    codigo: 'AUTO-02',
+    nombre: 'Puente Cotización DTF -> Despacho + Tarea WBS (Monday.com)',
+    trigger: 'Cuando se emite un Remito Oficial desde el Cotizador DTF 2D',
+    action: 'Crear automáticamente paquete WBS 4.2.1 en 03 · EJECUCIÓN con checklist de despacho',
+    origen_app: 'Monday.com / Airtable',
+    enabled: true,
+  },
+  {
+    id: 'AUTO-03',
+    codigo: 'AUTO-03',
+    nombre: 'Escalamiento Automático por Bloqueo (Jira / Linear)',
+    trigger: 'Cuando una tarea se marca como BLOQUEADA (Flag Blocker)',
+    action: 'Elevar prioridad a URGENTE, resaltar alerta roja en tablero y vincular a RAID Log',
+    origen_app: 'Jira / Linear',
+    enabled: true,
+  },
+  {
+    id: 'AUTO-04',
+    codigo: 'AUTO-04',
+    nombre: 'Sincronización de Tiempo Pomodoro a Esfuerzo Real (TickTick)',
+    trigger: 'Cuando finaliza una sesión del Temporizador Pomodoro / Reloj de Taller',
+    action: 'Sumar las horas trabajadas a horas_reales de la tarea activa y recalcular desvío EVM',
+    origen_app: 'TickTick / Smartsheet',
+    enabled: true,
+  },
+  {
+    id: 'AUTO-05',
+    codigo: 'AUTO-05',
+    nombre: 'Apertura de Ciclo PDCA en Workflow Kaizen (Asana / Wrike)',
+    trigger: 'Cuando se lanza el Workflow WF-06 (Mejora Continua Kaizen)',
+    action: 'Crear en simultáneo el paquete WBS en el Kanban y la tarjeta PLAN en el tablero PDCA',
+    origen_app: 'Asana / Wrike',
+    enabled: true,
+  },
+];
+
+export function getAutomationRecipes() {
+  return getLocal(KEYS.AUTOMATION_RECIPES, AIRO_AUTOMATION_RECIPES);
+}
+
+export function toggleAutomationRecipe(recipeId, actor = null) {
+  const operador = actor || getOperadorActual();
+  const list = getAutomationRecipes();
+  const updated = list.map((r) => (r.id === recipeId ? { ...r, enabled: !r.enabled } : r));
+  setLocal(KEYS.AUTOMATION_RECIPES, updated);
+  broadcastUpdate('AUTOMATION_RECIPES_UPDATED', updated);
+  const target = updated.find((r) => r.id === recipeId);
+  if (target) {
+    logAudit(operador, 'TOGGLE_AUTOMATION_RECIPE', 'PMBOK_COMMAND', `Receta ${target.codigo} (${target.nombre}) -> ${target.enabled ? 'ACTIVADA' : 'PAUSADA'}`);
+  }
+  return updated;
+}
+
 export function getPmbokTasks() {
   return getLocal(KEYS.PMBOK_TASKS, initialPmbokTasks);
 }
@@ -4000,6 +4207,15 @@ export function savePmbokTask(taskData, actor = null) {
         ...list[idx],
         ...taskData,
         subtasks,
+        etiquetas: Array.isArray(taskData.etiquetas) ? taskData.etiquetas : list[idx].etiquetas || [],
+        comentarios: Array.isArray(taskData.comentarios) ? taskData.comentarios : list[idx].comentarios || [],
+        horas_reales: Number(taskData.horas_reales ?? list[idx].horas_reales ?? 0),
+        bloqueada: Boolean(taskData.bloqueada ?? list[idx].bloqueada ?? false),
+        motivo_bloqueo: taskData.motivo_bloqueo ?? list[idx].motivo_bloqueo ?? '',
+        dependencia_id: taskData.dependencia_id ?? list[idx].dependencia_id ?? '',
+        modulo_vinculado: taskData.modulo_vinculado ?? list[idx].modulo_vinculado ?? 'pmbok_command',
+        color_portada: taskData.color_portada ?? list[idx].color_portada ?? '#1a4295',
+        notas_markdown: taskData.notas_markdown ?? list[idx].notas_markdown ?? '',
         grupo_procesos: finalGrp,
         progreso_pct: finalGrp === 'CIERRE' ? 100 : autoPct,
         estado: finalGrp === 'CIERRE' ? 'COMPLETADO' : finalGrp === 'EJECUCION' ? 'EN_CURSO' : 'PENDIENTE',
@@ -4032,10 +4248,20 @@ export function savePmbokTask(taskData, actor = null) {
       progreso_pct: initialPct,
       fecha_vencimiento: taskData.fecha_vencimiento || nowIso.slice(0, 10),
       esfuerzo_estimado_hs: Number(taskData.esfuerzo_estimado_hs) || 4,
+      horas_reales: Number(taskData.horas_reales) || 0,
       riesgo_asociado: taskData.riesgo_asociado || 'NINGUNO',
       hitl: taskData.hitl || 'HITL-2',
       agente: taskData.agente || 'ORC',
       responsable: taskData.responsable || operador,
+      etiquetas: Array.isArray(taskData.etiquetas) ? taskData.etiquetas : ['PMBOK'],
+      color_portada: taskData.color_portada || '#1a4295',
+      modulo_vinculado: taskData.modulo_vinculado || 'pmbok_command',
+      workflow_id: taskData.workflow_id || null,
+      bloqueada: Boolean(taskData.bloqueada),
+      motivo_bloqueo: taskData.motivo_bloqueo || '',
+      dependencia_id: taskData.dependencia_id || '',
+      notas_markdown: taskData.notas_markdown || '',
+      comentarios: Array.isArray(taskData.comentarios) ? taskData.comentarios : [],
       subtasks,
       created_at: nowIso,
       updated_at: nowIso,
@@ -4047,6 +4273,253 @@ export function savePmbokTask(taskData, actor = null) {
   broadcastUpdate('PMBOK_TASKS_UPDATED', list);
   logAudit(operador, 'SAVE_PMBOK_TASK', 'PMBOK_COMMAND', `Actualizado paquete WBS ${saved.wbs_code} (${saved.id}: ${saved.titulo}) en fase ${saved.grupo_procesos}`);
   return saved;
+}
+
+// Lanzador 1-Click de cualquiera de los 6 Workflows Estándar de AIRO Color Lab
+export function launchCompanyWorkflow(workflowId, customData = {}, actor = null) {
+  const operador = actor || getOperadorActual();
+  const wf = AIRO_COMPANY_WORKFLOWS.find((w) => w.id === workflowId || w.codigo === workflowId);
+  if (!wf) throw new Error(`Workflow empresarial ${workflowId} no encontrado`);
+
+  const list = getPmbokTasks();
+  const seq = list.length + 1;
+  const suffix = customData.cliente_lote ? ` — ${customData.cliente_lote.trim()}` : '';
+  const due =
+    customData.fecha_vencimiento ||
+    new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10);
+
+  const createdTask = savePmbokTask(
+    {
+      wbs_code: `${wf.wbs_prefix}.${seq}`,
+      titulo: `${wf.codigo}: ${wf.nombre}${suffix}`,
+      grupo_procesos: customData.grupo_procesos || wf.grupo_inicial,
+      area_conocimiento: wf.area_conocimiento,
+      prioridad: customData.prioridad || wf.prioridad,
+      fecha_vencimiento: due,
+      esfuerzo_estimado_hs: Number(customData.esfuerzo_estimado_hs) || wf.esfuerzo_estimado_hs,
+      hitl: wf.hitl,
+      agente: 'ORC',
+      responsable: customData.responsable || operador,
+      etiquetas: [...wf.etiquetas, ...(customData.etiquetas || [])],
+      color_portada: wf.color_portada,
+      modulo_vinculado: wf.modulo_vinculado,
+      workflow_id: wf.id,
+      notas_markdown:
+        customData.notas_markdown ||
+        `Workflow estándar **${wf.codigo} (${wf.nombre})** lanzado desde el Dashboard Principal.\n- Regla comercial: mínimo 10 unidades, múltiplos de 10.\n- Módulo operativo primario: \`${wf.modulo_vinculado}\`.`,
+      subtasks: wf.subtasks.map((txt, idx) => ({
+        id: `st-wf-${Date.now()}-${idx + 1}`,
+        text: txt,
+        done: false,
+      })),
+    },
+    operador
+  );
+
+  // Si AUTO-05 está activo y es WF-06 (Kaizen), abre también un ciclo PDCA
+  const recipes = getAutomationRecipes();
+  const auto05 = recipes.find((r) => r.id === 'AUTO-05');
+  if (wf.id === 'WF-06' && (!auto05 || auto05.enabled)) {
+    saveKaizenCycle(
+      {
+        titulo: `${createdTask.titulo}`,
+        etapa_pdca: 'PLAN',
+        wbs_ref: createdTask.wbs_code,
+        problema_detectado: customData.notas_markdown || 'Oportunidad de mejora operativa detectada en flujo diario.',
+        hipotesis_mejora: 'Estandarizar proceso y medir reducción de tiempos/merma.',
+        kpi_impacto: 'Reducción > 25% en tiempo de ciclo operativo.',
+      },
+      operador
+    );
+  }
+
+  logAudit(operador, 'LAUNCH_COMPANY_WORKFLOW', 'PMBOK_COMMAND', `Lanzado Workflow ${wf.codigo} (${createdTask.id}: ${createdTask.titulo})`);
+  return createdTask;
+}
+
+// Parser de lenguaje natural estilo Todoist / TickTick:
+// Soporta #etiqueta, @responsable, !urgente|!alta|!media|!baja, ^hoy|^mañana|^YYYY-MM-DD, ~3h
+export function parseQuickAddTaskInput(rawInput) {
+  const raw = String(rawInput || '').trim();
+  if (!raw) throw new Error('Ingresá el título o comando rápido de la tarea');
+
+  const etiquetas = [];
+  let responsable = '';
+  let prioridad = 'ALTA';
+  let esfuerzo_estimado_hs = 2;
+  let fecha_vencimiento = new Date().toISOString().slice(0, 10);
+
+  let cleanTitle = raw
+    .replace(/#([\w\-áéíóúñÁÉÍÓÚÑ]+)/g, (_, tag) => {
+      etiquetas.push(tag);
+      return '';
+    })
+    .replace(/@([\w.\-áéíóúñÁÉÍÓÚÑ]+)/g, (_, resp) => {
+      responsable = resp;
+      return '';
+    })
+    .replace(/!(urgente|alta|media|baja)/gi, (_, prio) => {
+      prioridad = prio.toUpperCase();
+      return '';
+    })
+    .replace(/~(\d+(?:\.\d+)?)h?/gi, (_, hs) => {
+      esfuerzo_estimado_hs = Number(hs) || 2;
+      return '';
+    })
+    .replace(/\^(hoy|mañana|manana|\d{4}-\d{2}-\d{2})/gi, (_, token) => {
+      const lower = token.toLowerCase();
+      if (lower === 'hoy') {
+        fecha_vencimiento = new Date().toISOString().slice(0, 10);
+      } else if (lower === 'mañana' || lower === 'manana') {
+        fecha_vencimiento = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+      } else {
+        fecha_vencimiento = token;
+      }
+      return '';
+    })
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!cleanTitle) cleanTitle = raw;
+
+  // Inferir módulo vinculado y área PMBOK según palabras clave
+  const lowerTitle = cleanTitle.toLowerCase();
+  let modulo_vinculado = 'pmbok_command';
+  let area_conocimiento = 'ALCANCE';
+  if (/dtf|cotiz|pliego|metro|nesting/.test(lowerTitle)) {
+    modulo_vinculado = 'cotizador_dtf';
+    area_conocimiento = 'COSTOS';
+  } else if (/remito|despach|env[ií]o|bulto/.test(lowerTitle)) {
+    modulo_vinculado = 'remitos';
+    area_conocimiento = 'ADQUISICIONES';
+  } else if (/seña|caja|cobro|pago|factura/.test(lowerTitle)) {
+    modulo_vinculado = 'caja';
+    area_conocimiento = 'COSTOS';
+  } else if (/lead|cliente|crm|whatsapp|prospect/.test(lowerTitle)) {
+    modulo_vinculado = 'crm';
+    area_conocimiento = 'INTERESADOS';
+  } else if (/lienzo|canvas|diseñ|carrusel|post/.test(lowerTitle)) {
+    modulo_vinculado = 'design_studio';
+    area_conocimiento = 'COMUNICACIONES';
+  } else if (/insumo|film|tinta|poliamida|tela/.test(lowerTitle)) {
+    modulo_vinculado = 'materiales';
+    area_conocimiento = 'RECURSOS';
+  }
+
+  return {
+    titulo: cleanTitle,
+    etiquetas: etiquetas.length > 0 ? etiquetas : ['QuickAdd'],
+    responsable,
+    prioridad,
+    esfuerzo_estimado_hs,
+    fecha_vencimiento,
+    modulo_vinculado,
+    area_conocimiento,
+  };
+}
+
+export function quickAddPmbokTask(rawInput, actor = null) {
+  const operador = actor || getOperadorActual();
+  const parsed = parseQuickAddTaskInput(rawInput);
+  return savePmbokTask(
+    {
+      titulo: parsed.titulo,
+      grupo_procesos: 'EJECUCION',
+      area_conocimiento: parsed.area_conocimiento,
+      prioridad: parsed.prioridad,
+      fecha_vencimiento: parsed.fecha_vencimiento,
+      esfuerzo_estimado_hs: parsed.esfuerzo_estimado_hs,
+      responsable: parsed.responsable || operador,
+      etiquetas: parsed.etiquetas,
+      modulo_vinculado: parsed.modulo_vinculado,
+      color_portada: parsed.prioridad === 'URGENTE' ? '#dc2626' : '#00b4d8',
+      subtasks: [
+        { id: `st-qa-${Date.now()}-1`, text: `Ejecutar: ${parsed.titulo}`, done: false },
+        { id: `st-qa-${Date.now()}-2`, text: 'Verificar resultado y registrar cierre en tablero', done: false },
+      ],
+    },
+    operador
+  );
+}
+
+export function deletePmbokSubtask(taskId, subtaskId, actor = null) {
+  const list = getPmbokTasks();
+  const target = list.find((t) => t.id === taskId);
+  if (!target) throw new Error('Tarea PMBOK no encontrada');
+  const updatedSubtasks = (target.subtasks || []).filter((st) => st.id !== subtaskId);
+  return savePmbokTask({ ...target, subtasks: updatedSubtasks }, actor);
+}
+
+export function addPmbokTaskComment(taskId, texto, actor = null) {
+  if (!texto || !texto.trim()) throw new Error('El comentario no puede estar vacío');
+  const operador = actor || getOperadorActual();
+  const list = getPmbokTasks();
+  const target = list.find((t) => t.id === taskId);
+  if (!target) throw new Error('Tarea PMBOK no encontrada');
+  const comentarios = [
+    ...(target.comentarios || []),
+    {
+      id: `cmt-${Date.now()}`,
+      autor: operador,
+      texto: texto.trim(),
+      fecha: new Date().toISOString(),
+    },
+  ];
+  return savePmbokTask({ ...target, comentarios }, operador);
+}
+
+export function togglePmbokTaskBlocker(taskId, bloqueada, motivo = '', dependenciaId = '', actor = null) {
+  const operador = actor || getOperadorActual();
+  const list = getPmbokTasks();
+  const target = list.find((t) => t.id === taskId);
+  if (!target) throw new Error('Tarea PMBOK no encontrada');
+
+  const recipes = getAutomationRecipes();
+  const auto03 = recipes.find((r) => r.id === 'AUTO-03');
+  const newPrio = bloqueada && (!auto03 || auto03.enabled) ? 'URGENTE' : target.prioridad;
+
+  return savePmbokTask(
+    {
+      ...target,
+      bloqueada: Boolean(bloqueada),
+      motivo_bloqueo: bloqueada ? motivo || 'Esperando definición o insumo externo' : '',
+      dependencia_id: bloqueada ? dependenciaId : '',
+      prioridad: newPrio,
+      riesgo_asociado: bloqueada ? `BLOQUEO: ${motivo || 'Activo'}` : target.riesgo_asociado,
+    },
+    operador
+  );
+}
+
+export function logPmbokTaskTime(taskId, hoursDelta, actor = null) {
+  const operador = actor || getOperadorActual();
+  const list = getPmbokTasks();
+  const target = list.find((t) => t.id === taskId);
+  if (!target) throw new Error('Tarea PMBOK no encontrada');
+  const prev = Number(target.horas_reales) || 0;
+  const next = Math.max(0, Math.round((prev + Number(hoursDelta || 0)) * 100) / 100);
+  return savePmbokTask({ ...target, horas_reales: next }, operador);
+}
+
+export function duplicatePmbokTask(taskId, actor = null) {
+  const operador = actor || getOperadorActual();
+  const list = getPmbokTasks();
+  const target = list.find((t) => t.id === taskId);
+  if (!target) throw new Error('Tarea PMBOK no encontrada');
+  return savePmbokTask(
+    {
+      ...target,
+      id: undefined,
+      titulo: `${target.titulo} (Copia)`,
+      grupo_procesos: target.grupo_procesos === 'CIERRE' ? 'PLANIFICACION' : target.grupo_procesos,
+      subtasks: (target.subtasks || []).map((st, idx) => ({
+        id: `st-dup-${Date.now()}-${idx}`,
+        text: st.text,
+        done: false,
+      })),
+    },
+    operador
+  );
 }
 
 export function movePmbokTaskPhase(taskId, newProcessGroup, actor = null) {
