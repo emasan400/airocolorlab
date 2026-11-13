@@ -922,3 +922,22 @@ test('TSK-013 — Work OS Dashboard, 6 Workflows Estándar AIRO, Quick Add NLP y
 
 
 
+
+test('TSK-014 — IDs de tareas PMBOK únicos aunque la numeración tenga huecos', () => {
+  const before = storage.getPmbokTasks();
+  const a = storage.savePmbokTask({ titulo: 'Tarea A sin id', grupo_procesos: 'PLANIFICACION' });
+  const b = storage.savePmbokTask({ titulo: 'Tarea B sin id', grupo_procesos: 'EJECUCION' });
+  assert.notEqual(a.id, b.id);
+  const ids = storage.getPmbokTasks().map((t) => t.id);
+  assert.equal(new Set(ids).size, ids.length, 'No deben existir IDs duplicados');
+  assert.equal(ids.length, before.length + 2);
+
+  // Editar un campo de una tarea completa no debe moverla de columna
+  const done = storage.savePmbokTask({ titulo: 'Tarea completa', grupo_procesos: 'MONITOREO_Y_CONTROL', subtasks: [{ id: 'x1', text: 'Paso', done: true }] });
+  const edited = storage.savePmbokTask({ ...done, prioridad: 'BAJA' });
+  assert.equal(edited.grupo_procesos, 'MONITOREO_Y_CONTROL', 'Editar prioridad no debe auto-cerrar la tarea');
+
+  storage.deletePmbokTask(a.id);
+  storage.deletePmbokTask(b.id);
+  storage.deletePmbokTask(done.id);
+});

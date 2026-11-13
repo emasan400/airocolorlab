@@ -4202,7 +4202,10 @@ export function savePmbokTask(taskData, actor = null) {
       const subtasks = Array.isArray(taskData.subtasks) ? taskData.subtasks : list[idx].subtasks || [];
       const doneCount = subtasks.filter((s) => s.done).length;
       const autoPct = subtasks.length > 0 ? Math.round((doneCount / subtasks.length) * 100) : taskData.progreso_pct ?? list[idx].progreso_pct;
-      const finalGrp = autoPct === 100 && taskData.grupo_procesos === list[idx].grupo_procesos ? 'CIERRE' : (taskData.grupo_procesos || list[idx].grupo_procesos);
+      // Auto-cierre solo cuando el checklist PASA a 100% en esta operación (no al editar otros campos de una tarea ya completa)
+      const wasComplete = Number(list[idx].progreso_pct) === 100;
+      const sameGroup = !taskData.grupo_procesos || taskData.grupo_procesos === list[idx].grupo_procesos;
+      const finalGrp = autoPct === 100 && !wasComplete && sameGroup ? 'CIERRE' : (taskData.grupo_procesos || list[idx].grupo_procesos);
       saved = {
         ...list[idx],
         ...taskData,
@@ -4226,7 +4229,12 @@ export function savePmbokTask(taskData, actor = null) {
   }
 
   if (!saved) {
-    const nextNum = list.length + 1;
+    // Correlativo único: máximo existente + 1 (list.length + 1 podía repetir un ID si había huecos en la numeración)
+    const maxNum = list.reduce((m, t) => {
+      const match = /^TSK-(\d+)$/.exec(String(t.id));
+      return match ? Math.max(m, Number(match[1])) : m;
+    }, 0);
+    const nextNum = maxNum + 1;
     const id = taskData.id || `TSK-${String(nextNum).padStart(3, '0')}`;
     const grp = taskData.grupo_procesos || 'PLANIFICACION';
     const subtasks = Array.isArray(taskData.subtasks) && taskData.subtasks.length > 0

@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import './styles/gestion.css';
+import './styles/workos.css';
 import {
   initializeStorageIfEmpty,
   getProductos,
@@ -11,7 +12,6 @@ import {
   getDesignCanvases,
   getDtfQuotes,
   getPmbokTasks,
-  getKaizenCycles,
   SUITES_DOMINIO,
   getOperadorActual,
   subscribeToSync,
@@ -34,7 +34,8 @@ import {
   IconSparkles,
   IconCanvas,
   IconRuler,
-  IconLayers,
+  IconHome,
+  IconKanban,
   IconShield,
   IconSettings,
   IconKey,
@@ -70,6 +71,10 @@ export default function GestionApp() {
 
 function GestionAppInner({ session, onSignOut }) {
   const [activeTab, setActiveTab] = useState('pmbok_command');
+  // Vista activa dentro del Comando de gestión: 'dashboard' (Inicio) | 'kanban' (Tablero) | vistas secundarias
+  const [workView, setWorkView] = useState('dashboard');
+  const goHome = () => { setActiveTab('pmbok_command'); setWorkView('dashboard'); setSidebarOpen(false); };
+  const goBoard = () => { setActiveTab('pmbok_command'); setWorkView('kanban'); setSidebarOpen(false); };
   const [operador, setOperador] = useState(() => session?.user?.email || getOperadorActual());
   const [, setRefreshKey] = useState(0);
 
@@ -142,7 +147,8 @@ function GestionAppInner({ session, onSignOut }) {
   const canvasesList = getDesignCanvases();
   const dtfQuotesList = getDtfQuotes();
   const pmbokTasksList = getPmbokTasks();
-  const kaizenList = getKaizenCycles();
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const dueTodayCount = pmbokTasksList.filter((t) => t.estado !== 'COMPLETADO' && t.fecha_vencimiento && t.fecha_vencimiento <= todayIso).length;
   const pendingApprovalsCount = approvalsList.filter((a) => a.estado === 'PENDING').length;
 
   const prodsAlert = prods.filter((p) => p.stock_actual <= p.stock_minimo).length;
@@ -235,21 +241,33 @@ function GestionAppInner({ session, onSignOut }) {
         </div>
 
         <nav className="gestion-sidebar-nav">
-          {/* SUITE 01: GOBERNANZA PMBOK & MEJORA CONTINUA */}
-          <div style={suiteLabelStyle}>01 · Comando PMBOK & Mejora Continua</div>
+          {/* PRINCIPAL: las dos herramientas de uso diario */}
+          <div style={suiteLabelStyle}>Principal</div>
           {(isAdmin || isModuloPermitido(currentRol, 'pmbok_command')) && (
-            <button
-              className={`gestion-sidebar-item ${activeTab === 'pmbok_command' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('pmbok_command'); setSidebarOpen(false); }}
-            >
-              <div className="gestion-sidebar-item-left">
-                <div className="gestion-sidebar-item-icon"><IconLayers /></div>
-                <span>Comando PMBOK & Google Tasks</span>
-              </div>
-              <span className="gestion-tab-badge" style={{ background: 'rgba(26, 66, 149, 0.14)', color: '#1a4295' }}>
-                {pmbokOpenCount} act. · {kaizenList.length} PDCA
-              </span>
-            </button>
+            <>
+              <button
+                className={`gestion-sidebar-item ${activeTab === 'pmbok_command' && workView === 'dashboard' ? 'active' : ''}`}
+                onClick={goHome}
+              >
+                <div className="gestion-sidebar-item-left">
+                  <div className="gestion-sidebar-item-icon"><IconHome /></div>
+                  <span>Inicio</span>
+                </div>
+                <span className="gestion-tab-badge">{dueTodayCount} hoy</span>
+              </button>
+              <button
+                className={`gestion-sidebar-item ${activeTab === 'pmbok_command' && workView !== 'dashboard' ? 'active' : ''}`}
+                onClick={goBoard}
+              >
+                <div className="gestion-sidebar-item-left">
+                  <div className="gestion-sidebar-item-icon"><IconKanban /></div>
+                  <span>Tablero Kanban</span>
+                </div>
+                <span className="gestion-tab-badge" style={{ background: 'rgba(26, 66, 149, 0.14)', color: '#1a4295' }}>
+                  {pmbokOpenCount} abiertas
+                </span>
+              </button>
+            </>
           )}
 
           {/* SUITE 02: COMERCIAL 360° & COTIZADOR DTF */}
@@ -494,6 +512,24 @@ function GestionAppInner({ session, onSignOut }) {
                 </div>
               </div>
             </a>
+            <nav className="gestion-primary-nav" aria-label="Herramientas principales">
+              <button
+                type="button"
+                aria-current={activeTab === 'pmbok_command' && workView === 'dashboard' ? 'page' : undefined}
+                onClick={goHome}
+              >
+                <IconHome size={16} />
+                <span>Inicio</span>
+              </button>
+              <button
+                type="button"
+                aria-current={activeTab === 'pmbok_command' && workView !== 'dashboard' ? 'page' : undefined}
+                onClick={goBoard}
+              >
+                <IconKanban size={16} />
+                <span>Tablero</span>
+              </button>
+            </nav>
           </div>
 
           <div className="gestion-header-actions">
@@ -578,110 +614,43 @@ function GestionAppInner({ session, onSignOut }) {
       </header>
 
       {/* Área de Trabajo Principal */}
-      <main className="gestion-main">
-        {/* Barra Contextual de las 5 Suites de Dominio (Reingeniería BPR & Desacoplamiento) */}
-        <div
-          style={{
-            background: '#fff',
-            border: '1px solid var(--line)',
-            borderRadius: 12,
-            padding: '10px 14px',
-            marginBottom: 18,
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: 10,
-            boxShadow: '0 2px 10px rgba(26, 66, 149, 0.04)',
-          }}
-        >
-          {/* Conmutador de las 5 Suites */}
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-            <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-45)', marginRight: 4 }}>
-              Suites B2B:
-            </span>
-            {SUITES_DOMINIO.map((suite) => {
-              const suiteTabs = getSuiteTabs(suite);
-              const allowedTabs = suiteTabs.filter((t) => isAdmin || isModuloPermitido(currentRol, t));
-              if (allowedTabs.length === 0) return null;
-              const isSuiteActive = suiteTabs.includes(activeTab);
-              return (
-                <button
-                  key={suite.id}
-                  type="button"
-                  onClick={() => setActiveTab(allowedTabs[0])}
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    padding: '5px 10px',
-                    borderRadius: 7,
-                    border: isSuiteActive ? `1.5px solid ${suite.color}` : '1px solid var(--line)',
-                    background: isSuiteActive ? `${suite.color}14` : '#f8fafc',
-                    color: isSuiteActive ? suite.color : 'var(--ink-70)',
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 5,
-                  }}
-                >
-                  <span style={{ opacity: 0.7 }}>{suite.num}</span>
-                  <span>{suite.nombre.replace(/^Suite \w+ · /, '')}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Sub-pestañas hermanas dentro de la Suite Activa */}
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-            <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--ink-45)' }}>
-              En {activeSuite.num}:
-            </span>
-            {getSuiteTabs(activeSuite)
-              .filter((t) => isAdmin || isModuloPermitido(currentRol, t))
-              .map((tabId) => {
-                const meta = TAB_META[tabId] || { label: tabId, badge: '' };
-                const isCurrent = activeTab === tabId;
-                return (
-                  <button
-                    key={tabId}
-                    type="button"
-                    onClick={() => setActiveTab(tabId)}
-                    style={{
-                      fontSize: 11,
-                      fontWeight: isCurrent ? 700 : 600,
-                      padding: '4px 10px',
-                      borderRadius: 6,
-                      border: isCurrent ? '1px solid #1a4295' : '1px solid var(--line)',
-                      background: isCurrent ? '#1a4295' : '#fff',
-                      color: isCurrent ? '#fff' : 'var(--ink)',
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 5,
-                    }}
-                  >
-                    <span>{meta.label}</span>
-                    {meta.badge && (
-                      <span
-                        style={{
-                          fontSize: 9,
-                          padding: '1px 5px',
-                          borderRadius: 4,
-                          background: isCurrent ? 'rgba(255,255,255,0.22)' : 'rgba(13,27,62,0.07)',
-                          color: isCurrent ? '#fff' : 'var(--ink-70)',
-                        }}
+      <main className={`gestion-main ${activeTab === 'pmbok_command' ? 'wos-wide' : ''}`}>
+        {/* Sub-navegación contextual: solo aparece dentro de las demás herramientas */}
+        {activeTab !== 'pmbok_command' && (
+          <nav className="wos-subnav" aria-label="Navegación de la suite activa">
+            <button type="button" className="wos-btn wos-btn--sm" onClick={goHome}>
+              &larr; Inicio
+            </button>
+            <span className="wos-subnav-label">Suite {activeSuite.num} · {activeSuite.nombre}</span>
+            {getSuiteTabs(activeSuite).filter((t) => isAdmin || isModuloPermitido(currentRol, t)).length > 1 && (
+              <div className="wos-subnav-tabs">
+                {getSuiteTabs(activeSuite)
+                  .filter((t) => isAdmin || isModuloPermitido(currentRol, t))
+                  .map((tabId) => {
+                    const meta = TAB_META[tabId] || { label: tabId };
+                    return (
+                      <button
+                        key={tabId}
+                        type="button"
+                        aria-current={activeTab === tabId ? 'page' : undefined}
+                        onClick={() => setActiveTab(tabId)}
                       >
-                        {meta.badge}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-          </div>
-        </div>
+                        {meta.label}
+                      </button>
+                    );
+                  })}
+              </div>
+            )}
+          </nav>
+        )}
 
         {activeTab === 'pmbok_command' && (
-          <PmbokCommandModule onNavigateTab={setActiveTab} onDataChanged={triggerRefresh} />
+          <PmbokCommandModule
+            view={workView}
+            onViewChange={setWorkView}
+            onNavigateTab={setActiveTab}
+            onDataChanged={triggerRefresh}
+          />
         )}
 
         {activeTab === 'productos' && (
