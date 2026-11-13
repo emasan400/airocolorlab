@@ -206,41 +206,43 @@ function SecureAdminLogin({ onSuccess, idleLockedMessage }) {
 
       let localAuthSuccess = false;
       if (userMatch) {
-        if (!userMatch.password) {
+        if (!userMatch.password && (!supabaseEnabled || !supabase)) {
           handleAuthFailure('Usuario sin credenciales configuradas. Contactá al administrador.');
           setBusy(false);
           return;
         }
 
-        const passwordOk = verifyPasswordSync(password, userMatch.password);
+        if (userMatch.password) {
+          const passwordOk = verifyPasswordSync(password, userMatch.password);
 
-        if (passwordOk) {
-          localAuthSuccess = true;
-          const mockSession = {
-            user: {
-              email: userMatch.email,
-              role: 'authenticated',
-              user_metadata: { rol: userMatch.rol, nombre: userMatch.nombre },
-            },
-            token: 'local-session-token-' + Date.now(),
-          };
+          if (passwordOk) {
+            localAuthSuccess = true;
+            const mockSession = {
+              user: {
+                email: userMatch.email,
+                role: 'authenticated',
+                user_metadata: { rol: userMatch.rol, nombre: userMatch.nombre },
+              },
+              token: 'local-session-token-' + Date.now(),
+            };
 
-          // Desafío MFA si el usuario tiene doble factor activado
-          if (userMatch.mfa_enabled && userMatch.mfa_secret) {
-            setMfaChallenge({
-              secret: userMatch.mfa_secret,
-              session: mockSession,
-              userObj: userMatch,
-            });
-            setBusy(false);
+            // Desafío MFA si el usuario tiene doble factor activado
+            if (userMatch.mfa_enabled && userMatch.mfa_secret) {
+              setMfaChallenge({
+                secret: userMatch.mfa_secret,
+                session: mockSession,
+                userObj: userMatch,
+              });
+              setBusy(false);
+              return;
+            }
+
+            sessionStorage.setItem('airo_auth_session', JSON.stringify(mockSession));
+            sessionStorage.removeItem('airo_login_fails');
+            setFailedAttempts(0);
+            onSuccess(mockSession);
             return;
           }
-
-          sessionStorage.setItem('airo_auth_session', JSON.stringify(mockSession));
-          sessionStorage.removeItem('airo_login_fails');
-          setFailedAttempts(0);
-          onSuccess(mockSession);
-          return;
         }
       }
 
@@ -253,19 +255,28 @@ function SecureAdminLogin({ onSuccess, idleLockedMessage }) {
           });
 
           if (!error && data?.session) {
-            // Sincronizar en base de usuarios si no existía
-            if (!usuarios.some((u) => u.email.toLowerCase() === cleanEmail)) {
+            // Sincronizar en base de usuarios si no existía o actualizar credenciales locales
+            const existingIdx = usuarios.findIndex((u) => u.email.toLowerCase() === cleanEmail);
+            const userRol = data.session.user.user_metadata?.rol || 'admin';
+            const userNombre = data.session.user.user_metadata?.nombre || cleanEmail.split('@')[0];
+
+            if (existingIdx === -1) {
               usuarios.push({
-                id: `usr-${Date.now()}`,
+                id: data.session.user.id || `usr-${Date.now()}`,
                 email: cleanEmail,
-                nombre: data.session.user.user_metadata?.nombre || cleanEmail.split('@')[0],
-                rol: data.session.user.user_metadata?.rol || 'admin',
+                nombre: userNombre,
+                rol: userRol,
                 activo: true,
                 password: hashPasswordSync(password),
                 fecha_creacion: new Date().toISOString(),
               });
-              setLocal(KEYS.USUARIOS, usuarios);
+            } else {
+              usuarios[existingIdx].password = hashPasswordSync(password);
+              usuarios[existingIdx].rol = userRol;
+              usuarios[existingIdx].nombre = userNombre;
+              usuarios[existingIdx].activo = true;
             }
+            setLocal(KEYS.USUARIOS, usuarios);
 
             sessionStorage.setItem('airo_auth_session', JSON.stringify(data.session));
             sessionStorage.removeItem('airo_login_fails');

@@ -1255,6 +1255,154 @@ export function adminResetPassword(userId, nuevaPassword) {
   return cambiarPasswordUsuario(userId, null, nuevaPassword);
 }
 
+// ------------------------------------------------------------
+// GESTIÓN CLOUD SUPABASE (ENDPOINT SERVERLESS /api/admin-users)
+// ------------------------------------------------------------
+
+export async function saveUsuarioCloud(usuarioData) {
+  const cleanEmail = (usuarioData.email || '').trim().toLowerCase();
+  const cleanNombre = (usuarioData.nombre || '').trim();
+  const password = (usuarioData.password || '').trim();
+  const rol = usuarioData.rol || 'taller_produccion';
+  const activo = usuarioData.activo !== false;
+
+  if (!cleanEmail) throw new Error('El correo electrónico es requerido');
+  if (!cleanNombre) throw new Error('El nombre de colaborador es requerido');
+  if (!usuarioData.id && (!password || password.length < 8)) {
+    throw new Error('La contraseña debe tener al menos 8 caracteres.');
+  }
+
+  let cloudSuccess = false;
+  let cloudUser = null;
+
+  try {
+    const res = await fetch('/api/admin-users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'create',
+        email: cleanEmail,
+        password,
+        nombre: cleanNombre,
+        rol,
+        activo,
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.success) {
+        cloudSuccess = true;
+        cloudUser = data.user;
+      }
+    } else {
+      const errData = await res.json().catch(() => ({}));
+      if (res.status === 400) {
+        throw new Error(errData.error || 'Error al validar datos en el servidor');
+      }
+      console.warn('API /api/admin-users no respondió 2xx:', res.status, errData);
+    }
+  } catch (err) {
+    if (err.message && !err.message.includes('fetch') && !err.message.includes('Failed to fetch')) {
+      throw err;
+    }
+    console.warn('Conexión con /api/admin-users no disponible, guardando en local:', err.message);
+  }
+
+  // Guardar en almacenamiento local para consistencia inmediata
+  const localSaved = saveUsuario({
+    ...usuarioData,
+    id: cloudUser?.id || usuarioData.id,
+    email: cleanEmail,
+    nombre: cleanNombre,
+    rol,
+    activo,
+    password,
+  });
+
+  return {
+    ...localSaved,
+    cloudProvisioned: cloudSuccess,
+  };
+}
+
+export async function adminResetPasswordCloud(userIdOrEmail, newPassword) {
+  if (!newPassword || newPassword.trim().length < 8) {
+    throw new Error('La nueva contraseña debe tener al menos 8 caracteres.');
+  }
+
+  const cleanId = String(userIdOrEmail || '').trim();
+
+  try {
+    const res = await fetch('/api/admin-users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'reset-password',
+        userId: cleanId.includes('@') ? null : cleanId,
+        email: cleanId.includes('@') ? cleanId : null,
+        newPassword: newPassword.trim(),
+      }),
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      console.warn('Fallo en reseteo cloud:', errData);
+    }
+  } catch (err) {
+    console.warn('Error llamando a reset cloud:', err.message);
+  }
+
+  return adminResetPassword(userIdOrEmail, newPassword);
+}
+
+export async function syncUsuariosFromCloud() {
+  try {
+    const res = await fetch('/api/admin-users', { method: 'GET' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data?.success || !Array.isArray(data.users)) return null;
+
+    const localList = getUsuarios();
+    let updated = false;
+
+    data.users.forEach((cloudUser) => {
+      const idx = localList.findIndex((u) => u.email.toLowerCase() === cloudUser.email.toLowerCase());
+      if (idx === -1) {
+        localList.push({
+          id: cloudUser.id,
+          email: cloudUser.email,
+          nombre: cloudUser.nombre,
+          rol: cloudUser.rol,
+          activo: cloudUser.activo,
+          fecha_creacion: cloudUser.fecha_creacion || new Date().toISOString(),
+          ultimo_ingreso: cloudUser.ultimo_ingreso,
+        });
+        updated = true;
+      } else {
+        if (
+          localList[idx].rol !== cloudUser.rol ||
+          localList[idx].nombre !== cloudUser.nombre ||
+          localList[idx].activo !== cloudUser.activo
+        ) {
+          localList[idx].rol = cloudUser.rol;
+          localList[idx].nombre = cloudUser.nombre;
+          localList[idx].activo = cloudUser.activo;
+          updated = true;
+        }
+      }
+    });
+
+    if (updated) {
+      setLocal(KEYS.USUARIOS, localList);
+      broadcastUpdate('USUARIOS_UPDATED', localList);
+    }
+    return localList;
+  } catch (e) {
+    console.warn('syncUsuariosFromCloud error silencioso:', e.message);
+    return null;
+  }
+}
+
 export function isModuloPermitido(rolId, moduloId) {
   if (!rolId || rolId === 'admin') return true;
   const def = ROLES_DEFINICION.find((r) => r.id === rolId);

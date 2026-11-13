@@ -3,9 +3,12 @@ import {
   getUsuarios,
   getUsuariosSanitizados,
   saveUsuario,
+  saveUsuarioCloud,
   deleteUsuario,
   cambiarPasswordUsuario,
   adminResetPassword,
+  adminResetPasswordCloud,
+  syncUsuariosFromCloud,
   generateTotpSecret,
   verifyTotpCode,
   enableMfaForUser,
@@ -26,6 +29,21 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
       setActiveSubTab(initialSubTab);
     }
   }, [initialSubTab]);
+
+  // Sincronizar automáticamente usuarios centralizados desde Supabase Auth
+  useEffect(() => {
+    let mounted = true;
+    syncUsuariosFromCloud()
+      .then((cloudList) => {
+        if (mounted && cloudList) {
+          reloadUsuarios();
+        }
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Modal Alta / Edición de Usuario
   const [modalUsuario, setModalUsuario] = useState({
@@ -161,21 +179,24 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
     });
   };
 
-  const handleGuardarUsuario = (e) => {
+  const handleGuardarUsuario = async (e) => {
     e.preventDefault();
-    setModalUsuario((m) => ({ ...m, error: '', success: '' }));
+    setModalUsuario((m) => ({ ...m, error: '', success: '', busy: true }));
     try {
-      saveUsuario(modalUsuario.data);
+      const res = await saveUsuarioCloud(modalUsuario.data);
       reloadUsuarios();
       setModalUsuario((m) => ({
         ...m,
-        success: m.isEdit ? '¡Usuario actualizado con éxito!' : '¡Nuevo colaborador registrado exitosamente!',
+        busy: false,
+        success: res.cloudProvisioned
+          ? (m.isEdit ? '¡Usuario actualizado y sincronizado en la nube con éxito!' : '¡Colaborador registrado y habilitado en la nube con éxito!')
+          : (m.isEdit ? '¡Usuario actualizado en almacenamiento local!' : '¡Colaborador registrado en almacenamiento local!'),
       }));
       setTimeout(() => {
-        setModalUsuario({ open: false, isEdit: false, error: '', success: '', data: {} });
-      }, 1000);
+        setModalUsuario({ open: false, isEdit: false, error: '', success: '', busy: false, data: {} });
+      }, 1500);
     } catch (err) {
-      setModalUsuario((m) => ({ ...m, error: err.message }));
+      setModalUsuario((m) => ({ ...m, busy: false, error: err.message }));
     }
   };
 
@@ -211,19 +232,21 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
       setModalReset((prev) => ({ ...prev, error: 'Las contraseñas no coinciden.' }));
       return;
     }
+    setModalReset((prev) => ({ ...prev, busy: true, error: '' }));
     try {
-      await adminResetPassword(modalReset.user.id, modalReset.newPassword);
+      await adminResetPasswordCloud(modalReset.user.id || modalReset.user.email, modalReset.newPassword);
       setModalReset((prev) => ({
         ...prev,
+        busy: false,
         success: '¡Contraseña actualizada con éxito!',
         error: '',
       }));
       setTimeout(() => {
-        setModalReset({ open: false, user: null, newPassword: '', confirmPassword: '', error: '', success: '' });
+        setModalReset({ open: false, user: null, newPassword: '', confirmPassword: '', error: '', success: '', busy: false });
         reloadUsuarios();
       }, 1500);
     } catch (err) {
-      setModalReset((prev) => ({ ...prev, error: err.message }));
+      setModalReset((prev) => ({ ...prev, busy: false, error: err.message }));
     }
   };
 
@@ -890,6 +913,7 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                         type="password"
                         placeholder="Dejar en blanco para mantener la clave actual"
                         value={modalUsuario.data.password || ''}
+                        disabled={modalUsuario.busy}
                         onChange={(e) =>
                           setModalUsuario((p) => ({ ...p, data: { ...p.data, password: e.target.value } }))
                         }
@@ -903,10 +927,14 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                         required
                         placeholder="••••••••••••"
                         value={modalUsuario.data.password || ''}
+                        disabled={modalUsuario.busy}
                         onChange={(e) =>
                           setModalUsuario((p) => ({ ...p, data: { ...p.data, password: e.target.value } }))
                         }
                       />
+                      <small style={{ display: 'block', marginTop: '6px', color: 'var(--ink-45)', fontSize: '0.8rem' }}>
+                        Mínimo 8 caracteres. El usuario quedará confirmado y habilitado para iniciar sesión inmediatamente.
+                      </small>
                     </div>
                   )}
 
@@ -915,6 +943,7 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                       type="checkbox"
                       id="usr-activo-chk"
                       checked={modalUsuario.data.activo ?? true}
+                      disabled={modalUsuario.busy}
                       onChange={(e) =>
                         setModalUsuario((p) => ({ ...p, data: { ...p.data, activo: e.target.checked } }))
                       }
@@ -930,12 +959,17 @@ export default function UsuariosRolesModule({ currentUserEmail, onProfileUpdated
                 <button
                   type="button"
                   className="g-btn g-btn-outline"
+                  disabled={modalUsuario.busy}
                   onClick={() => setModalUsuario({ open: false, isEdit: false, data: {} })}
                 >
                   Cancelar
                 </button>
-                <button type="submit" className="g-btn g-btn-primary">
-                  {modalUsuario.isEdit ? 'Guardar Cambios' : 'Crear Usuario'}
+                <button type="submit" className="g-btn g-btn-primary" disabled={modalUsuario.busy}>
+                  {modalUsuario.busy
+                    ? 'Guardando en la nube…'
+                    : modalUsuario.isEdit
+                    ? 'Guardar Cambios'
+                    : 'Crear Usuario'}
                 </button>
               </div>
             </form>
